@@ -1,6 +1,6 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
-public class StaticEdge extends Edge<StaticVertex> {
+public class StaticEdge extends AEdge<StaticVertex> {
     private int eLabel;
 
     public StaticEdge(StaticVertex from, StaticVertex to, int eLabel) {

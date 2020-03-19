@@ -1,31 +1,35 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class Graph<V extends Vertex, E extends Edge> {
+public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
     private long graphId;
 
     private Map<Integer, V> vertices;
     private Map<Integer, AdjEdges<E>> adjLists;
 
-    public Graph(long id) {
+    public AGraph(long id) {
         this.graphId = id;
         vertices = new HashMap<>();
         adjLists = new HashMap<>();
     }
 
-    public Graph(long id, List<V> vertices, List<E> edges) {
+    public AGraph(long id, List<V> vertices, List<E> edges) {
         this(id);
 
-        for (V v : vertices) {
-            addVertex(v);
+        if (vertices != null) {
+            for (V v : vertices) {
+                addVertex(v);
+            }
         }
 
-        for (E e : edges) {
-            addEdge(e);
+        if (edges != null) {
+            for (E e : edges) {
+                addEdge(e);
+            }
         }
     }
 
@@ -58,19 +62,22 @@ public abstract class Graph<V extends Vertex, E extends Edge> {
         return adjLists.get(vertexId);
     }
 
-    public abstract int vLabel(V v);
-
-    public abstract int eLabel(E e);
+//    public abstract int vLabel(V v);
+//
+//    public abstract int eLabel(E e);
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (V v : vertices.values()) {
-            builder.append(vLabel(v)).append('\n');
-        }
+//        for (V v : vertices.values()) {
+//            builder.append(v.id()).append('\n');
+//        }
         for (AdjEdges<E> adj : adjLists.values()) {
             for (E e : adj) {
-                builder.append(eLabel(e)).append('\n');
+                builder.append(e.from().id())
+                        .append(" ")
+                        .append(e.to().id())
+                        .append('\n');
             }
         }
         return builder.toString();

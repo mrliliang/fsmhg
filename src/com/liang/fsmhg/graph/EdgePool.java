@@ -1,4 +1,4 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 import java.util.HashMap;
 import java.util.Map;

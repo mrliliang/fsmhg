@@ -1,4 +1,4 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -7,7 +7,7 @@ public class DynamicVertex extends Vertex {
 
     private NavigableMap<Long, Integer> labels;
 
-    public DynamicVertex(int id) {
+    private DynamicVertex(int id) {
         super(id);
         labels = new TreeMap<>();
     }

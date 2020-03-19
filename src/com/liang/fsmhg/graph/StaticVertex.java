@@ -1,4 +1,4 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 public class StaticVertex extends Vertex {
     private int label;

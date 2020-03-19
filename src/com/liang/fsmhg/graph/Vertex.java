@@ -1,6 +1,6 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
-public abstract class Vertex {
+public class Vertex {
     private int id;
 
     public Vertex(int id) {

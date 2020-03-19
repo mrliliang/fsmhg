@@ -1,4 +1,6 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
+
+import com.liang.fsmhg.graph.DynamicVertex;
 
 import java.util.HashMap;
 import java.util.Map;

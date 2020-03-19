@@ -1,9 +1,9 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class DynamicEdge extends Edge<DynamicVertex> {
+public class DynamicEdge extends AEdge<DynamicVertex> {
 
     private NavigableMap<Long, Integer> eLabels;
 

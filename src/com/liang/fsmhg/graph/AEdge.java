@@ -1,11 +1,11 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
-public class Edge<V extends Vertex> {
+public abstract class AEdge<V extends Vertex> {
 
     private V from;
     private V to;
 
-    public Edge(V from, V to) {
+    public AEdge(V from, V to) {
         this.from = from;
         this.to = to;
     }

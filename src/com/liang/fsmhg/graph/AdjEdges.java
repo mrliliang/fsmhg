@@ -1,9 +1,9 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
 
 import java.util.*;
 
-public class AdjEdges<E extends Edge> implements Iterable<E> {
+public class AdjEdges<E extends AEdge> implements Iterable<E> {
 
     private Map<Integer, E> edges;
 

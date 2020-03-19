@@ -1,11 +1,8 @@
-package com.liang.fsmhg;
+package com.liang.fsmhg.graph;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class StaticGraph extends Graph<StaticVertex, StaticEdge> {
+public class StaticGraph extends LabeledGraph<StaticVertex, StaticEdge> {
 
     public StaticGraph(long id) {
         super(id);
