@@ -16,7 +16,7 @@ public class DynamicEdge extends AEdge<DynamicVertex> {
         return eLabels.floorEntry(time).getValue();
     }
 
-    public void addLabel(long time, int label) {
+    protected void addLabel(long time, int label) {
         int oldLabel = eLabels.lastEntry().getValue();
         if (oldLabel != label)
         {

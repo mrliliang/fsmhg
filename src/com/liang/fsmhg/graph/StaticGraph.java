@@ -4,8 +4,12 @@ import java.util.List;
 
 public class StaticGraph extends LabeledGraph<StaticVertex, StaticEdge> {
 
+    public StaticGraph() {
+        this(0);
+    }
+
     public StaticGraph(long id) {
-        super(id);
+        this(id, null, null);
     }
 
     public StaticGraph(long id, List<StaticVertex> vertices, List<StaticEdge> edges) {

@@ -11,6 +11,10 @@ public class AdjEdges<E extends AEdge> implements Iterable<E> {
         edges = new HashMap<>();
     }
 
+    public int size() {
+        return edges.size();
+    }
+
     public E edgeTo(int to) {
         return edges.get(to);
     }
@@ -25,17 +29,18 @@ public class AdjEdges<E extends AEdge> implements Iterable<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return new Iterator<E>() {
-            Iterator<Map.Entry<Integer, E>> it = edges.entrySet().iterator();
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public E next() {
-                return it.next().getValue();
-            }
-        };
+        return edges.values().iterator();
+//        return new Iterator<E>() {
+//            Iterator<Map.Entry<Integer, E>> it = edges.entrySet().iterator();
+//            @Override
+//            public boolean hasNext() {
+//                return it.hasNext();
+//            }
+//
+//            @Override
+//            public E next() {
+//                return it.next().getValue();
+//            }
+//        };
     }
 }

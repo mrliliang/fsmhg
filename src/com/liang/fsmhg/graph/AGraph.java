@@ -50,6 +50,14 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
         return new ArrayList<>(vertices.values());
     }
 
+    public List<E> edges() {
+        List<E> edges = new ArrayList<>();
+        for (AdjEdges<E> adjEdges : adjLists.values()) {
+            edges.addAll(adjEdges.edges());
+        }
+        return edges;
+    }
+
     public V vertex(int id) {
         return vertices.get(id);
     }
@@ -60,6 +68,18 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
 
     public AdjEdges<E> adjEdges(int vertexId) {
         return adjLists.get(vertexId);
+    }
+
+    public int vSize() {
+        return vertices.size();
+    }
+
+    public int eSize() {
+        int size = 0;
+        for (AdjEdges<E> adjEdges : adjLists.values()) {
+            size += adjEdges.size();
+        }
+        return size;
     }
 
     @Override

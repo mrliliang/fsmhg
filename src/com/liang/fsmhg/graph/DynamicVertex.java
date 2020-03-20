@@ -16,12 +16,11 @@ public class DynamicVertex extends Vertex {
         return labels.floorEntry(time).getValue();
     }
 
-    public void addLabel(long time, int label) {
+    protected void addLabel(long time, int label) {
         int oldLabel = labels.lastEntry().getValue();
         if (oldLabel != label)
         {
             labels.put(time, label);
         }
     }
-
 }

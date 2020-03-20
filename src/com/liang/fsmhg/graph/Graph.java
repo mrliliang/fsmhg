@@ -3,8 +3,13 @@ package com.liang.fsmhg.graph;
 import java.util.List;
 
 public class Graph extends AGraph<Vertex, Edge> {
+
+    public Graph() {
+        this(0);
+    }
+
     public Graph(long id) {
-        super(id);
+        this(id, null, null);
     }
 
     public Graph(long id, List<Vertex> vertices, List<Edge> edges) {
