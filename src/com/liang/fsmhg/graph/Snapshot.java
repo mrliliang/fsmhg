@@ -25,4 +25,20 @@ public class Snapshot extends LabeledGraph<DynamicVertex, DynamicEdge> {
         return e.label(graphId());
     }
 
+    @Override
+    public DynamicVertex addVertex(int id, int label) {
+        DynamicVertex v = hg.vertex(id);
+        v.addLabel(graphId(), label);
+        addVertex(v);
+        return null;
+    }
+
+    @Override
+    public DynamicEdge addEdge(int from, int to, int eLabel) {
+        DynamicEdge e = hg.edge(from, to);
+        e.addLabel(graphId(), eLabel);
+        addEdge(e);
+        return e;
+    }
+
 }

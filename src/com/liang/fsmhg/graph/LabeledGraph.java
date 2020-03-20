@@ -5,7 +5,7 @@ import java.util.List;
 public abstract class LabeledGraph<V extends Vertex, E extends AEdge<V>> extends AGraph<V, E> {
 
     public LabeledGraph(long id) {
-        super(id);
+        this(id, null, null);
     }
 
     public LabeledGraph(long id, List vertices, List edges) {
@@ -15,6 +15,10 @@ public abstract class LabeledGraph<V extends Vertex, E extends AEdge<V>> extends
     public abstract int vLabel(V v);
 
     public abstract int eLabel(E e);
+
+    public abstract V addVertex(int id, int label);
+
+    public abstract E addEdge(int from, int to, int eLabel);
 
     @Override
     public String toString() {

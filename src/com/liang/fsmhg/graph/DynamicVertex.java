@@ -7,7 +7,7 @@ public class DynamicVertex extends Vertex {
 
     private NavigableMap<Long, Integer> labels;
 
-    private DynamicVertex(int id) {
+    protected DynamicVertex(int id) {
         super(id);
         labels = new TreeMap<>();
     }

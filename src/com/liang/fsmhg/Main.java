@@ -25,7 +25,22 @@ public class Main {
         ReturnList<A> rl = new ReturnList<>();
         Graph graph = new Graph(1);
         StaticGraph sg = new StaticGraph(1);
-        Snapshot snapshot = new Snapshot(1);
+
+        BitSet bitSet = new BitSet();
+        bitSet.set(1);
+        bitSet.set(100);
+        System.out.println(bitSet.size());
+        System.out.println(bitSet.get(1));
+        System.out.println(bitSet.get(100));
+        System.out.println(bitSet.get(129));
+        bitSet.set(200);
+        System.out.println(bitSet.size());
+        System.out.println(bitSet.get(200));
+
+        bitSet.set(1000000000);
+        bitSet.set(51332);
+        System.out.println(bitSet.size());
+        System.out.println(bitSet.get(51332));
 
     }
 

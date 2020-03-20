@@ -12,16 +12,27 @@ public class StaticGraph extends LabeledGraph<StaticVertex, StaticEdge> {
         super(id, vertices, edges);
     }
 
+    @Override
     public StaticVertex addVertex(int id, int label) {
         StaticVertex v = new StaticVertex(id, label);
         addVertex(v);
         return v;
     }
 
-    public StaticEdge addEdge(StaticVertex from, StaticVertex to, int eLabel) {
-        StaticEdge e = new StaticEdge(from, to, eLabel);
-        addEdge(e);
-        return e;
+    @Override
+    public StaticEdge addEdge(int from, int to, int eLabel) {
+        StaticVertex vfrom = vertex(from);
+        if (vfrom == null) {
+            throw new RuntimeException("No vertex " + from + ".");
+        }
+        StaticVertex vto = vertex(to);
+        if (vto == null) {
+            throw new RuntimeException("No vertex " + to + ".");
+        }
+        StaticEdge e = new StaticEdge(vfrom, vto, eLabel);
+        adjEdges(from).add(e);
+
+        return null;
     }
 
     @Override

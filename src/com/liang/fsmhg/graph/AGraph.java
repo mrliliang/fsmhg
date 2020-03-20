@@ -37,12 +37,12 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
         return graphId;
     }
 
-    public void addVertex(V v) {
+    protected void addVertex(V v) {
         vertices.put(v.id(), v);
         adjLists.put(v.id(), new AdjEdges<>());
     }
 
-    public void addEdge(E e) {
+    protected void addEdge(E e) {
         adjLists.get(e.from().id()).add(e);
     }
 
@@ -62,16 +62,9 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
         return adjLists.get(vertexId);
     }
 
-//    public abstract int vLabel(V v);
-//
-//    public abstract int eLabel(E e);
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-//        for (V v : vertices.values()) {
-//            builder.append(v.id()).append('\n');
-//        }
         for (AdjEdges<E> adj : adjLists.values()) {
             for (E e : adj) {
                 builder.append(e.from().id())
