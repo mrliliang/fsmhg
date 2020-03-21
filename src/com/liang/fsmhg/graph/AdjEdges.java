@@ -8,7 +8,7 @@ public class AdjEdges<E extends AEdge> implements Iterable<E> {
     private Map<Integer, E> edges;
 
     public AdjEdges() {
-        edges = new HashMap<>();
+        edges = new TreeMap<>();
     }
 
     public int size() {

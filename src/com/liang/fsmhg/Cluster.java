@@ -1,29 +1,24 @@
 package com.liang.fsmhg;
 
 
-import com.liang.fsmhg.graph.DynamicEdge;
-import com.liang.fsmhg.graph.DynamicVertex;
-import com.liang.fsmhg.graph.LabeledGraph;
-import com.liang.fsmhg.graph.Snapshot;
+import com.liang.fsmhg.graph.*;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Cluster implements Iterable<Snapshot> {
 
     private double similarity;
     private List<Snapshot> snapshots;
 
-    private List<DynamicVertex> intersectedVertices;
-    private List<DynamicEdge> intersectedEdges;
+    private List<DynamicVertex> commonVertices;
+    private Map<Integer, AdjEdges<DynamicEdge>> commonEdges;
 
 
     public Cluster(double similarity) {
         this.similarity = similarity;
         snapshots = new ArrayList<>();
-        intersectedVertices = new ArrayList<>();
-        intersectedEdges = new ArrayList<>();
+        commonVertices = new ArrayList<>();
+        commonEdges = new HashMap<>();
     }
 
     public List<Snapshot> snapshots() {
@@ -37,8 +32,10 @@ public class Cluster implements Iterable<Snapshot> {
     public boolean add(Snapshot s) {
         if (this.snapshots.size() == 0) {
             this.snapshots.add(s);
-            intersectedVertices = s.vertices();
-            intersectedEdges = s.edges();
+            commonVertices = s.vertices();
+            for (DynamicVertex v : commonVertices) {
+                commonEdges.put(v.id(), s.adjEdges(v.id()));
+            }
             return true;
         }
 
@@ -46,29 +43,13 @@ public class Cluster implements Iterable<Snapshot> {
     }
 
     private boolean similarityCheck(Snapshot s) {
-        Snapshot last = snapshots.get(snapshots.size() - 1);
-
-        List<DynamicVertex> vertices = new ArrayList<>(intersectedVertices);
-        vertices.retainAll(s.vertices());
-        Iterator<DynamicVertex> vertexIterator = vertices.iterator();
-        while (vertexIterator.hasNext()) {
-            DynamicVertex v = vertexIterator.next();
-            if (last.vLabel(v) != s.vLabel(v)) {
-                vertexIterator.remove();
-            }
+        List<DynamicVertex> vCommon = commonVertices(s);
+        Map<Integer, AdjEdges<DynamicEdge>> eCommon = commonEdges(vCommon, s);
+        int edgeNum = 0;
+        for (AdjEdges adjEdges : eCommon.values()) {
+            edgeNum += adjEdges.size();
         }
-
-        List<DynamicEdge> edges = new ArrayList<>(intersectedEdges);
-        edges.retainAll(s.edges());
-        Iterator<DynamicEdge> edgeIterator = edges.iterator();
-        while (edgeIterator.hasNext()) {
-            DynamicEdge e = edgeIterator.next();
-            if (last.eLabel(e) != s.eLabel(e)
-                    || last.vLabel(e.from()) != s.vLabel(e.from())
-                    || last.vLabel(e.to()) != s.vLabel(e.to())) {
-                edgeIterator.remove();
-            }
-        }
+        edgeNum /= edgeNum / 2;
 
 
         int denominator = 0;
@@ -76,19 +57,67 @@ public class Cluster implements Iterable<Snapshot> {
             denominator += (snapshot.vSize() + snapshot.eSize());
         }
         denominator += (s.vSize() + s.eSize());
-        double sim = (double)(snapshots.size() + 1) * (vertices.size() + edges.size()) / denominator;
+        double sim = (double)(snapshots.size() + 1) * (vCommon.size() + edgeNum) / denominator;
         if (sim >= similarity) {
-            intersectedVertices = vertices;
-            intersectedEdges = edges;
+            commonVertices = vCommon;
+            commonEdges = eCommon;
             return true;
         }
         return false;
     }
 
+    private List<DynamicVertex> commonVertices(Snapshot s) {
+        Snapshot last = snapshots.get(snapshots.size() - 1);
+        List<DynamicVertex> vCommon = new ArrayList<>();
+        for (DynamicVertex v : commonVertices) {
+            if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
+                vCommon.add(v);
+            }
+        }
+        return vCommon;
+    }
+
+    private Map<Integer, AdjEdges<DynamicEdge>> commonEdges(List<DynamicVertex> vCommon, Snapshot s) {
+        Snapshot last = snapshots.get(snapshots.size() - 1);
+        Map<Integer, AdjEdges<DynamicEdge>> eCommon = new HashMap<>();
+        for (DynamicVertex v : vCommon) {
+            AdjEdges<DynamicEdge> edges = new AdjEdges<>();
+            AdjEdges<DynamicEdge> edges1 = s.adjEdges(v.id());
+            for (DynamicEdge e : commonEdges.get(v.id())) {
+                DynamicEdge e1 = edges1.edgeTo(e.to().id());
+                if (last.vLabel(e.from()) == s.vLabel(e1.from())
+                        && last.vLabel(e.to()) == s.vLabel(e1.to())
+                        && last.eLabel(e) == s.eLabel(e1)) {
+                    edges.add(e);
+                }
+            }
+            eCommon.put(v.id(), edges);
+        }
+        return eCommon;
+    }
+
 
     public Intersection intersection() {
         Snapshot s = snapshots.get(snapshots.size() - 1);
-        return new Intersection(s.graphId(), intersectedVertices, intersectedEdges);
+        List<DynamicEdge> edges = new ArrayList<>();
+        for (AdjEdges adjEdges : commonEdges.values()) {
+            edges.addAll(adjEdges.edges());
+        }
+        return new Intersection(s.graphId(), commonVertices, edges);
+    }
+
+    public void delta(Snapshot s) {
+        // TODO: 2020/3/21 To be implemented for delta graph
+    }
+
+    public List<DynamicVertex> border() {
+        // TODO: 2020/3/21 To be implemented for border
+        return null;
+    }
+
+    public boolean isBorderEmbedding() {
+        // TODO: 2020/3/21 To be implemented for border embedding checking
+        return false;
     }
 
     @Override

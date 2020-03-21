@@ -1,5 +1,7 @@
 package com.liang.fsmhg.graph;
 
+import java.util.Comparator;
+
 public abstract class AEdge<V extends Vertex> {
 
     private V from;

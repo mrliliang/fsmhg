@@ -1,8 +1,7 @@
 package com.liang.fsmhg;
 
 import com.liang.fsmhg.graph.Graph;
-import com.liang.fsmhg.graph.Snapshot;
-import com.liang.fsmhg.graph.StaticGraph;
+
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -24,7 +23,7 @@ public class Main {
 
         ReturnList<A> rl = new ReturnList<>();
         Graph graph = new Graph(1);
-        StaticGraph sg = new StaticGraph(1);
+//        StaticGraph sg = new StaticGraph(1);
 
         BitSet bitSet = new BitSet();
         bitSet.set(1);

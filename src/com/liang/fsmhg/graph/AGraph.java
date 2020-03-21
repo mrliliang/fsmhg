@@ -1,9 +1,6 @@
 package com.liang.fsmhg.graph;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
     private long graphId;
@@ -11,14 +8,15 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
     private Map<Integer, V> vertices;
     private Map<Integer, AdjEdges<E>> adjLists;
 
+
     public AGraph(long id) {
-        this.graphId = id;
-        vertices = new HashMap<>();
-        adjLists = new HashMap<>();
+        this(id, null, null);
     }
 
     public AGraph(long id, List<V> vertices, List<E> edges) {
-        this(id);
+        this.graphId = id;
+        this.vertices = new HashMap<>();
+        this.adjLists = new HashMap<>();
 
         if (vertices != null) {
             for (V v : vertices) {
@@ -79,7 +77,7 @@ public abstract class AGraph<V extends Vertex, E extends AEdge<V>> {
         for (AdjEdges<E> adjEdges : adjLists.values()) {
             size += adjEdges.size();
         }
-        return size;
+        return size / 2;
     }
 
     @Override

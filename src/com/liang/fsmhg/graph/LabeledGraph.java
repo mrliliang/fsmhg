@@ -8,7 +8,7 @@ public abstract class LabeledGraph<V extends Vertex, E extends AEdge<V>> extends
         this(id, null, null);
     }
 
-    public LabeledGraph(long id, List vertices, List edges) {
+    public LabeledGraph(long id, List<V> vertices, List<E> edges) {
         super(id, vertices, edges);
     }
 
