@@ -1,5 +1,5 @@
 package com.liang.fsmhg;
 
-public class FSMHGWIN {
+public class Pattern {
 
 }
