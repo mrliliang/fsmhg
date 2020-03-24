@@ -5,12 +5,12 @@ import com.liang.fsmhg.graph.Graph;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
-	// write your code here
 
         BitSet bs = new BitSet(1000000);
         bs.set(1);
@@ -21,9 +21,7 @@ public class Main {
         VP vp = new VP();
         vp.test(0001,"5555","swa",87.845, new String("ssss"), new A());
 
-        ReturnList<A> rl = new ReturnList<>();
-        Graph graph = new Graph(1);
-//        StaticGraph sg = new StaticGraph(1);
+        ReturnList rl = new ReturnList<>();
 
         BitSet bitSet = new BitSet();
         bitSet.set(1);
@@ -40,6 +38,13 @@ public class Main {
         bitSet.set(51332);
         System.out.println(bitSet.size());
         System.out.println(bitSet.get(51332));
+
+        HashSet<Long> hashSet = new HashSet<>();
+        hashSet.add(Long.valueOf(1));
+        hashSet.add(Long.valueOf(1));
+        hashSet.add(Long.valueOf(1));
+        hashSet.add(Long.valueOf(1));
+        System.out.println("Hashset size = " + hashSet.size());
 
     }
 

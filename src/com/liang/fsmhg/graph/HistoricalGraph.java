@@ -7,7 +7,7 @@ import java.util.Map;
 public class HistoricalGraph {
 
     private Map<Integer, DynamicVertex> vMap;
-    private Map<Integer, AdjEdges<DynamicEdge>> adjLists;
+    private Map<Integer, AdjEdges> adjLists;
 
     long start;
     long end;
@@ -39,8 +39,8 @@ public class HistoricalGraph {
         if (vto == null) {
             throw new RuntimeException("No vertex " + to + ".");
         }
-        AdjEdges<DynamicEdge> adjEdges = adjLists.get(from);
-        DynamicEdge e = adjEdges.edgeTo(to);
+        AdjEdges adjEdges = adjLists.get(from);
+        DynamicEdge e = (DynamicEdge)adjEdges.edgeTo(to);
         if (e == null) {
             e = new DynamicEdge(vfrom, vto);
             adjEdges.add(e);

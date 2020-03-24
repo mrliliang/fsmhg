@@ -5,13 +5,13 @@ import com.liang.fsmhg.graph.*;
 
 import java.util.*;
 
-public class Cluster implements Iterable<Snapshot> {
+public class Cluster implements Iterable<LabeledGraph> {
 
     private double similarity;
-    private List<Snapshot> snapshots;
+    private List<LabeledGraph> snapshots;
 
-    private Map<Integer, DynamicVertex> commonVertices;
-    private Map<Integer, AdjEdges<DynamicEdge>> commonEdges;
+    private Map<Integer, LabeledVertex> commonVertices;
+    private Map<Integer, AdjEdges> commonEdges;
 
 
     public Cluster(double similarity) {
@@ -21,18 +21,18 @@ public class Cluster implements Iterable<Snapshot> {
         commonEdges = new HashMap<>();
     }
 
-    public List<Snapshot> snapshots() {
+    public List<LabeledGraph> snapshots() {
         return snapshots;
     }
 
-    public void remove(List<Snapshot> snapshots) {
+    public void remove(List<LabeledGraph> snapshots) {
         snapshots.removeAll(snapshots);
     }
 
-    public boolean add(Snapshot s) {
+    public boolean add(LabeledGraph s) {
         if (this.snapshots.size() == 0) {
             this.snapshots.add(s);
-            for (DynamicVertex v : s.vertices()) {
+            for (LabeledVertex v : s.vertices()) {
                 commonVertices.put(v.id(), v);
                 commonEdges.put(v.id(), s.adjEdges(v.id()));
             }
@@ -42,9 +42,9 @@ public class Cluster implements Iterable<Snapshot> {
         return similarityCheck(s);
     }
 
-    private boolean similarityCheck(Snapshot s) {
-        Map<Integer, DynamicVertex> vCommon = commonVertices(s);
-        Map<Integer, AdjEdges<DynamicEdge>> eCommon = commonEdges(vCommon, s);
+    private boolean similarityCheck(LabeledGraph s) {
+        Map<Integer, LabeledVertex> vCommon = commonVertices(s);
+        Map<Integer, AdjEdges> eCommon = commonEdges(vCommon, s);
         int edgeNum = 0;
         for (AdjEdges adjEdges : eCommon.values()) {
             edgeNum += adjEdges.size();
@@ -53,7 +53,7 @@ public class Cluster implements Iterable<Snapshot> {
 
 
         int denominator = 0;
-        for (Snapshot snapshot : snapshots) {
+        for (LabeledGraph snapshot : snapshots) {
             denominator += (snapshot.vSize() + snapshot.eSize());
         }
         denominator += (s.vSize() + s.eSize());
@@ -66,10 +66,10 @@ public class Cluster implements Iterable<Snapshot> {
         return false;
     }
 
-    private Map<Integer, DynamicVertex> commonVertices(Snapshot s) {
-        Snapshot last = snapshots.get(snapshots.size() - 1);
-        Map<Integer, DynamicVertex> vCommon = new HashMap<>();
-        for (DynamicVertex v : commonVertices.values()) {
+    private Map<Integer, LabeledVertex> commonVertices(LabeledGraph s) {
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        Map<Integer, LabeledVertex> vCommon = new HashMap<>();
+        for (LabeledVertex v : commonVertices.values()) {
             if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
                 vCommon.put(v.id(), v);
             }
@@ -77,14 +77,14 @@ public class Cluster implements Iterable<Snapshot> {
         return vCommon;
     }
 
-    private Map<Integer, AdjEdges<DynamicEdge>> commonEdges(Map<Integer, DynamicVertex> vCommon, Snapshot s) {
-        Snapshot last = snapshots.get(snapshots.size() - 1);
-        Map<Integer, AdjEdges<DynamicEdge>> eCommon = new HashMap<>();
-        for (DynamicVertex v : vCommon.values()) {
-            AdjEdges<DynamicEdge> edges = new AdjEdges<>();
-            AdjEdges<DynamicEdge> edges1 = s.adjEdges(v.id());
-            for (DynamicEdge e : commonEdges.get(v.id())) {
-                DynamicEdge e1 = edges1.edgeTo(e.to().id());
+    private Map<Integer, AdjEdges> commonEdges(Map<Integer, LabeledVertex> vCommon, LabeledGraph s) {
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        Map<Integer, AdjEdges> eCommon = new HashMap<>();
+        for (LabeledVertex v : vCommon.values()) {
+            AdjEdges edges = new AdjEdges();
+            AdjEdges edges1 = s.adjEdges(v.id());
+            for (LabeledEdge e : commonEdges.get(v.id())) {
+                LabeledEdge e1 = edges1.edgeTo(e.to().id());
                 if (last.vLabel(e.from()) == s.vLabel(e1.from())
                         && last.vLabel(e.to()) == s.vLabel(e1.to())
                         && last.eLabel(e) == s.eLabel(e1)) {
@@ -98,8 +98,8 @@ public class Cluster implements Iterable<Snapshot> {
 
 
     public Intersection intersection() {
-        Snapshot last = snapshots.get(snapshots.size() - 1);
-        List<DynamicEdge> edges = new ArrayList<>();
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : commonEdges.values()) {
             edges.addAll(adjEdges.edges());
         }
@@ -107,26 +107,26 @@ public class Cluster implements Iterable<Snapshot> {
     }
 
     public DeltaGraph delta(Snapshot s) {
-        Map<Integer, DynamicVertex> vDelta = new HashMap<>();
-        Map<Integer, AdjEdges<DynamicEdge>> eDelta = new HashMap<>();
-        Map<Integer, DynamicVertex> vBorder = new HashMap<>();
-        Map<Integer, AdjEdges<DynamicEdge>> eBorder = new HashMap<>();
-        for (DynamicVertex v : s.vertices()) {
+        Map<Integer, LabeledVertex> vDelta = new HashMap<>();
+        Map<Integer, AdjEdges> eDelta = new HashMap<>();
+        Map<Integer, LabeledVertex> vBorder = new HashMap<>();
+        Map<Integer, AdjEdges> eBorder = new HashMap<>();
+        for (LabeledVertex v : s.vertices()) {
             if (!commonVertices.containsKey(v.id())) {
                 vDelta.put(v.id(), v);
                 eDelta.put(v.id(), s.adjEdges(v.id()));
             }
         }
 
-        for (AdjEdges<DynamicEdge> adjEdges : eDelta.values()) {
-            for (DynamicEdge e : adjEdges) {
-                DynamicVertex from = e.from();
-                DynamicVertex to = e.to();
+        for (AdjEdges adjEdges : eDelta.values()) {
+            for (LabeledEdge e : adjEdges) {
+                LabeledVertex from = e.from();
+                LabeledVertex to = e.to();
                 if (commonVertices.containsKey(to.id())) {
                     vDelta.put(to.id(), to);
-                    AdjEdges<DynamicEdge> edges = eBorder.get(to.id());
+                    AdjEdges edges = eBorder.get(to.id());
                     if (edges == null) {
-                        edges = new AdjEdges<>();
+                        edges = new AdjEdges();
                         eBorder.put(to.id(), edges);
                     }
                     edges.add(s.edge(to.id(), from.id()));
@@ -137,8 +137,8 @@ public class Cluster implements Iterable<Snapshot> {
         vDelta.putAll(vBorder);
         eDelta.putAll(eBorder);
 
-        Snapshot last = snapshots.get(snapshots.size() - 1);
-        List<DynamicEdge> edges = new ArrayList<>();
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : eDelta.values()) {
             edges.addAll(adjEdges.edges());
         }
@@ -146,14 +146,14 @@ public class Cluster implements Iterable<Snapshot> {
     }
 
     @Override
-    public Iterator<Snapshot> iterator() {
+    public Iterator<LabeledGraph> iterator() {
         return snapshots.iterator();
     }
 
-    public static List<Cluster> partition(List<Snapshot> snapshots, double similarity) {
+    public static List<Cluster> partition(List<? extends LabeledGraph> snapshots, double similarity) {
         List<Cluster> clusters = new ArrayList<>();
         Cluster cluster = new Cluster(similarity);
-        for (Snapshot s : snapshots) {
+        for (LabeledGraph s : snapshots) {
             if (cluster.add(s)) {
                 continue;
             }
@@ -164,62 +164,62 @@ public class Cluster implements Iterable<Snapshot> {
         return clusters;
     }
 
-    public class Intersection extends LabeledGraph<DynamicVertex, DynamicEdge> {
+    public class Intersection extends LabeledGraph {
 
-        private Intersection(long id, List<DynamicVertex> vertices, List<DynamicEdge> edges) {
+        private Intersection(long id, List<? extends LabeledVertex> vertices, List<? extends LabeledEdge> edges) {
             super(id, vertices, edges);
         }
 
         @Override
-        public int vLabel(DynamicVertex v) {
+        public int vLabel(LabeledVertex v) {
             return v.label(graphId());
         }
 
         @Override
-        public int eLabel(DynamicEdge e) {
+        public int eLabel(LabeledEdge e) {
             return e.label(graphId());
         }
 
         @Override
-        public DynamicVertex addVertex(int id, int label) {
+        public LabeledVertex addVertex(int id, int label) {
             throw new RuntimeException("Not allowed to add vertex to intersection.");
         }
 
         @Override
-        public DynamicEdge addEdge(int from, int to, int eLabel) {
+        public LabeledEdge addEdge(int from, int to, int eLabel) {
             throw new RuntimeException("Not allowed to add edge to intersection.");
         }
     }
 
-    public class DeltaGraph extends LabeledGraph<DynamicVertex, DynamicEdge> {
-        private Map<Integer, DynamicVertex> border;
+    public class DeltaGraph extends LabeledGraph {
+        private Map<Integer, LabeledVertex> border;
 
-        private DeltaGraph(long id, List<DynamicVertex> vertices, List<DynamicEdge> edges, Map<Integer, DynamicVertex> border) {
+        private DeltaGraph(long id, List<? extends LabeledVertex> vertices, List<? extends LabeledEdge> edges, Map<Integer, LabeledVertex> border) {
             super(id, vertices, edges);
             this.border = border;
         }
 
-        public Map<Integer, DynamicVertex> border() {
+        public Map<Integer, LabeledVertex> border() {
             return border;
         }
 
         @Override
-        public int vLabel(DynamicVertex v) {
+        public int vLabel(LabeledVertex v) {
             return v.label(graphId());
         }
 
         @Override
-        public int eLabel(DynamicEdge e) {
+        public int eLabel(LabeledEdge e) {
             return e.label(graphId());
         }
 
         @Override
-        public DynamicVertex addVertex(int id, int label) {
+        public LabeledVertex addVertex(int id, int label) {
             throw new RuntimeException("Not allowed to add vertex to delta graph.");
         }
 
         @Override
-        public DynamicEdge addEdge(int from, int to, int eLabel) {
+        public LabeledEdge addEdge(int from, int to, int eLabel) {
             throw new RuntimeException("Not allowed to add edge to delta graph.");
         }
     }

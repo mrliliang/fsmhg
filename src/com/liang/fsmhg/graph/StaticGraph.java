@@ -2,7 +2,7 @@ package com.liang.fsmhg.graph;
 
 import java.util.List;
 
-public class StaticGraph extends LabeledGraph<StaticVertex, StaticEdge> {
+public class StaticGraph extends LabeledGraph {
 
     public StaticGraph() {
         this(0);
@@ -25,28 +25,37 @@ public class StaticGraph extends LabeledGraph<StaticVertex, StaticEdge> {
 
     @Override
     public StaticEdge addEdge(int from, int to, int eLabel) {
-        StaticVertex vfrom = vertex(from);
+        StaticVertex vfrom = (StaticVertex) vertex(from);
         if (vfrom == null) {
             throw new RuntimeException("No vertex " + from + ".");
         }
-        StaticVertex vto = vertex(to);
+        StaticVertex vto = (StaticVertex) vertex(to);
         if (vto == null) {
             throw new RuntimeException("No vertex " + to + ".");
         }
         StaticEdge e = new StaticEdge(vfrom, vto, eLabel);
         adjEdges(from).add(e);
 
-        return null;
+        return e;
     }
 
     @Override
-    public int vLabel(StaticVertex v) {
-        return v.label();
+    public int vLabel(LabeledVertex v) {
+        return v.label(graphId());
     }
 
     @Override
-    public int eLabel(StaticEdge e) {
-        return e.label();
+    public int eLabel(LabeledEdge e) {
+        return e.label(graphId());
     }
 
+    @Override
+    public AdjEdges adjEdges(int vertexId) {
+        return super.adjEdges(vertexId);
+    }
+
+    @Override
+    public List<LabeledVertex> vertices() {
+        return super.vertices();
+    }
 }

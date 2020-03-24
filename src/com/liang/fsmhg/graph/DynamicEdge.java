@@ -3,7 +3,7 @@ package com.liang.fsmhg.graph;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class DynamicEdge extends AEdge<DynamicVertex> {
+public class DynamicEdge extends LabeledEdge {
 
     private NavigableMap<Long, Integer> eLabels;
 

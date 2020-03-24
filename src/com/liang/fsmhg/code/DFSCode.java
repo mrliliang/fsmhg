@@ -1,8 +1,7 @@
 package com.liang.fsmhg.code;
 
 
-import com.liang.fsmhg.graph.StaticGraph;
-import com.liang.fsmhg.graph.StaticVertex;
+import com.liang.fsmhg.graph.*;
 
 import java.util.*;
 
@@ -55,18 +54,18 @@ public class DFSCode implements Comparable<DFSCode> {
         return nodeCount;
     }
 
-    public StaticGraph toGraph() {
-        StaticGraph g = new StaticGraph();
+    public LabeledGraph toGraph() {
+        LabeledGraph g = new StaticGraph();
 
         for (DFSEdge edge : edges) {
             int id = edge.from();
-            StaticVertex from = g.vertex(id);
+            LabeledVertex from = g.vertex(id);
             if (from == null) {
                 from = g.addVertex(id, edge.fromLabel());
             }
 
             id = edge.to();
-            StaticVertex to = g.vertex(id);
+            LabeledVertex to = g.vertex(id);
             if (to == null) {
                 to = g.addVertex(id, edge.toLabel());
             }

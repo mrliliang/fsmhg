@@ -1,6 +1,6 @@
 package com.liang.fsmhg.graph;
 
-public class StaticEdge extends AEdge<StaticVertex> {
+public class StaticEdge extends LabeledEdge {
     private int eLabel;
 
     public StaticEdge(StaticVertex from, StaticVertex to, int eLabel) {
@@ -22,5 +22,10 @@ public class StaticEdge extends AEdge<StaticVertex> {
                 .append(' ')
                 .append(eLabel);
         return builder.toString();
+    }
+
+    @Override
+    public int label(long time) {
+        return eLabel;
     }
 }

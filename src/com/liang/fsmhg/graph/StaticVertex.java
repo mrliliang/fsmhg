@@ -1,10 +1,15 @@
 package com.liang.fsmhg.graph;
 
-public class StaticVertex extends Vertex {
+public class StaticVertex extends LabeledVertex {
     private int label;
 
     public StaticVertex(int id) {
         super(id);
+    }
+
+    @Override
+    public int label(long time) {
+        return label;
     }
 
     public StaticVertex(int id, int label) {

@@ -3,9 +3,9 @@ package com.liang.fsmhg.graph;
 
 import java.util.*;
 
-public class AdjEdges<E extends AEdge> implements Iterable<E> {
+public class AdjEdges implements Iterable<LabeledEdge> {
 
-    private Map<Integer, E> edges;
+    private Map<Integer, LabeledEdge> edges;
 
     public AdjEdges() {
         edges = new TreeMap<>();
@@ -15,20 +15,20 @@ public class AdjEdges<E extends AEdge> implements Iterable<E> {
         return edges.size();
     }
 
-    public E edgeTo(int to) {
+    public LabeledEdge edgeTo(int to) {
         return edges.get(to);
     }
 
-    public void add(E e) {
+    public void add(LabeledEdge e) {
         edges.put(e.to().id(), e);
     }
 
-    public List<E> edges() {
+    public List<LabeledEdge> edges() {
         return new ArrayList<>(edges.values());
     }
 
     @Override
-    public Iterator<E> iterator() {
+    public Iterator<LabeledEdge> iterator() {
         return edges.values().iterator();
 //        return new Iterator<E>() {
 //            Iterator<Map.Entry<Integer, E>> it = edges.entrySet().iterator();

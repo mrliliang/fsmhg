@@ -3,7 +3,7 @@ package com.liang.fsmhg.graph;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-public class DynamicVertex extends Vertex {
+public class DynamicVertex extends LabeledVertex {
 
     private NavigableMap<Long, Integer> labels;
 
