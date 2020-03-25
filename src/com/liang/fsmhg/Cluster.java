@@ -13,6 +13,7 @@ public class Cluster implements Iterable<LabeledGraph> {
     private Map<Integer, LabeledVertex> commonVertices;
     private Map<Integer, AdjEdges> commonEdges;
 
+    private Map<Long, DeltaGraph> deltaGraphs;
 
     public Cluster(double similarity) {
         this.similarity = similarity;
@@ -23,6 +24,10 @@ public class Cluster implements Iterable<LabeledGraph> {
 
     public List<LabeledGraph> snapshots() {
         return snapshots;
+    }
+
+    public int size() {
+        return snapshots.size();
     }
 
     public void remove(List<LabeledGraph> snapshots) {
@@ -96,7 +101,6 @@ public class Cluster implements Iterable<LabeledGraph> {
         return eCommon;
     }
 
-
     public Intersection intersection() {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         List<LabeledEdge> edges = new ArrayList<>();
@@ -106,7 +110,7 @@ public class Cluster implements Iterable<LabeledGraph> {
         return new Intersection(last.graphId(), new ArrayList<>(commonVertices.values()), edges);
     }
 
-    public DeltaGraph delta(Snapshot s) {
+    private DeltaGraph computeDelta(LabeledGraph s) {
         Map<Integer, LabeledVertex> vDelta = new HashMap<>();
         Map<Integer, AdjEdges> eDelta = new HashMap<>();
         Map<Integer, LabeledVertex> vBorder = new HashMap<>();
@@ -123,7 +127,7 @@ public class Cluster implements Iterable<LabeledGraph> {
                 LabeledVertex from = e.from();
                 LabeledVertex to = e.to();
                 if (commonVertices.containsKey(to.id())) {
-                    vDelta.put(to.id(), to);
+                    vBorder.put(to.id(), to);
                     AdjEdges edges = eBorder.get(to.id());
                     if (edges == null) {
                         edges = new AdjEdges();
@@ -137,12 +141,35 @@ public class Cluster implements Iterable<LabeledGraph> {
         vDelta.putAll(vBorder);
         eDelta.putAll(eBorder);
 
-        LabeledGraph last = snapshots.get(snapshots.size() - 1);
         List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : eDelta.values()) {
             edges.addAll(adjEdges.edges());
         }
-        return new DeltaGraph(last.graphId(), new ArrayList<>(vDelta.values()), new ArrayList<>(edges), vBorder);
+        return new DeltaGraph(s.graphId(), new ArrayList<>(vDelta.values()), new ArrayList<>(edges), vBorder);
+    }
+
+    private void computeDeltas() {
+        Map<Long, DeltaGraph> deltaGraphs = new TreeMap<>();
+        for (LabeledGraph s : snapshots) {
+            deltaGraphs.put(s.graphId(), computeDelta(s));
+        }
+        this.deltaGraphs = deltaGraphs;
+    }
+
+    public List<DeltaGraph> deltaGraphs() {
+        return new ArrayList<>(deltaGraphs.values());
+    }
+
+    public DeltaGraph deltaGraph(LabeledGraph graph) {
+        return deltaGraphs.get(graph.graphId());
+    }
+
+    public Map<Integer, LabeledVertex> border() {
+        Map<Integer, LabeledVertex> map = new HashMap<>();
+        for (DeltaGraph delta : deltaGraphs.values()) {
+            map.putAll(delta.border());
+        }
+        return map;
     }
 
     @Override
@@ -158,6 +185,7 @@ public class Cluster implements Iterable<LabeledGraph> {
                 continue;
             }
             clusters.add(cluster);
+            cluster.computeDeltas();
             cluster = new Cluster(similarity);
             cluster.add(s);
         }

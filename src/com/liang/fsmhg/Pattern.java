@@ -1,25 +1,51 @@
 package com.liang.fsmhg;
 
+import com.liang.fsmhg.code.DFSEdge;
+import com.liang.fsmhg.graph.LabeledGraph;
+import com.liang.fsmhg.graph.Snapshot;
+
 import java.util.*;
 
 public class Pattern {
 
-    private Map<Long, List<Embedding>> embeddingMap;
-    private Map<Long, List<Embedding>> intersectionEmbeddings;
-    private Map<Long, List<Embedding>> borderEmbeddings;
+    private DFSEdge edge;
+    private Pattern parent;
 
-    public Pattern() {
+    private List<Cluster> clusters;
+
+    private Map<Long, List<Embedding>> embeddingMap;
+    private Map<Cluster, List<Embedding>> intersectionEmbeddings;
+    private Map<Cluster, List<Embedding>> borderEmbeddings;
+
+    public Pattern(DFSEdge edge, Pattern parent) {
+        this.edge = edge;
+        this.parent = parent;
+        this.clusters = new ArrayList<>();
+
         embeddingMap = new TreeMap<>();
         intersectionEmbeddings = new TreeMap<>();
         borderEmbeddings = new TreeMap<>();
     }
 
+    public DFSEdge edge() {
+        return edge;
+    }
+
+    public Pattern parent() {
+        return parent;
+    }
+
     public int support() {
-        HashSet<Long> graphIds = new HashSet<>();
-        graphIds.addAll(embeddingMap.keySet());
-        graphIds.addAll(intersectionEmbeddings.keySet());
-        graphIds.addAll(borderEmbeddings.keySet());
-        return graphIds.size();
+        return embeddingMap.size();
+    }
+
+    public void addCluster(Cluster c) {
+        clusters.add(c);
+        for (LabeledGraph g : c.snapshots()) {
+            if (!embeddingMap.containsKey(g.graphId())) {
+                embeddingMap.put(g.graphId(), new ArrayList<>());
+            }
+        }
     }
 
     public List<Embedding> embeddings(long graphId) {
@@ -31,13 +57,13 @@ public class Pattern {
         embeddings.add(em);
     }
 
-    public void addIntersectionEmbedding(long graphId, Embedding em) {
-        List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(graphId, aLong -> new ArrayList<>());
+    public void addIntersectionEmbedding(Cluster c, Embedding em) {
+        List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, aLong -> new ArrayList<>());
         embeddings.add(em);
     }
 
-    public void addBorderEmbedding(long graphId, Embedding em) {
-        List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(graphId, aLong -> new ArrayList<>());
+    public void addBorderEmbedding(Cluster c, Embedding em) {
+        List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, aLong -> new ArrayList<>());
         embeddings.add(em);
     }
 }
