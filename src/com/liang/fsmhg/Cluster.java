@@ -5,7 +5,8 @@ import com.liang.fsmhg.graph.*;
 
 import java.util.*;
 
-public class Cluster implements Iterable<LabeledGraph> {
+public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
+    private int index;
 
     private double similarity;
     private List<LabeledGraph> snapshots;
@@ -28,6 +29,10 @@ public class Cluster implements Iterable<LabeledGraph> {
 
     public int size() {
         return snapshots.size();
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public void remove(List<LabeledGraph> snapshots) {
@@ -149,11 +154,10 @@ public class Cluster implements Iterable<LabeledGraph> {
     }
 
     private void computeDeltas() {
-        Map<Long, DeltaGraph> deltaGraphs = new TreeMap<>();
+        this.deltaGraphs = new TreeMap<>();
         for (LabeledGraph s : snapshots) {
             deltaGraphs.put(s.graphId(), computeDelta(s));
         }
-        this.deltaGraphs = deltaGraphs;
     }
 
     public List<DeltaGraph> deltaGraphs() {
@@ -177,19 +181,27 @@ public class Cluster implements Iterable<LabeledGraph> {
         return snapshots.iterator();
     }
 
-    public static List<Cluster> partition(List<? extends LabeledGraph> snapshots, double similarity) {
+    public static List<Cluster> partition(List<? extends LabeledGraph> snapshots, double similarity, int startIndex) {
         List<Cluster> clusters = new ArrayList<>();
         Cluster cluster = new Cluster(similarity);
+        cluster.setIndex(startIndex++);
         for (LabeledGraph s : snapshots) {
             if (cluster.add(s)) {
                 continue;
             }
-            clusters.add(cluster);
             cluster.computeDeltas();
+            clusters.add(cluster);
             cluster = new Cluster(similarity);
-            cluster.add(s);
+            cluster.setIndex(startIndex++);
         }
+        cluster.computeDeltas();
+        clusters.add(cluster);
         return clusters;
+    }
+
+    @Override
+    public int compareTo(Cluster other) {
+        return this.index - other.index;
     }
 
     public class Intersection extends LabeledGraph {

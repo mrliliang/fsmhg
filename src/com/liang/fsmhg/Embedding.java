@@ -15,6 +15,10 @@ public class Embedding {
         this.parent = parent;
     }
 
+    public LabeledVertex vertex() {
+        return v;
+    }
+
     public List<LabeledVertex> vertices() {
         return vertices(1);
     }

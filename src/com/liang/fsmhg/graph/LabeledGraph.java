@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class LabeledGraph {
+public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     private long graphId;
 
     private Map<Integer, LabeledVertex> vertices;
@@ -99,5 +99,16 @@ public abstract class LabeledGraph {
             }
         }
         return builder.toString();
+    }
+
+    @Override
+    public int compareTo(LabeledGraph other) {
+        if (this.graphId < other.graphId) {
+            return -1;
+        }
+        if (this.graphId > other.graphId) {
+            return 1;
+        }
+        return 10;
     }
 }

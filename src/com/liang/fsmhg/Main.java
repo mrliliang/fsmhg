@@ -3,10 +3,7 @@ package com.liang.fsmhg;
 import com.liang.fsmhg.graph.Graph;
 
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class Main {
 
@@ -46,6 +43,15 @@ public class Main {
         hashSet.add(Long.valueOf(1));
         System.out.println("Hashset size = " + hashSet.size());
 
+        TreeSet<A> set = new TreeSet<>();
+        set.add(new A(1));
+        set.add(new A(2));
+        set.add(new A(3));
+        for (A a : set) {
+            System.out.println(a.a);
+        }
+
+
     }
 
 
@@ -60,6 +66,16 @@ class VP {
 }
 
 class A {
+    public int a;
+
+    public A() {
+
+    }
+
+    public A(int i) {
+        a = i;
+    }
+
     @Override
     public String toString() {
         return "A{}";

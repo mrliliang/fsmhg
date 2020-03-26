@@ -12,6 +12,7 @@ public class PatternTree {
     private Map<DFSEdge, Pattern> edges;
 
     private Enumerator enumerator;
+    private int clusterCounter;
 
     public PatternTree(Enumerator enumerator) {
         this.enumerator = enumerator;
@@ -24,10 +25,18 @@ public class PatternTree {
     }
 
     public void grow(Map<Long, ? extends LabeledGraph> newTrans, double minSupport, double similarity, int maxEdgeSize) {
-        List<Cluster> clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity);
-        List<PointPattern> points = enumerator.points(this.points, clusters);
+        List<Cluster> clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
+        clusterCounter += clusters.size();
+        Map<Integer, PointPattern> points = enumerator.points(this.points, clusters);
 
-        List<Pattern> edges = enumerator.edges(points, this.edges, clusters);
+        Map<DFSEdge, Pattern> edges = enumerator.edges(new ArrayList<>(points.values()), clusters);
+
+        for (Pattern p : edges.values()) {
+
+            clusters = Cluster.partition(p.unClusteredGraphs(), similarity, clusterCounter);
+            clusterCounter += clusters.size();
+            enumerator.subgraphMining(p, minSupport, maxEdgeSize);
+        }
 
     }
 }
