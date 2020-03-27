@@ -35,6 +35,10 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         this.index = index;
     }
 
+    public int index() {
+        return index;
+    }
+
     public void remove(List<LabeledGraph> snapshots) {
         snapshots.removeAll(snapshots);
     }
@@ -201,6 +205,9 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
 
     @Override
     public int compareTo(Cluster other) {
+        if (other == null) {
+            return 1;
+        }
         return this.index - other.index;
     }
 

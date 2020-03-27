@@ -1,6 +1,7 @@
 package com.liang.fsmhg.code;
 
 
+import com.liang.fsmhg.Pattern;
 import com.liang.fsmhg.graph.*;
 
 import java.util.*;
@@ -135,7 +136,9 @@ public class DFSCode implements Comparable<DFSCode> {
         return false;
     }
 
-//    public boolean isMin() {
+
+    public boolean isMin() {
+        // TODO: 2020/3/27 need to check min DFS code
 //        if (edges.size() == 1) {
 //            DFSEdge edge = edges.get(0);
 //            return edge.from() == 0 && edge.to() == 1 && edge.fromLabel() <= edge.toLabel();
@@ -179,69 +182,70 @@ public class DFSCode implements Comparable<DFSCode> {
 //                }
 //            }
 //        }
-//
-////        DFSEdge edge = patternMap.firstKey();
-////        if (!edges.get(0).equals(edge)) {
-////            return false;
-////        }
-////
-////
-////        return isNextEdgeMin(g, patternMap.firstEntry().getValue(), 1);
-//
-//        if (!edges.get(0).equals(minDfsEdge)) {
+
+//        DFSEdge edge = patternMap.firstKey();
+//        if (!edges.get(0).equals(edge)) {
 //            return false;
 //        }
 //
+//
+//        return isNextEdgeMin(g, patternMap.firstEntry().getValue(), 1);
+
+//        if (!edges.get(0).equals(minDfsEdge)) {
+//            return false;
+//        }
+
 //        return isNextEdgeMin(g, minPattern, 1);
-//    }
+        return false;
+    }
 
 
-//    private boolean isNextEdgeMin(Graph g, Pattern p, int count) {
-//        if (count == edges.size()) {
-//            return true;
+    private boolean isNextEdgeMin(Graph g, Pattern p, int count) {
+        if (count == edges.size()) {
+            return true;
+        }
+
+//        ArrayList<Integer> rmPath = p.getDfsCode().rightMostPath();
+
+//        TreeMap<DFSEdge, Pattern> patternMap = new TreeMap<>();
+//
+//        p.expandBackward(0, g, p.embeddings(0), rmPath, patternMap);
+//        Map.Entry<DFSEdge, Pattern> entry = patternMap.firstEntry();
+//        DFSEdge edge = entry != null ? patternMap.firstKey() : null;
+//        if (edge != null) {
+//            if (edges.get(count).equals(edge)) {
+//                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
+//            } else {
+//                return false;
+//            }
 //        }
 //
-//        ArrayList<Integer> rmPath = p.getDfsCode().rightMostPath();
+//        patternMap.clear();
+//        p.expandRmVertexForward(0, g, p.embeddings(0), rmPath, patternMap);
+//        entry = patternMap.firstEntry();
+//        edge = entry != null ? patternMap.firstKey() : null;
+//        if (edge != null) {
+//            if (edges.get(count).equals(edge)) {
+//                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
+//            } else {
+//                return false;
+//            }
+//        }
 //
-////        TreeMap<DFSEdge, Pattern> patternMap = new TreeMap<>();
-////
-////        p.expandBackward(0, g, p.embeddings(0), rmPath, patternMap);
-////        Map.Entry<DFSEdge, Pattern> entry = patternMap.firstEntry();
-////        DFSEdge edge = entry != null ? patternMap.firstKey() : null;
-////        if (edge != null) {
-////            if (edges.get(count).equals(edge)) {
-////                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
-////            } else {
-////                return false;
-////            }
-////        }
-////
-////        patternMap.clear();
-////        p.expandRmVertexForward(0, g, p.embeddings(0), rmPath, patternMap);
-////        entry = patternMap.firstEntry();
-////        edge = entry != null ? patternMap.firstKey() : null;
-////        if (edge != null) {
-////            if (edges.get(count).equals(edge)) {
-////                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
-////            } else {
-////                return false;
-////            }
-////        }
-////
-////        patternMap.clear();
-////        p.expandRmPathForward(0, g, p.embeddings(0), rmPath, patternMap);
-////        entry = patternMap.firstEntry();
-////        edge = entry != null ? patternMap.firstKey() : null;
-////        if (edge != null && edges.get(count).equals(edge)) {
-////            if (edges.get(count).equals(edge)) {
-////                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
-////            } else {
-////                return false;
-////            }
-////        }
-//
-//
-//
+//        patternMap.clear();
+//        p.expandRmPathForward(0, g, p.embeddings(0), rmPath, patternMap);
+//        entry = patternMap.firstEntry();
+//        edge = entry != null ? patternMap.firstKey() : null;
+//        if (edge != null && edges.get(count).equals(edge)) {
+//            if (edges.get(count).equals(edge)) {
+//                return isNextEdgeMin(g, patternMap.firstEntry().getValue(), count + 1);
+//            } else {
+//                return false;
+//            }
+//        }
+
+
+
 //        Pattern expand = p.minBackwardPattern(0, g, p.embeddings(0), rmPath);
 //        if (expand != null) {
 //            DFSEdge dfsEdge = expand.getDfsCode().lastEdge();
@@ -271,9 +275,9 @@ public class DFSCode implements Comparable<DFSCode> {
 //                return false;
 //            }
 //        }
-//
-//        return false;
-//    }
+
+        return false;
+    }
 
     @Override
     public String toString() {

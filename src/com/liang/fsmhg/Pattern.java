@@ -1,5 +1,6 @@
 package com.liang.fsmhg;
 
+import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.Snapshot;
@@ -12,19 +13,24 @@ public class Pattern {
     private DFSEdge edge;
     private Pattern parent;
 
-    private Map<LabeledGraph, List<Embedding>> embeddingMap;
-    private Map<Cluster, List<Embedding>> intersectionEmbeddings;
-    private Map<Cluster, List<Embedding>> borderEmbeddings;
+    private TreeMap<LabeledGraph, List<Embedding>> embeddingMap;
+    private TreeMap<Cluster, List<Embedding>> intersectionEmbeddings;
+    private TreeMap<Cluster, List<Embedding>> borderEmbeddings;
+
+    private Cluster clusterDelimiter;
 
     private Map<DFSEdge, Pattern> children;
+
+    private boolean isMinChecked;
+    private boolean minCheckResult;
 
     public Pattern(DFSEdge edge, Pattern parent) {
         this.edge = edge;
         this.parent = parent;
 
         embeddingMap = new TreeMap<>();
-        intersectionEmbeddings = new LinkedHashMap<>();
-        borderEmbeddings = new LinkedHashMap<>();
+        intersectionEmbeddings = new TreeMap<>();
+        borderEmbeddings = new TreeMap<>();
 
         children = new TreeMap<>();
     }
@@ -37,22 +43,39 @@ public class Pattern {
         return parent;
     }
 
-    public int support() {
+    public int frequency() {
         return embeddingMap.size();
     }
 
+    public DFSCode code() {
+        // TODO: 2020/3/27 need correct DFS code
+        return new DFSCode();
+    }
+
+    public boolean checkMin() {
+        if (!isMinChecked) {
+            minCheckResult = code().isMin();
+            isMinChecked = true;
+        }
+        return minCheckResult;
+    }
+
     public List<LabeledGraph> unClusteredGraphs() {
-        List<LabeledGraph> graphs = new ArrayList<>(embeddingMap.keySet());
-        for (Cluster c : intersectionEmbeddings.keySet()) {
+        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.keySet());
+        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
+        clusters.addAll(borderEmbeddings.keySet());
+        for (Cluster c : clusters) {
             graphs.removeAll(c.snapshots());
         }
 
-        for (Cluster c : borderEmbeddings.keySet()) {
-            if (!intersectionEmbeddings.containsKey(c)) {
-                graphs.removeAll(c.snapshots());
-            }
-        }
-        return graphs;
+        return new ArrayList<>(graphs);
+    }
+
+    public List<Cluster> newClusters() {
+        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.tailMap(clusterDelimiter).keySet());
+        clusters.addAll(borderEmbeddings.tailMap(clusterDelimiter).keySet());
+        clusters.remove(clusterDelimiter);
+        return new ArrayList<>(clusters);
     }
 
     public List<Embedding> embeddings(long graphId) {
@@ -73,8 +96,9 @@ public class Pattern {
     }
 
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
-        List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, c1 -> {
-            for (LabeledGraph g : c1.snapshots()) {
+        List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
+            clusterDelimiter = key;
+            for (LabeledGraph g : key.snapshots()) {
                 if (!embeddingMap.containsKey(g)) {
                     embeddingMap.put(g, new ArrayList<>());
                 }
@@ -85,8 +109,9 @@ public class Pattern {
     }
 
     public void addBorderEmbedding(Cluster c, Embedding em) {
-        List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, c1 -> {
-            for (LabeledGraph g : c1.snapshots()) {
+        List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, key -> {
+            clusterDelimiter = key;
+            for (LabeledGraph g : key.snapshots()) {
                 if (!embeddingMap.containsKey(g)) {
                     embeddingMap.put(g, new ArrayList<>());
                 }

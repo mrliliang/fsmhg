@@ -12,6 +12,25 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Enumerator {
+    private Map<Integer, PointPattern> points;
+    private int clusterCounter;
+
+    public void enumerate(Map<Long, LabeledGraph> newTrans, double minSupport, double similarity, int maxEdgeSize) {
+        List<Cluster> clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
+        clusterCounter += clusters.size();
+        Map<Integer, PointPattern> points = points(this.points, clusters);
+        Map<DFSEdge, Pattern> edges = edges(new ArrayList<>(points.values()), clusters);
+
+        for (Pattern p : edges.values()) {
+            if (p.frequency() < minSupport || p.code().edgeSize() < maxEdgeSize) {
+                continue;
+            }
+            clusters = Cluster.partition(p.unClusteredGraphs(), similarity, clusterCounter);
+            clusterCounter += clusters.size();
+            subgraphMining(newTrans, p, minSupport, maxEdgeSize, similarity);
+        }
+    }
+
 
     public Map<Integer, PointPattern> points(Map<Integer, PointPattern> oldPoints, List<Cluster> clusters) {
         Map<Integer, PointPattern> newPoints = new TreeMap<>();
@@ -125,8 +144,34 @@ public class Enumerator {
     }
 
 
-    public void subgraphMining(Pattern p, double minSup, int maxEdgeSize) {
+    public void subgraphMining(Map<Long, LabeledGraph> trans, Pattern parent, double minSup, int maxEdgeSize, double similarity) {
+        if (!parent.checkMin()) {
+            return;
+        }
 
+        List<Cluster> clusters = parent.newClusters();
+        int startIndex = clusters.get(clusters.size() - 1).index() + 1;
+        List<Cluster> additionClusters = Cluster.partition(parent.unClusteredGraphs(), similarity, startIndex);
+        clusters.addAll(additionClusters);
+
+        List<Pattern> children = enumerateChildren(clusters, parent);
+        if (children == null || children.size() == 0) {
+            return;
+        }
+        for (Pattern p : children) {
+            if (p.code().edgeSize() >= maxEdgeSize) {
+                return;
+            }
+            if (p.frequency() < minSup * trans.size()) {
+                continue;
+            }
+            subgraphMining(trans, p, minSup, maxEdgeSize, similarity);
+        }
+    }
+
+    private List<Pattern> enumerateChildren(List<Cluster> clusters, Pattern p) {
+        // TODO: 2020/3/27 enumerate children
+        return null;
     }
 
 }
