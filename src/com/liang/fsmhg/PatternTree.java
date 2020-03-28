@@ -41,7 +41,7 @@ public class PatternTree {
                 return;
             }
 
-            enumerator.subgraphMining(trans, p, minSupport, maxEdgeSize, similarity);
+            enumerator.subgraphMining(trans, p, minSupport, maxEdgeSize);
         }
 
     }

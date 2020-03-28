@@ -25,9 +25,7 @@ public class Enumerator {
             if (p.frequency() < minSupport || p.code().edgeSize() < maxEdgeSize) {
                 continue;
             }
-            clusters = Cluster.partition(p.unClusteredGraphs(), similarity, clusterCounter);
-            clusterCounter += clusters.size();
-            subgraphMining(newTrans, p, minSupport, maxEdgeSize, similarity);
+            subgraphMining(newTrans, p, minSupport, maxEdgeSize);
         }
     }
 
@@ -94,6 +92,9 @@ public class Enumerator {
         for (PointPattern p : points) {
             for (Embedding em : p.borderEmbeddings(c)) {
                 for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
+                    if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
+                        continue;
+                    }
                     Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
                     if (child == null) {
                         child = p.addChild(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
@@ -105,6 +106,9 @@ public class Enumerator {
 
             for (Embedding em : p.intersectionEmbeddings(c)) {
                 for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
+                    if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
+                        continue;
+                    }
                     Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
                     if (child == null) {
                         child = p.addChild(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
@@ -122,6 +126,9 @@ public class Enumerator {
             for (PointPattern p : points) {
                 for (Embedding em : p.embeddings(g.graphId())) {
                     for (LabeledEdge e : g.adjEdges(em.vertex().id())) {
+                        if (g.vLabel(e.from()) > g.vLabel(e.to())) {
+                            continue;
+                        }
                         Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
                         if (child == null) {
                             child = p.addChild(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
@@ -144,17 +151,12 @@ public class Enumerator {
     }
 
 
-    public void subgraphMining(Map<Long, LabeledGraph> trans, Pattern parent, double minSup, int maxEdgeSize, double similarity) {
+    public void subgraphMining(Map<Long, LabeledGraph> trans, Pattern parent, double minSup, int maxEdgeSize) {
         if (!parent.checkMin()) {
             return;
         }
 
-        List<Cluster> clusters = parent.newClusters();
-        int startIndex = clusters.get(clusters.size() - 1).index() + 1;
-        List<Cluster> additionClusters = Cluster.partition(parent.unClusteredGraphs(), similarity, startIndex);
-        clusters.addAll(additionClusters);
-
-        List<Pattern> children = enumerateChildren(clusters, parent);
+        List<Pattern> children = enumerateChildren(parent);
         if (children == null || children.size() == 0) {
             return;
         }
@@ -165,13 +167,68 @@ public class Enumerator {
             if (p.frequency() < minSup * trans.size()) {
                 continue;
             }
-            subgraphMining(trans, p, minSup, maxEdgeSize, similarity);
+            subgraphMining(trans, p, minSup, maxEdgeSize);
         }
     }
 
-    private List<Pattern> enumerateChildren(List<Cluster> clusters, Pattern p) {
+    private List<Pattern> enumerateChildren(Pattern p) {
         // TODO: 2020/3/27 enumerate children
-        return null;
+        Map<DFSEdge, Pattern> newChildren = new TreeMap<>();
+        for (Cluster c : p.newClusters()) {
+            expandInterEmbeddings(p, c, newChildren);
+            expandBorderEmbeddings(p, c, newChildren);
+        }
+        for (LabeledGraph g : p.unClusteredGraphs()) {
+            expandOtherEmbeddings(p, g, newChildren);
+        }
+        return new ArrayList<>(newChildren.values());
+    }
+
+    private void expandInterEmbeddings(Pattern p, Cluster c, Map<DFSEdge, Pattern> newChildren) {
+        LabeledGraph inter = c.intersection();
+        List<Integer> rmPath = p.code().rightMostPath();
+
+
+        for (Embedding em : p.intersectionEmbeddings(c)) {
+            for (int v : rmPath) {
+                // TODO: 2020/3/28 backward edge
+
+                // TODO: 2020/3/28 forward edges on right most vertex
+
+                // TODO: 2020/3/28 forward edges on right most path
+            }
+        }
+
+        for (Embedding em : p.borderEmbeddings(c)) {
+            for (int v : rmPath) {
+                // TODO: 2020/3/28 backward edge
+
+                // TODO: 2020/3/28 forward edges on right most vertex
+
+                // TODO: 2020/3/28 forward edges on right most path
+            }
+        }
+
+    }
+
+    private void expandBorderEmbeddings(Pattern p, Cluster c, Map<DFSEdge, Pattern> newChildren) {
+
+    }
+
+    private void expandOtherEmbeddings(Pattern p, LabeledGraph g, Map<DFSEdge, Pattern> newChildren) {
+
+    }
+
+    private void getBackwardEdge() {
+
+    }
+
+    private void getRmVertexForward() {
+
+    }
+
+    private void getRmPathForward() {
+
     }
 
 }
