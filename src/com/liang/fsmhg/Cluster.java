@@ -148,6 +148,15 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         }
 
         vDelta.putAll(vBorder);
+        for (LabeledVertex v1 : vDelta.values()) {
+            for (LabeledVertex v2 : vDelta.values()) {
+                LabeledEdge e1 = s.edge(v1.id(), v2.id());
+                LabeledEdge e2 = commonEdges.get(v1.id()).edgeTo(v2.id());
+                if (e1 != null && e2 == null) {
+                    eDelta.get(v1.id()).add(e1);
+                }
+            }
+        }
         eDelta.putAll(eBorder);
 
         List<LabeledEdge> edges = new ArrayList<>();

@@ -48,8 +48,15 @@ public class Pattern {
     }
 
     public DFSCode code() {
-        // TODO: 2020/3/27 need correct DFS code
-        return new DFSCode();
+        if (parent instanceof PointPattern) {
+            DFSCode code = new DFSCode();
+            code.add(edge);
+            return code;
+        }
+
+        DFSCode code = parent.code();
+        code.add(edge);
+        return code;
     }
 
     public boolean checkMin() {
@@ -78,8 +85,8 @@ public class Pattern {
         return new ArrayList<>(clusters);
     }
 
-    public List<Embedding> embeddings(long graphId) {
-        return embeddingMap.get(graphId);
+    public List<Embedding> embeddings(LabeledGraph graph) {
+        return embeddingMap.get(graph);
     }
 
     public List<Embedding> intersectionEmbeddings(Cluster c) {

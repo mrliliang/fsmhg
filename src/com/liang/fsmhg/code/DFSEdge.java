@@ -1,6 +1,6 @@
 package com.liang.fsmhg.code;
 
-public class DFSEdge implements Comparable<DFSEdge> {
+public class  DFSEdge implements Comparable<DFSEdge> {
     private int from;
     private int to;
     private int fromLabel;

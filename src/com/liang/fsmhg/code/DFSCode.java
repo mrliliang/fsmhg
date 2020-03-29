@@ -56,6 +56,7 @@ public class DFSCode implements Comparable<DFSCode> {
     }
 
     public LabeledGraph toGraph() {
+        // TODO: 2020/3/29 Convert DFS code to graph
         LabeledGraph g = new StaticGraph();
 
         for (DFSEdge edge : edges) {
@@ -140,64 +141,59 @@ public class DFSCode implements Comparable<DFSCode> {
 
     public boolean isMin() {
         // TODO: 2020/3/27 need to check min DFS code
-//        if (edges.size() == 1) {
-//            DFSEdge edge = edges.get(0);
-//            return edge.from() == 0 && edge.to() == 1 && edge.fromLabel() <= edge.toLabel();
-//        }
-//
-//        Graph g = toGraph();
-//        TreeMap<DFSEdge, Pattern> patternMap = new TreeMap<>();
-//
-//        Comparator<DFSEdge> comparator = new RmPathForwardComparator();
-//        DFSEdge minDfsEdge = null;
-//        Pattern minPattern = null;
-//        for (Vertex v : g.vertices()) {
-//            for (Edge e : g.adjEdges(v.id())) {
-//                Vertex from = e.from();
-//                Vertex to = e.to();
-//                if (from.label() > to.label()) {
-//                    continue;
-//                }
-////                DFSEdge key = new DFSEdge(0, 1, from.label(), to.label(), e.label());
-////                Pattern pattern = patternMap.get(key);
-////                if (pattern == null) {
-////                    DFSCode code = new DFSCode();
-////                    code.add(key);
-////                    pattern = new Pattern();
-////                    pattern.setDfsCode(code);
-////                    patternMap.put(key, pattern);
-////                }
-////                pattern.addEmbedding(0, e, null);
-//
-//
-//                DFSEdge dfsEdge = new DFSEdge(0, 1, from.label(), to.label(), e.label());
-//                if (dfsEdge.equals(minDfsEdge)) {
-//                    minPattern.addEmbedding(0, e, null);
-//                } else if (minDfsEdge == null || minDfsEdge.compareTo(dfsEdge) > 0) {
-////                } else if (minDfsEdge == null || comparator.compare(minDfsEdge, dfsEdge) > 0) {
-//                    minDfsEdge = dfsEdge;
-//                    DFSCode code = new DFSCode(null, minDfsEdge);
-//                    minPattern = new Pattern();
-//                    minPattern.setDfsCode(code);
-//                    minPattern.addEmbedding(0, e, null);
-//                }
-//            }
-//        }
+        DFSEdge firstEdge = edges.get(0);
+        if (edges.size() == 1) {
+            return firstEdge.from() == 0 && firstEdge.to() == 1 && firstEdge.fromLabel() <= firstEdge.toLabel();
+        }
 
-//        DFSEdge edge = patternMap.firstKey();
-//        if (!edges.get(0).equals(edge)) {
-//            return false;
-//        }
-//
-//
-//        return isNextEdgeMin(g, patternMap.firstEntry().getValue(), 1);
+        LabeledGraph g = toGraph();
 
-//        if (!edges.get(0).equals(minDfsEdge)) {
-//            return false;
-//        }
+        List<LabeledEdge> embeddings = new ArrayList<>(edges.size());
+        for (LabeledVertex v : g.vertices()) {
+            if (g.vLabel(v) != firstEdge.fromLabel()) {
+                continue;
+            }
+            for (LabeledEdge e : g.adjEdges(v.id())) {
+                if (g.eLabel(e) == firstEdge.edgeLabel() && g.vLabel(e.to()) == firstEdge.toLabel()) {
+                    embeddings.add(e);
+                }
+            }
+        }
 
-//        return isNextEdgeMin(g, minPattern, 1);
-        return false;
+        TreeMap<DFSEdge, List<LabeledEdge>> map = new TreeMap<>();
+        for (int i = 1; i < edges.size(); i++) {
+            List<DFSEdge> rmpath = rmPath(i);
+            map = nextEdge();
+            DFSEdge dfsEdge = map.firstKey();
+            if (dfsEdge != null && !edges.get(i).equals(dfsEdge)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private List<DFSEdge> rmPath(int i) {
+        return null;
+    }
+
+    private TreeMap<DFSEdge, List<LabeledEdge>> nextEdge() {
+        // TODO: 2020/3/29 next edge
+        TreeMap<DFSEdge, List<LabeledEdge>> map = backwardEdge();
+        if (map != null) {
+            return map;
+        }
+
+        map = forwardEdge();
+        return map;
+    }
+
+    private TreeMap<DFSEdge, List<LabeledEdge>> backwardEdge() {
+        return null;
+    }
+
+    private TreeMap<DFSEdge, List<LabeledEdge>> forwardEdge() {
+        return null;
     }
 
 
