@@ -310,7 +310,9 @@ public class Enumerator {
         }
         LabeledEdge pathEdge = g.edge(vertices.get(pathVertexIndex).id(), vertices.get(pathVertexIndex + 1).id());
         LabeledEdge backEdge = g.edge(vertices.get(rmVertexIndex).id(), vertices.get(pathVertexIndex).id());
-
+        if (backEdge == null) {
+            return null;
+        }
         if (g.eLabel(pathEdge) < g.eLabel(backEdge)
                 || (g.eLabel(pathEdge) == g.eLabel(backEdge) && g.vLabel(pathEdge.to()) <= g.vLabel(backEdge.from()))) {
             return backEdge;
