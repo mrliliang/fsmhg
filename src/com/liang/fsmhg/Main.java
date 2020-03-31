@@ -43,14 +43,6 @@ public class Main {
         hashSet.add(Long.valueOf(1));
         System.out.println("Hashset size = " + hashSet.size());
 
-        TreeSet<A> set = new TreeSet<>();
-        set.add(new A(1));
-        set.add(new A(2));
-        set.add(new A(3));
-        for (A a : set) {
-            System.out.println(a.a);
-        }
-
 
     }
 
