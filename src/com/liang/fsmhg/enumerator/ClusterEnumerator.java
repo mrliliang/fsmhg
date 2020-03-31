@@ -2,27 +2,58 @@ package com.liang.fsmhg.enumerator;
 
 import com.liang.fsmhg.*;
 import com.liang.fsmhg.code.DFSEdge;
+import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
 
 import java.util.*;
 
-public class Enumerator {
-    private Map<Integer, PointPattern> points;
+public class ClusterEnumerator {
+    private TreeMap<Integer, PointPattern> points;
+    private Map<Long, LabeledGraph> trans;
+    private double minSup;
+    private int maxEdgeSize;
+
+    private double similarity;
     private int clusterCounter;
 
-    public void enumerate(Map<Long, LabeledGraph> newTrans, double minSupport, double similarity, int maxEdgeSize) {
-        List<Cluster> clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
-        clusterCounter += clusters.size();
+    public ClusterEnumerator(Map<Long, LabeledGraph> trans, double minSupport, double similarity, int maxEdgeSize) {
+        this.trans = trans;
+        this.minSup = minSupport;
+        this.similarity = similarity;
+        this.maxEdgeSize = maxEdgeSize;
+
+        this.points = new TreeMap<>();
+    }
+
+    // TODO: 2020/3/31 enumeration
+    public void enumerate() {
+        List<Cluster> clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
+        clusterCounter = clusters.size();
         Map<Integer, PointPattern> points = points(this.points, clusters);
-        Map<DFSEdge, Pattern> edges = edges(new ArrayList<>(points.values()), clusters);
+        Map<DFSEdge, Pattern> edges = edges(points, clusters);
 
         for (Pattern p : edges.values()) {
-            if (p.frequency() < minSupport || p.code().edgeSize() < maxEdgeSize) {
+            if (p.frequency() < trans.size() * minSup || p.code().edgeSize() < maxEdgeSize) {
                 continue;
             }
-            subgraphMining(newTrans, p, minSupport, maxEdgeSize);
+            subgraphMining(trans, p, minSup, maxEdgeSize);
+        }
+    }
+
+    // TODO: 2020/3/31 increment enumeration
+    public void incrementEnum(Map<Long, LabeledGraph> trans) {
+        List<Cluster> clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, clusterCounter);
+        clusterCounter += clusters.size();
+        Map<Integer, PointPattern> points = points(this.points, clusters);
+        Map<DFSEdge, Pattern> edges = edges(points, clusters);
+
+        for (Pattern p : edges.values()) {
+            if (p.frequency() < trans.size() * minSup || p.code().edgeSize() < maxEdgeSize) {
+                continue;
+            }
+            subgraphMining(trans, p, minSup, maxEdgeSize);
         }
     }
 
@@ -75,7 +106,7 @@ public class Enumerator {
         }
     }
 
-    public Map<DFSEdge, Pattern> edges(List<PointPattern> points, List<Cluster> clusters) {
+    public Map<DFSEdge, Pattern> edges(Map<Integer, PointPattern> points, List<Cluster> clusters) {
         Map<DFSEdge, Pattern> newEdges = new TreeMap<>();
         for (Cluster c : clusters) {
             intersectionEdges(c, points, newEdges);
@@ -84,9 +115,10 @@ public class Enumerator {
         return newEdges;
     }
 
-    private void intersectionEdges(Cluster c, List<PointPattern> points, Map<DFSEdge, Pattern> newEdges) {
+    private void intersectionEdges(Cluster c, Map<Integer, PointPattern> points, Map<DFSEdge, Pattern> newEdges) {
         Cluster.Intersection inter = c.intersection();
-        for (PointPattern p : points) {
+
+        for (PointPattern p : points.values()) {
             for (Embedding em : p.borderEmbeddings(c)) {
                 for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
                     if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
@@ -117,12 +149,29 @@ public class Enumerator {
         }
     }
 
-    private void otherEdges (Cluster c, List<PointPattern> points, Map<DFSEdge, Pattern> newEdges) {
-        List<? extends LabeledGraph> deltaGraphs = c.deltaGraphs();
-        for (LabeledGraph g : deltaGraphs) {
-            for (PointPattern p : points) {
+    private void otherEdges (Cluster c, Map<Integer, PointPattern> points, Map<DFSEdge, Pattern> newEdges) {
+        for (LabeledGraph g : c) {
+            Cluster.DeltaGraph delta = c.deltaGraph(g);
+            for (PointPattern p : points.values()) {
                 for (Embedding em : p.embeddings(g)) {
-                    for (LabeledEdge e : g.adjEdges(em.vertex().id())) {
+                    for (LabeledEdge e : delta.adjEdges(em.vertex().id())) {
+                        if (g.vLabel(e.from()) > g.vLabel(e.to())) {
+                            continue;
+                        }
+                        Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
+                        if (child == null) {
+                            child = p.addChild(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
+                        }
+                        child.addEmbedding(g, new Embedding(e.to(), em));
+                        newEdges.put(child.edge(), child);
+                    }
+                }
+
+                for (Embedding em : p.borderEmbeddings(c)) {
+                    if (!delta.border().containsKey(em.vertex().id())) {
+                        continue;
+                    }
+                    for (LabeledEdge e : delta.adjEdges(em.vertex().id())) {
                         if (g.vLabel(e.from()) > g.vLabel(e.to())) {
                             continue;
                         }
@@ -424,6 +473,14 @@ public class Enumerator {
         }
         child.addEmbedding(g, em);
         return child;
+    }
+
+    private void join() {
+        // TODO: 2020/3/31 join
+    }
+
+    private void extend() {
+        // TODO: 2020/3/31 extend
     }
 
 }

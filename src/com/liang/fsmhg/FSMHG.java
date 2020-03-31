@@ -1,15 +1,15 @@
 package com.liang.fsmhg;
 
-import com.liang.fsmhg.enumerator.Enumerator;
+import com.liang.fsmhg.enumerator.ClusterEnumerator;
 import com.liang.fsmhg.graph.LabeledGraph;
 
 import java.util.Map;
 
 public class FSMHG {
 
-    private Enumerator enumerator;
+    private ClusterEnumerator enumerator;
 
-    public FSMHG(Enumerator enumerator) {
+    public FSMHG(ClusterEnumerator enumerator) {
         this.enumerator = enumerator;
     }
 
