@@ -16,19 +16,19 @@ public class DFSCode implements Comparable<DFSCode> {
         edges = new ArrayList<>();
     }
 
-    public DFSCode(DFSCode parent, DFSEdge expandedEdge) {
-        edges = new ArrayList<>();
-        if (parent != null) {
-            edges.addAll(parent.edges);
-        }
-        edges.add(expandedEdge);
-
-        if (parent == null) {
-            nodeCount = 2;
-        } else {
-            nodeCount = Math.max(parent.nodeCount(), Math.max(expandedEdge.from(), expandedEdge.to()) + 1);
-        }
-    }
+//    public DFSCode(DFSCode parent, DFSEdge expandedEdge) {
+//        edges = new ArrayList<>();
+//        if (parent != null) {
+//            edges.addAll(parent.edges);
+//        }
+//        edges.add(expandedEdge);
+//
+//        if (parent == null) {
+//            nodeCount = 2;
+//        } else {
+//            nodeCount = Math.max(parent.nodeCount(), Math.max(expandedEdge.from(), expandedEdge.to()) + 1);
+//        }
+//    }
 
     public void add(DFSEdge edge) {
         edges.add(edge);

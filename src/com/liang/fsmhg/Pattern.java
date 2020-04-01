@@ -17,9 +17,7 @@ public class Pattern {
     private TreeMap<Cluster, List<Embedding>> intersectionEmbeddings;
     private TreeMap<Cluster, List<Embedding>> borderEmbeddings;
 
-    private Cluster clusterDelimiter;
-
-    private Map<DFSEdge, Pattern> children;
+    private TreeMap<DFSEdge, Pattern> children;
 
     private boolean isMinChecked;
     private boolean minCheckResult;
@@ -67,8 +65,8 @@ public class Pattern {
         return minCheckResult;
     }
 
-    public List<LabeledGraph> unClusteredGraphs() {
-        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.keySet());
+    public List<LabeledGraph> unClusteredGraphs(LabeledGraph graphDelimiter) {
+        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.tailMap(graphDelimiter).keySet());
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
         clusters.addAll(borderEmbeddings.keySet());
         for (Cluster c : clusters) {
@@ -78,10 +76,9 @@ public class Pattern {
         return new ArrayList<>(graphs);
     }
 
-    public List<Cluster> newClusters() {
+    public List<Cluster> clusters(Cluster clusterDelimiter) {
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.tailMap(clusterDelimiter).keySet());
         clusters.addAll(borderEmbeddings.tailMap(clusterDelimiter).keySet());
-        clusters.remove(clusterDelimiter);
         return new ArrayList<>(clusters);
     }
 
@@ -104,7 +101,6 @@ public class Pattern {
 
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
-            clusterDelimiter = key;
             for (LabeledGraph g : key.snapshots()) {
                 if (!embeddingMap.containsKey(g)) {
                     embeddingMap.put(g, new ArrayList<>());
@@ -117,7 +113,6 @@ public class Pattern {
 
     public void addBorderEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, key -> {
-            clusterDelimiter = key;
             for (LabeledGraph g : key.snapshots()) {
                 if (!embeddingMap.containsKey(g)) {
                     embeddingMap.put(g, new ArrayList<>());
@@ -139,4 +134,10 @@ public class Pattern {
         children.put(e, new Pattern(e, this));
         return child;
     }
+
+//    public List<Pattern> rightSiblings() {
+//        Map<DFSEdge, Pattern> siblings = new TreeMap<>(parent.children.tailMap(edge));
+//        siblings.remove(edge);
+//        return new ArrayList<>(siblings.values());
+//    }
 }
