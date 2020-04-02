@@ -83,15 +83,27 @@ public class Pattern {
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
-        return embeddingMap.get(graph);
+        List<Embedding> embeddings = this.embeddingMap.get(graph);
+        if (embeddings == null) {
+            embeddings = new ArrayList<>(0);
+        }
+        return embeddings;
     }
 
     public List<Embedding> intersectionEmbeddings(Cluster c) {
-        return intersectionEmbeddings.get(c);
+        List<Embedding> embeddings = intersectionEmbeddings.get(c);
+        if (embeddings == null) {
+            embeddings = new ArrayList<>(0);
+        }
+        return embeddings;
     }
 
     public List<Embedding> borderEmbeddings(Cluster c) {
-        return borderEmbeddings.get(c);
+        List<Embedding> embeddings = borderEmbeddings.get(c);
+        if (embeddings == null) {
+            embeddings = new ArrayList<>(0);
+        }
+        return embeddings;
     }
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
@@ -133,6 +145,12 @@ public class Pattern {
         Pattern child = new Pattern(e, this);
         children.put(e, new Pattern(e, this));
         return child;
+    }
+
+    public List<Pattern> children() {
+        List<Pattern> patterns = new ArrayList<>();
+        patterns.addAll(this.children.values());
+        return patterns;
     }
 
 //    public List<Pattern> rightSiblings() {

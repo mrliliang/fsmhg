@@ -3,6 +3,7 @@ package com.liang.fsmhg;
 
 import com.liang.fsmhg.graph.*;
 
+import javax.swing.*;
 import java.util.*;
 
 public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
@@ -123,7 +124,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         Map<Integer, LabeledVertex> vDelta = new HashMap<>();
         Map<Integer, AdjEdges> eDelta = new HashMap<>();
         Map<Integer, LabeledVertex> vBorder = new HashMap<>();
-        Map<Integer, AdjEdges> eBorder = new HashMap<>();
         for (LabeledVertex v : s.vertices()) {
             if (!commonVertices.containsKey(v.id())) {
                 vDelta.put(v.id(), v);
@@ -131,33 +131,40 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             }
         }
 
-        for (AdjEdges adjEdges : eDelta.values()) {
+        // TODO: 2020/4/2 delta graph may not be correct
+        for (AdjEdges adjEdges : new ArrayList<>(eDelta.values())) {
             for (LabeledEdge e : adjEdges) {
                 LabeledVertex from = e.from();
                 LabeledVertex to = e.to();
                 if (commonVertices.containsKey(to.id())) {
                     vBorder.put(to.id(), to);
-                    AdjEdges edges = eBorder.get(to.id());
-                    if (edges == null) {
-                        edges = new AdjEdges();
-                        eBorder.put(to.id(), edges);
+                    AdjEdges adjEdges1 = eDelta.get(to.id());
+                    if (adjEdges1 == null) {
+                        adjEdges1 = new AdjEdges();
+                        eDelta.put(to.id(), adjEdges1);
                     }
-                    edges.add(s.edge(to.id(), from.id()));
+                    adjEdges1.add(s.edge(to.id(), from.id()));
+
+                    // TODO: 2020/4/2 从与to连接的所有边中找出border points和delta edges
+
                 }
             }
         }
 
         vDelta.putAll(vBorder);
-        for (LabeledVertex v1 : vDelta.values()) {
-            for (LabeledVertex v2 : vDelta.values()) {
+        List<LabeledVertex> vertices = new ArrayList<>(vBorder.values());
+        for (int i = 0; i < vertices.size(); i++) {
+            for (int j = i + 1; j < vertices.size(); j++) {
+                LabeledVertex v1 = vertices.get(i);
+                LabeledVertex v2 = vertices.get(j);
                 LabeledEdge e1 = s.edge(v1.id(), v2.id());
                 LabeledEdge e2 = commonEdges.get(v1.id()).edgeTo(v2.id());
                 if (e1 != null && e2 == null) {
                     eDelta.get(v1.id()).add(e1);
+                    eDelta.get(v2.id()).add(s.edge(v2.id(), v1.id()));
                 }
             }
         }
-        eDelta.putAll(eBorder);
 
         List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : eDelta.values()) {
