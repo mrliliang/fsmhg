@@ -138,31 +138,38 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                 LabeledVertex to = e.to();
                 if (commonVertices.containsKey(to.id())) {
                     vBorder.put(to.id(), to);
-                    AdjEdges adjEdges1 = eDelta.get(to.id());
-                    if (adjEdges1 == null) {
-                        adjEdges1 = new AdjEdges();
-                        eDelta.put(to.id(), adjEdges1);
-                    }
-                    adjEdges1.add(s.edge(to.id(), from.id()));
-
-                    // TODO: 2020/4/2 从与to连接的所有边中找出border points和delta edges
-
+                    vDelta.put(to.id(), to);
+                    eDelta.put(to.id(), new AdjEdges());
                 }
             }
         }
 
-        vDelta.putAll(vBorder);
-        List<LabeledVertex> vertices = new ArrayList<>(vBorder.values());
-        for (int i = 0; i < vertices.size(); i++) {
-            for (int j = i + 1; j < vertices.size(); j++) {
-                LabeledVertex v1 = vertices.get(i);
-                LabeledVertex v2 = vertices.get(j);
-                LabeledEdge e1 = s.edge(v1.id(), v2.id());
-                LabeledEdge e2 = commonEdges.get(v1.id()).edgeTo(v2.id());
-                if (e1 != null && e2 == null) {
-                    eDelta.get(v1.id()).add(e1);
-                    eDelta.get(v2.id()).add(s.edge(v2.id(), v1.id()));
+        Map<Integer, LabeledVertex> tempBorder = new HashMap<>();
+        for (LabeledVertex v : vBorder.values()) {
+            for (LabeledEdge e : s.adjEdges(v.id())) {
+                LabeledVertex from = e.from();
+                LabeledVertex to = e.to();
+                if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
+                    continue;
                 }
+                eDelta.get(from.id()).add(e);
+                if (commonVertices.containsKey(to.id()) && !vDelta.containsKey(to.id())) {
+                    tempBorder.put(to.id(), to);
+                    vDelta.put(to.id(), to);
+                    eDelta.put(to.id(), new AdjEdges());
+                }
+            }
+        }
+        vBorder.putAll(tempBorder);
+
+        for (LabeledVertex v : tempBorder.values()) {
+            for (LabeledEdge e : s.adjEdges(v.id())) {
+                LabeledVertex from = e.from();
+                LabeledVertex to = e.to();
+                if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
+                    continue;
+                }
+                eDelta.get(from.id()).add(e);
             }
         }
 
@@ -170,6 +177,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         for (AdjEdges adjEdges : eDelta.values()) {
             edges.addAll(adjEdges.edges());
         }
+
         return new DeltaGraph(s.graphId(), new ArrayList<>(vDelta.values()), new ArrayList<>(edges), vBorder);
     }
 
