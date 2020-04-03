@@ -14,16 +14,17 @@ public class ClusterEnumerator {
     private TreeMap<Long, LabeledGraph> trans;
     private double minSup;
     private int maxEdgeSize = Integer.MAX_VALUE;
-
+    private boolean partition;
     private double similarity;
     private int clusterCounter;
 
     private LabeledGraph transDelimiter;
     private Cluster clusterDemimiter;
 
-    public ClusterEnumerator(TreeMap<Long, LabeledGraph> trans, double minSupport, double similarity) {
+    public ClusterEnumerator(TreeMap<Long, LabeledGraph> trans, double minSupport, boolean partition, double similarity) {
         this.trans = trans;
         this.minSup = minSupport;
+        this.partition = partition;
         this.similarity = similarity;
         this.points = new TreeMap<>();
     }
@@ -31,11 +32,19 @@ public class ClusterEnumerator {
     // TODO: 2020/3/31 enumeration
     public void enumerate() {
         transDelimiter = trans.firstEntry().getValue();
-        List<Cluster> clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
-        clusterDemimiter = clusters.get(0);
-        clusterCounter = clusters.size();
-        Map<Integer, PointPattern> points = newPoints(clusters);
-        Map<DFSEdge, Pattern> edges = newEdges(points, clusters);
+        List<Cluster> clusters;
+        Map<Integer, PointPattern> points;
+        Map<DFSEdge, Pattern> edges;
+        if (partition) {
+            clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
+            clusterDemimiter = clusters.get(0);
+            clusterCounter = clusters.size();
+            points = newPoints(clusters);
+            edges = newEdges(points, clusters);
+        } else {
+            points = newPoints(this.trans);
+            edges = newEdges(points);
+        }
 
         List<Pattern> patterns = new ArrayList<>(edges.values());
         for (int i = 0; i < patterns.size(); i++) {
@@ -59,11 +68,19 @@ public class ClusterEnumerator {
     public void incrementEnum(TreeMap<Long, LabeledGraph> newTrans) {
         transDelimiter = newTrans.firstEntry().getValue();
         this.trans.putAll(newTrans);
-        List<Cluster> clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
-        clusterDemimiter = clusters.get(0);
-        clusterCounter += clusters.size();
-        Map<Integer, PointPattern> points = newPoints(clusters);
-        Map<DFSEdge, Pattern> edges = newEdges(points, clusters);
+        List<Cluster> clusters;
+        Map<Integer, PointPattern> points;
+        Map<DFSEdge, Pattern> edges;
+        if (partition) {
+            clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
+            clusterDemimiter = clusters.get(0);
+            clusterCounter += clusters.size();
+            points = newPoints(clusters);
+            edges = newEdges(points, clusters);
+        } else {
+            points = newPoints(this.trans);
+            edges = newEdges(points);
+        }
 
         List<Pattern> patterns = new ArrayList<>(edges.values());
         for (int i = 0; i < patterns.size(); i++) {
@@ -104,10 +121,10 @@ public class ClusterEnumerator {
         }
     }
 
-
     private void otherPoints(Cluster c, Map<Integer, PointPattern> newPoints) {
-        for (Cluster.DeltaGraph g : c.deltaGraphs()) {
-            Map<Integer, LabeledVertex> border = g.border();
+        for (LabeledGraph g : c.snapshots()) {
+            Cluster.DeltaGraph dg = c.deltaGraph(g);
+            Map<Integer, LabeledVertex> border = dg.border();
             for (LabeledVertex v : g.vertices()) {
                 if (border.containsKey(v.id())) {
                     continue;
@@ -212,6 +229,42 @@ public class ClusterEnumerator {
             }
         }
         return false;
+    }
+
+    public Map<Integer, PointPattern> newPoints(TreeMap<Long, LabeledGraph> trans) {
+        TreeMap<Integer, PointPattern> newPoints = new TreeMap<>();
+        for (LabeledGraph g : trans.values()) {
+            for (LabeledVertex v : g.vertices()) {
+                PointPattern pp = this.points.get(g.vLabel(v));
+                if (pp == null) {
+                    pp = new PointPattern(g.vLabel(v));
+                    this.points.put(pp.label(), pp);
+                }
+                pp.addEmbedding(g, new Embedding(v, null));
+                newPoints.put(pp.label(), pp);
+            }
+        }
+        return newPoints;
+    }
+
+    public Map<DFSEdge, Pattern> newEdges(Map<Integer, PointPattern> newPoints) {
+        Map<DFSEdge, Pattern> eMap = new TreeMap<>();
+        for (PointPattern pp : newPoints.values()) {
+            for (LabeledGraph g : pp.unClusteredGraphs(transDelimiter)) {
+                for (Embedding em : pp.embeddings(g)) {
+                    LabeledVertex from = em.vertex();
+                    for (LabeledEdge e : g.adjEdges(from.id())) {
+                        LabeledVertex to = e.to();
+                        if (g.vLabel(from) > g.vLabel(to)) {
+                            continue;
+                        }
+                        Pattern child = updateOtherExpansion(g, 0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), pp);
+                        eMap.put(child.edge(), child);
+                    }
+                }
+            }
+        }
+        return eMap;
     }
 
 
@@ -530,15 +583,21 @@ public class ClusterEnumerator {
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern sib : siblings) {
-            commonCluster.addAll(sib.clusters(clusterDemimiter));
+            if (partition) {
+                commonCluster.addAll(sib.clusters(clusterDemimiter));
+            }
             commonTrans.addAll(sib.unClusteredGraphs(transDelimiter));
         }
-        commonCluster.retainAll(p.clusters(clusterDemimiter));
+        if (partition) {
+            commonCluster.retainAll(p.clusters(clusterDemimiter));
+        }
         commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
 
-        for (Cluster c : commonCluster) {
-            joinInterEmbeddings(c, p, backCand, forCand, children);
-            joinDeltaEmbeddings(c, p, backCand, forCand, children);
+        if (partition) {
+            for (Cluster c : commonCluster) {
+                joinInterEmbeddings(c, p, backCand, forCand, children);
+                joinDeltaEmbeddings(c, p, backCand, forCand, children);
+            }
         }
         for (LabeledGraph g : commonTrans) {
             joinOtherEmbeddings(g, p, backCand, forCand, children);
@@ -546,8 +605,6 @@ public class ClusterEnumerator {
     }
 
     private TreeMap<DFSEdge, Pattern> extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
-//        TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
-
         DFSEdge lastEdge = p.edge();
         DFSEdge firstEdge = p.code().get(0);
         TreeMap<DFSEdge, Pattern> candEdges = new TreeMap<>();
@@ -587,15 +644,21 @@ public class ClusterEnumerator {
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern ep : candEdges.values()) {
-            commonCluster.addAll(ep.clusters(clusterDemimiter));
+            if (partition) {
+                commonCluster.addAll(ep.clusters(clusterDemimiter));
+            }
             commonTrans.addAll(ep.unClusteredGraphs(transDelimiter));
         }
-        commonCluster.retainAll(p.clusters(clusterDemimiter));
+        if (partition) {
+            commonCluster.retainAll(p.clusters(clusterDemimiter));
+        }
         commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
 
-        for (Cluster c : commonCluster) {
-            extendInterEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
-            extendDeltaEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
+        if (partition) {
+            for (Cluster c : commonCluster) {
+                extendInterEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
+                extendDeltaEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
+            }
         }
         for (LabeledGraph g : commonTrans) {
             extendOtherEmbeddings(g, p, new TreeSet<>(candEdges.keySet()), children);

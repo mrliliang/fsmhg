@@ -153,9 +153,4 @@ public class Pattern {
         return patterns;
     }
 
-//    public List<Pattern> rightSiblings() {
-//        Map<DFSEdge, Pattern> siblings = new TreeMap<>(parent.children.tailMap(edge));
-//        siblings.remove(edge);
-//        return new ArrayList<>(siblings.values());
-//    }
 }
