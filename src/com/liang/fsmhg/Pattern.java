@@ -65,6 +65,17 @@ public class Pattern {
         return minCheckResult;
     }
 
+    public List<LabeledGraph> unClusteredGraph() {
+        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.keySet());
+        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
+        clusters.addAll(borderEmbeddings.keySet());
+        for (Cluster c : clusters) {
+            graphs.removeAll(c.snapshots());
+        }
+
+        return new ArrayList<>(graphs);
+    }
+
     public List<LabeledGraph> unClusteredGraphs(LabeledGraph graphDelimiter) {
         TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.tailMap(graphDelimiter).keySet());
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
@@ -74,6 +85,12 @@ public class Pattern {
         }
 
         return new ArrayList<>(graphs);
+    }
+
+    public List<Cluster> clusters() {
+        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
+        clusters.addAll(borderEmbeddings.keySet());
+        return new ArrayList<>(clusters);
     }
 
     public List<Cluster> clusters(Cluster clusterDelimiter) {
