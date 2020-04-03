@@ -134,7 +134,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         // TODO: 2020/4/2 delta graph may not be correct
         for (AdjEdges adjEdges : new ArrayList<>(eDelta.values())) {
             for (LabeledEdge e : adjEdges) {
-                LabeledVertex from = e.from();
                 LabeledVertex to = e.to();
                 if (commonVertices.containsKey(to.id())) {
                     vBorder.put(to.id(), to);
