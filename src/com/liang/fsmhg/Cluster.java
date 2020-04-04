@@ -10,7 +10,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private int index;
 
     private double similarity;
-    private List<LabeledGraph> snapshots;
+    private ArrayList<LabeledGraph> snapshots;
 
     private Map<Integer, LabeledVertex> commonVertices;
     private Map<Integer, AdjEdges> commonEdges;
@@ -28,6 +28,24 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         return snapshots;
     }
 
+    public boolean contains(LabeledGraph g) {
+        if (g == null) {
+            return false;
+        }
+
+        LabeledGraph first = snapshots.get(0);
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        return g.graphId() >= first.graphId() && g.graphId() <= last.graphId();
+    }
+
+    public LabeledGraph first() {
+        return snapshots.get(0);
+    }
+
+    public LabeledGraph last() {
+        return snapshots.get(snapshots.size() - 1);
+    }
+
     public int size() {
         return snapshots.size();
     }
@@ -40,8 +58,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         return index;
     }
 
-    public void remove(List<LabeledGraph> snapshots) {
-        snapshots.removeAll(snapshots);
+    public boolean remove(Collection<LabeledGraph> snapshots) {
+        return this.snapshots.removeAll(snapshots);
     }
 
     public boolean add(LabeledGraph s) {

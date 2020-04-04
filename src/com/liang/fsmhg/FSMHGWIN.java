@@ -15,6 +15,7 @@ public class FSMHGWIN {
     private int maxEdgeSize = Integer.MAX_VALUE;
     private boolean partition;
     private double similarity;
+    private ArrayList<Cluster> clusters;
     private int clusterCounter;
 
     private LabeledGraph transDelimiter;
@@ -26,50 +27,51 @@ public class FSMHGWIN {
         this.partition = partition;
         this.similarity = similarity;
         this.points = new TreeMap<>();
+        clusters = new ArrayList<>();
     }
 
     // TODO: 2020/3/31 enumeration
-    public void enumerate() {
-        transDelimiter = trans.firstEntry().getValue();
-        List<Cluster> clusters;
-        Map<Integer, PointPattern> points;
-        Map<DFSEdge, Pattern> edges;
-        if (partition) {
-            clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
-            clusterDelimiter = clusters.get(0);
-            clusterCounter = clusters.size();
-            points = newPoints(clusters);
-            edges = newEdges(points, clusters);
-        } else {
-            points = newPoints(this.trans);
-            edges = newEdges(points);
-        }
-
-        List<Pattern> patterns = new ArrayList<>(edges.values());
-        for (int i = 0; i < patterns.size(); i++) {
-            Pattern p = patterns.get(i);
-            if (!isFrequent(p) || p.code().edgeSize() < maxEdgeSize) {
-                continue;
-            }
-            subgraphMining(p, rightSiblings(p, patterns, i + 1));
-        }
-    }
+//    public void enumerate() {
+//        transDelimiter = trans.firstEntry().getValue();
+//        List<Cluster> clusters;
+//        Map<Integer, PointPattern> points;
+//        Map<DFSEdge, Pattern> edges;
+//        if (partition) {
+//            clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
+//            clusterDelimiter = clusters.get(0);
+//            clusterCounter = clusters.size();
+//            points = newPoints(clusters);
+//            edges = newEdges(points, clusters);
+//        } else {
+//            points = newPoints(this.trans);
+//            edges = newEdges(points);
+//        }
+//
+//        List<Pattern> patterns = new ArrayList<>(edges.values());
+//        for (int i = 0; i < patterns.size(); i++) {
+//            Pattern p = patterns.get(i);
+//            if (!isFrequent(p) || p.code().edgeSize() < maxEdgeSize) {
+//                continue;
+//            }
+//            subgraphMining(p, rightSiblings(p, patterns, i + 1));
+//        }
+//    }
 
     private List<Pattern> rightSiblings(Pattern p, List<Pattern> patterns, int fromIndex) {
         int toIndex = fromIndex;
-        while (patterns.get(toIndex).parent() != p.parent()) {
+        while (patterns.get(toIndex).parent() == p.parent()) {
             toIndex++;
         }
         return patterns.subList(fromIndex, toIndex);
     }
 
     // TODO: 2020/3/31 increment enumeration
-    public void incrementEnum(TreeMap<Long, LabeledGraph> newTrans) {
+    public void enumerate(TreeMap<Long, LabeledGraph> newTrans) {
         TreeMap<Long, LabeledGraph> removed = new TreeMap<>(this.trans.headMap(newTrans.firstKey()));
         TreeMap<Long, LabeledGraph> added = new TreeMap<>(newTrans.tailMap(this.trans.lastKey()));
         this.trans = newTrans;
 
-        shrink(removed);
+        shrink(removed.values());
         grow(added);
 
 
@@ -99,22 +101,39 @@ public class FSMHGWIN {
 //        }
     }
 
-    private void shrink(TreeMap<Long, LabeledGraph> removed) {
+    private void shrink(Collection<LabeledGraph> graphs) {
         // TODO: 2020/4/3 shrink
+        List<Cluster> changed = new ArrayList<>();
+        Iterator<Cluster> it = this.clusters.iterator();
+        while (it.hasNext()) {
+            Cluster c = it.next();
+            if (!c.remove(graphs)) {
+                break;
+            }
+            if (c.size() == 0) {
+                changed.add(c);
+            }
+        }
+
+        for (PointPattern pp : this.points.values()) {
+            pp.remove(graphs, changed);
+        }
     }
+
 
     private void grow(TreeMap<Long, LabeledGraph> added) {
         // TODO: 2020/4/3 grow
         transDelimiter = added.get(added.firstKey());
-        List<Cluster> clusters;
+        List<Cluster> addedClusters;
         Map<Integer, PointPattern> points;
         Map<DFSEdge, Pattern> edges;
         if (partition) {
-            clusters = Cluster.partition(new ArrayList<>(added.values()), similarity, clusterCounter);
-            clusterDelimiter = clusters.get(0);
-            clusterCounter += clusters.size();
-            points = newPoints(clusters);
-            edges = newEdges(points, clusters);
+            addedClusters = Cluster.partition(new ArrayList<>(added.values()), similarity, clusterCounter);
+            clusterDelimiter = addedClusters.get(0);
+            clusterCounter += addedClusters.size();
+            this.clusters.addAll(addedClusters);
+            points = newPoints(addedClusters);
+            edges = newEdges(points, addedClusters);
         } else {
             points = newPoints(added);
             edges = newEdges(points);
@@ -623,14 +642,30 @@ public class FSMHGWIN {
         for (Pattern sib : siblings) {
             if (partition) {
                 // TODO: 2020/4/3 when p is leaf node need to search all graphs and clusters
-                commonCluster.addAll(sib.clusters(clusterDelimiter));
+                if (!p.children().isEmpty()) {
+                    commonCluster.addAll(sib.clusters(clusterDelimiter));
+                } else {
+                    commonCluster.addAll(sib.clusters());
+                }
             }
-            commonTrans.addAll(sib.unClusteredGraphs(transDelimiter));
+            if (!p.children().isEmpty()) {
+                commonTrans.addAll(sib.unClusteredGraphs(transDelimiter));
+            } else {
+                commonTrans.addAll(sib.unClusteredGraphs());
+            }
         }
         if (partition) {
-            commonCluster.retainAll(p.clusters(clusterDelimiter));
+            if (!p.children().isEmpty()) {
+                commonCluster.retainAll(p.clusters(clusterDelimiter));
+            } else {
+                commonCluster.retainAll(p.clusters());
+            }
         }
-        commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        if (!p.children().isEmpty()) {
+            commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        } else {
+            commonTrans.retainAll(p.unClusteredGraphs());
+        }
 
         if (partition) {
             for (Cluster c : commonCluster) {
@@ -648,22 +683,22 @@ public class FSMHGWIN {
         DFSEdge firstEdge = p.code().get(0);
         TreeMap<DFSEdge, Pattern> candEdges = new TreeMap<>();
         for (Pattern ep : this.points.get(firstEdge.fromLabel()).children()) {
-            if (!isFrequent(ep)) {
-                continue;
-            }
+//            if (!isFrequent(ep)) {
+//                continue;
+//            }
             DFSEdge e = ep.edge();
             if (e.toLabel() == lastEdge.toLabel() && e.edgeLabel() >= firstEdge.edgeLabel()) {
                 candEdges.put(e, ep);
             }
         }
         for (PointPattern pp : this.points.tailMap(firstEdge.fromLabel(), false).headMap(lastEdge.toLabel()).values()) {
-            if (!isFrequent(pp)) {
-                continue;
-            }
+//            if (!isFrequent(pp)) {
+//                continue;
+//            }
             for (Pattern ep : pp.children()) {
-                if (!isFrequent(ep)) {
-                    continue;
-                }
+//                if (!isFrequent(ep)) {
+//                    continue;
+//                }
                 DFSEdge e = ep.edge();
                 if (e.toLabel() == lastEdge.toLabel()) {
                     candEdges.put(e, ep);
@@ -671,11 +706,12 @@ public class FSMHGWIN {
             }
         }
         PointPattern rmPoint = this.points.get(lastEdge.toLabel());
-        if (rmPoint != null && isFrequent(rmPoint)) {
+//        if (rmPoint != null && isFrequent(rmPoint)) {
+        if (rmPoint != null) {
             for (Pattern ep : rmPoint.children()) {
-                if (!isFrequent(ep)) {
-                    continue;
-                }
+//                if (!isFrequent(ep)) {
+//                    continue;
+//                }
                 candEdges.put(ep.edge(), ep);
             }
         }
@@ -684,14 +720,30 @@ public class FSMHGWIN {
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern ep : candEdges.values()) {
             if (partition) {
-                commonCluster.addAll(ep.clusters(clusterDelimiter));
+                if (!p.children().isEmpty()) {
+                    commonCluster.addAll(ep.clusters(clusterDelimiter));
+                } else {
+                    commonCluster.addAll(ep.clusters());
+                }
             }
-            commonTrans.addAll(ep.unClusteredGraphs(transDelimiter));
+            if (!p.children().isEmpty()) {
+                commonTrans.addAll(ep.unClusteredGraphs(transDelimiter));
+            } else {
+                commonTrans.addAll(ep.unClusteredGraphs());
+            }
         }
         if (partition) {
-            commonCluster.retainAll(p.clusters(clusterDelimiter));
+            if (!p.children().isEmpty()) {
+                commonCluster.retainAll(p.clusters(clusterDelimiter));
+            } else {
+                commonCluster.retainAll(p.clusters());
+            }
         }
-        commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        if (!p.children().isEmpty()) {
+            commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        } else {
+            commonTrans.retainAll(p.unClusteredGraphs());
+        }
 
         if (partition) {
             for (Cluster c : commonCluster) {

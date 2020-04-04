@@ -2,6 +2,7 @@ package com.liang.fsmhg;
 
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
+import com.liang.fsmhg.graph.Graph;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.Snapshot;
 
@@ -65,7 +66,7 @@ public class Pattern {
         return minCheckResult;
     }
 
-    public List<LabeledGraph> unClusteredGraph() {
+    public List<LabeledGraph> unClusteredGraphs() {
         TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.keySet());
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
         clusters.addAll(borderEmbeddings.keySet());
@@ -168,6 +169,29 @@ public class Pattern {
         List<Pattern> patterns = new ArrayList<>();
         patterns.addAll(this.children.values());
         return patterns;
+    }
+
+    public void remove(Collection<LabeledGraph> graphs, Collection<Cluster> clusters) {
+        List<LabeledGraph> removedGraphs = new ArrayList<>();
+        for (LabeledGraph g : graphs) {
+            if (embeddingMap.remove(g) != null) {
+                removedGraphs.add(g);
+            }
+        }
+        if (removedGraphs.isEmpty()) {
+            return;
+        }
+
+        List<Cluster> removedClusters = new ArrayList<>();
+        for (Cluster c : clusters) {
+            if (intersectionEmbeddings.remove(c) != null || borderEmbeddings.remove(c) != null) {
+                removedClusters.add(c);
+            }
+        }
+
+        for (Pattern p : children()) {
+            remove(removedGraphs, removedClusters);
+        }
     }
 
 }

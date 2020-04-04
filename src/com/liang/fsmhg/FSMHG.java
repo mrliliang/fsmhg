@@ -18,8 +18,8 @@ public class FSMHG {
     private double similarity;
     private int clusterCounter;
 
-    private LabeledGraph transDelimiter;
-    private Cluster clusterDelimiter;
+//    private LabeledGraph transDelimiter;
+//    private Cluster clusterDelimiter;
 
     public FSMHG(TreeMap<Long, LabeledGraph> trans, double minSupport, boolean partition, double similarity) {
         this.trans = trans;
@@ -31,14 +31,14 @@ public class FSMHG {
 
     // TODO: 2020/3/31 enumeration
     public void enumerate() {
-        transDelimiter = trans.firstEntry().getValue();
+//        transDelimiter = trans.firstEntry().getValue();
         List<Cluster> clusters;
         Map<Integer, PointPattern> points;
         Map<DFSEdge, Pattern> edges;
         if (partition) {
             clusters = Cluster.partition(new ArrayList<>(trans.values()), similarity, 0);
-            clusterDelimiter = clusters.get(0);
-            clusterCounter = clusters.size();
+//            clusterDelimiter = clusters.get(0);
+//            clusterCounter = clusters.size();
             points = newPoints(clusters);
             edges = newEdges(points, clusters);
         } else {
@@ -58,39 +58,39 @@ public class FSMHG {
 
     private List<Pattern> rightSiblings(Pattern p, List<Pattern> patterns, int fromIndex) {
         int toIndex = fromIndex;
-        while (patterns.get(toIndex).parent() != p.parent()) {
+        while (patterns.get(toIndex).parent() == p.parent()) {
             toIndex++;
         }
         return patterns.subList(fromIndex, toIndex);
     }
 
     // TODO: 2020/3/31 increment enumeration
-    public void incrementEnum(TreeMap<Long, LabeledGraph> newTrans) {
-        transDelimiter = newTrans.firstEntry().getValue();
-        this.trans.putAll(newTrans);
-        List<Cluster> clusters;
-        Map<Integer, PointPattern> points;
-        Map<DFSEdge, Pattern> edges;
-        if (partition) {
-            clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
-            clusterDelimiter = clusters.get(0);
-            clusterCounter += clusters.size();
-            points = newPoints(clusters);
-            edges = newEdges(points, clusters);
-        } else {
-            points = newPoints(this.trans);
-            edges = newEdges(points);
-        }
-
-        List<Pattern> patterns = new ArrayList<>(edges.values());
-        for (int i = 0; i < patterns.size(); i++) {
-            Pattern p = patterns.get(i);
-            if (!isFrequent(p) || p.code().edgeSize() < maxEdgeSize) {
-                continue;
-            }
-            subgraphMining(newTrans, p, rightSiblings(p, patterns, i + 1));
-        }
-    }
+//    public void incrementEnum(TreeMap<Long, LabeledGraph> newTrans) {
+////        transDelimiter = newTrans.firstEntry().getValue();
+//        this.trans.putAll(newTrans);
+//        List<Cluster> clusters;
+//        Map<Integer, PointPattern> points;
+//        Map<DFSEdge, Pattern> edges;
+//        if (partition) {
+//            clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
+////            clusterDelimiter = clusters.get(0);
+//            clusterCounter += clusters.size();
+//            points = newPoints(clusters);
+//            edges = newEdges(points, clusters);
+//        } else {
+//            points = newPoints(this.trans);
+//            edges = newEdges(points);
+//        }
+//
+//        List<Pattern> patterns = new ArrayList<>(edges.values());
+//        for (int i = 0; i < patterns.size(); i++) {
+//            Pattern p = patterns.get(i);
+//            if (!isFrequent(p) || p.code().edgeSize() < maxEdgeSize) {
+//                continue;
+//            }
+//            subgraphMining(newTrans, p, rightSiblings(p, patterns, i + 1));
+//        }
+//    }
 
 
     public Map<Integer, PointPattern> newPoints(List<Cluster> clusters) {
@@ -250,7 +250,7 @@ public class FSMHG {
     public Map<DFSEdge, Pattern> newEdges(Map<Integer, PointPattern> newPoints) {
         Map<DFSEdge, Pattern> eMap = new TreeMap<>();
         for (PointPattern pp : newPoints.values()) {
-            for (LabeledGraph g : pp.unClusteredGraphs(transDelimiter)) {
+            for (LabeledGraph g : pp.unClusteredGraphs()) {
                 for (Embedding em : pp.embeddings(g)) {
                     LabeledVertex from = em.vertex();
                     for (LabeledEdge e : g.adjEdges(from.id())) {
@@ -562,6 +562,9 @@ public class FSMHG {
 
         DFSEdge e1 = p.edge();
         for (Pattern sib : siblings) {
+            if (!isFrequent(sib)) {
+                continue;
+            }
             DFSEdge e2 = sib.edge();
             if (e1.compareTo(e2) >= 0) {
                 continue;
@@ -584,14 +587,14 @@ public class FSMHG {
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern sib : siblings) {
             if (partition) {
-                commonCluster.addAll(sib.clusters(clusterDelimiter));
+                commonCluster.addAll(sib.clusters());
             }
-            commonTrans.addAll(sib.unClusteredGraphs(transDelimiter));
+            commonTrans.addAll(sib.unClusteredGraphs());
         }
         if (partition) {
-            commonCluster.retainAll(p.clusters(clusterDelimiter));
+            commonCluster.retainAll(p.clusters());
         }
-        commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        commonTrans.retainAll(p.unClusteredGraphs());
 
         if (partition) {
             for (Cluster c : commonCluster) {
@@ -645,14 +648,14 @@ public class FSMHG {
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern ep : candEdges.values()) {
             if (partition) {
-                commonCluster.addAll(ep.clusters(clusterDelimiter));
+                commonCluster.addAll(ep.clusters());
             }
-            commonTrans.addAll(ep.unClusteredGraphs(transDelimiter));
+            commonTrans.addAll(ep.unClusteredGraphs());
         }
         if (partition) {
-            commonCluster.retainAll(p.clusters(clusterDelimiter));
+            commonCluster.retainAll(p.clusters());
         }
-        commonTrans.retainAll(p.unClusteredGraphs(transDelimiter));
+        commonTrans.retainAll(p.unClusteredGraphs());
 
         if (partition) {
             for (Cluster c : commonCluster) {
