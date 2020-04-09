@@ -23,6 +23,10 @@ public class AdjEdges implements Iterable<LabeledEdge> {
         edges.put(e.to().id(), e);
     }
 
+    public LabeledEdge remove(int to) {
+        return edges.remove(to);
+    }
+
     public List<LabeledEdge> edges() {
         return new ArrayList<>(edges.values());
     }

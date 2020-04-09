@@ -43,6 +43,8 @@ public class Main {
         hashSet.add(Long.valueOf(1));
         System.out.println("Hashset size = " + hashSet.size());
 
+        System.out.println(String.format("%04d", 10));
+
 
     }
 

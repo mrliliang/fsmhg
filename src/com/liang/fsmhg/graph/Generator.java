@@ -1,109 +1,171 @@
 package com.liang.fsmhg.graph;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 public class Generator {
 
     private int initialEntity;
-    private int maxEntity;
     private int averageDegree;
     private int snapshotNum;
     private double insertRate;
-    private double addDelRate;
+    private double insertDelRate;
 
     private int vLabelNum;
     private int eLabelNum;
 
     private Random random;
 
-    private TreeMap<Integer, StaticVertex> vMap;
+    private Map<Integer, StaticVertex> vMap;
     private Map<Integer, AdjEdges> eMap;
-    private TreeMap<Integer, Integer> degreeInterval;
+    private TreeMap<Integer, TreeSet<Integer>> vGroup;
     private int totalDegree;
 
-    public Generator(int initialEntity, int maxEntity, int averageDegree, int snapshotNum, double insertRate, double addDelRate, int vLabelNum, int eLabelNum) {
+    public Generator(int initialEntity, int averageDegree, int snapshotNum, double insertRate, double insertDelRate, int vLabelNum, int eLabelNum) {
         this.initialEntity = initialEntity;
-        this.maxEntity = maxEntity;
+//        this.maxEntity = maxEntity;
         this.averageDegree = averageDegree;
         this.snapshotNum = snapshotNum;
         this.insertRate = insertRate;
-        this.addDelRate = addDelRate;
+        this.insertDelRate = insertDelRate;
         this.vLabelNum = vLabelNum;
         this.eLabelNum = eLabelNum;
         this.random = new Random();
 
-        eMap = new HashMap<>();
-        vMap = new TreeMap<>(new Comparator<Integer>() {
-            @Override
-            public int compare(Integer v1, Integer v2) {
-                AdjEdges adj1 = eMap.get(v1);
-                AdjEdges adj2 = eMap.get(v2);
-                return adj1.size() - adj2.size();
-            }
-        });
-
-        degreeInterval = new TreeMap<>();
+        eMap = new TreeMap<>();
+        vMap = new HashMap<>();
+        vGroup = new TreeMap<>();
     }
 
     public void generate() {
         firstSnapshot();
-        output();
-        for (int i = 0; i < snapshotNum; i++) {
+        output(0);
+        for (int i = 1; i < snapshotNum; i++) {
             evolve();
-            output();
+            output(i);
         }
     }
 
     private void firstSnapshot() {
         int m0 = averageDegree / 2;
+        vGroup.put(0, new TreeSet<>());
         for (int i = 0; i < m0; i++) {
             StaticVertex v = new StaticVertex(i, vLabel());
             eMap.put(v.id(), new AdjEdges());
             vMap.put(v.id(), v);
+            vGroup.get(0).add(v.id());
         }
 
         for (int i = m0; i < initialEntity; i++) {
-            StaticVertex from = new StaticVertex(i, vLabel());
-            eMap.put(i, new AdjEdges());
-            for (int j = 0; j < m0; j++) {
-                StaticVertex to = vMap.remove(select());
-                while (eMap.get(from.id()).edgeTo(to.id()) != null) {
-                    to = vMap.remove(select());
-                }
-                StaticEdge e1 = new StaticEdge(from, to, eLabel());
-                eMap.get(from.id()).add(e1);
-                StaticEdge e2 = new StaticEdge(to, from, eLabel());
-                eMap.get(to.id()).add(e2);
-                vMap.put(from.id(), from);
-                vMap.put(to.id(), to);
-                totalDegree++;
-            }
-        }
-
-        int v;
-        int degree = -1;
-        int sum = degree;
-        for (Integer id : vMap.keySet()) {
-            AdjEdges adj = eMap.get(id);
-            if (adj.size() != degree) {
-                v = id;
-                degree = adj.size();
-                sum = degree;
-                degreeInterval.put(sum, v);
-            }
-            sum += adj.size();
+            insertEdges(i, m0);
         }
     }
 
     private void evolve() {
+        int maxV = (int)Math.ceil(vMap.size() + initialEntity * insertRate);
+        int insertedEdgeNum = (int)Math.ceil(averageDegree / (2 * (1 - 1 / insertDelRate)));
+        for (int i = vMap.size(); i < maxV; i++) {
+            insertEdges(i, insertedEdgeNum);
+        }
 
+        int removedEdgeNum = (int)Math.floor(insertRate * initialEntity * insertedEdgeNum / insertDelRate);
+        for (int i = 0; i < removedEdgeNum; i++) {
+            removeEdge();
+        }
     }
 
-    private void output() {
-
+    private void insertEdges(int vId, int edgeNum) {
+        StaticVertex from = new StaticVertex(vId, vLabel());
+        eMap.put(from.id(), new AdjEdges());
+        for (int j = 0; j < edgeNum; j++) {
+            StaticVertex to = vMap.get(selectAttachPoint());
+            while (eMap.get(from.id()).edgeTo(to.id()) != null) {
+                to = vMap.get(selectAttachPoint());
+                System.out.println("loop in insertEdges");
+            }
+            vGroup.get(eMap.get(to.id()).size()).remove(to.id());
+            int eLabel = eLabel();
+            StaticEdge e = new StaticEdge(from, to, eLabel);
+            eMap.get(from.id()).add(e);
+            e = new StaticEdge(to, from, eLabel);
+            eMap.get(to.id()).add(e);
+            vGroup.computeIfAbsent(eMap.get(to.id()).size(), integer -> new TreeSet<>()).add(to.id());
+            totalDegree += 2;
+        }
+        vMap.put(from.id(), from);
+        TreeSet<Integer> group = vGroup.get(eMap.get(from.id()).size());
+        if (group == null) {
+            group = new TreeSet<>();
+            vGroup.put(eMap.get(from.id()).size(), group);
+        }
+        group.add(from.id());
     }
 
-    private int select() {
+    private void removeEdge() {
+        int from = random.nextInt(vMap.size());
+        int to = random.nextInt(vMap.size());
+        while (from == to || eMap.get(from).edgeTo(to) == null) {
+            from = random.nextInt(vMap.size());
+            to = random.nextInt(vMap.size());
+            System.out.println("loop in removeEdge");
+        }
+        eMap.get(from).remove(to);
+        eMap.get(to).remove(from);
+        totalDegree -= 2;
+    }
+
+    private void output(int transId) {
+        System.out.println("TRANS " + transId);
+        int vSize = vMap.size();
+        int eSize = 0;
+        for (AdjEdges adjEdges : eMap.values()) {
+            eSize += adjEdges.size();
+        }
+        eSize /= 2;
+        String filename = String.format("snapshots/T%04dV%dE%d.txt", transId, vSize, eSize);
+        File file = new File(filename);
+        try {
+            FileWriter writer = new FileWriter(file);
+            BufferedWriter bw = new BufferedWriter(writer);
+            bw.write("t # " + transId);
+            for (StaticVertex v : vMap.values()) {
+                bw.newLine();
+                bw.write("v " + v.id() + " " + v.label());
+            }
+            List<StaticVertex> vertices = new ArrayList<>(vMap.values());
+            for (int i = 0; i < vertices.size(); i++) {
+                for (int j = i + 1; j < vertices.size(); j++) {
+                    StaticVertex from = vertices.get(i);
+                    StaticVertex to = vertices.get(j);
+                    StaticEdge e = (StaticEdge) eMap.get(from.id()).edgeTo(to.id());
+                    if (e == null) {
+                        continue;
+                    }
+                    System.out.println("from " + from.id() + " to " + to.id() + " " + e.label());
+                    bw.newLine();
+                    bw.write("e " + from.id() + " " + to.id() + " " + e.label());
+                }
+            }
+            bw.close();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int vLabel() {
+        return random.nextInt(vLabelNum);
+    }
+
+    private int eLabel() {
+        return random.nextInt(eLabelNum);
+    }
+
+    private int selectAttachPoint() {
         if (totalDegree == 0) {
             return random.nextInt(vMap.size());
         }
@@ -116,27 +178,35 @@ public class Generator {
         return vertices.get(index);
     }
 
-    private int totalDegrees() {
-        int degrees = 0;
-        for (AdjEdges adjEdges : eMap.values()) {
-            degrees += adjEdges.size();
-        }
-        return degrees;
-    }
-
-    private int vLabel() {
-        return random.nextInt(vLabelNum);
-    }
-
-    private int eLabel() {
-        return random.nextInt(eLabelNum);
-    }
-
     private List<Integer> vertices(int degree) {
-        Map.Entry<Integer, Integer> entry = degreeInterval.floorEntry(degree);
-        int v = entry.getKey();
-        Map<Integer, StaticVertex> map = vMap.tailMap(v, true).headMap(v, true);
-        return new ArrayList<>(map.keySet());
+        int sum = 0;
+        TreeSet<Integer> vertices = new TreeSet<>();
+        for (Map.Entry<Integer, TreeSet<Integer>> entry : vGroup.entrySet()) {
+            int d = entry.getKey();
+            vertices = entry.getValue();
+            if (vertices == null || vertices.isEmpty()) {
+                continue;
+            }
+            sum += d * vertices.size();
+            if (sum >= degree) {
+                break;
+            }
+        }
+        return new ArrayList<>(vertices);
+    }
+
+    public static void main(String[] args) {
+        int initialEntity = 20;
+        int averageDegree = 4;
+        int snapshotNum = 1000;
+        double insertRate = 0.2;
+        double insertDelRate = 3;
+
+        int vLabelNum = 100;
+        int eLabelNum = 100;
+
+        Generator generator = new Generator(initialEntity, averageDegree, snapshotNum, insertRate, insertDelRate, vLabelNum, eLabelNum);
+        generator.generate();
     }
 
 }
