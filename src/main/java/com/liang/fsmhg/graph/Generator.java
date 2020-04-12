@@ -42,11 +42,15 @@ public class Generator {
     }
 
     public void generate() {
+        boolean append = true;
         firstSnapshot();
-        output(0);
+        output(0, append);
         for (int i = 1; i < snapshotNum; i++) {
             evolve();
-            output(i);
+            output(i, append);
+        }
+        if (append) {
+            output(-1, append);
         }
     }
 
@@ -118,7 +122,7 @@ public class Generator {
         totalDegree -= 2;
     }
 
-    private void output(int transId) {
+    private void output(int transId, boolean append) {
         System.out.println("TRANS " + transId);
         int vSize = vMap.size();
         int eSize = 0;
@@ -127,11 +131,22 @@ public class Generator {
         }
         eSize /= 2;
         String filename = String.format("snapshots/T%04dV%dE%d.txt", transId, vSize, eSize);
+        if (append) {
+            filename = "snapshots.txt";
+        }
         File file = new File(filename);
         try {
-            FileWriter writer = new FileWriter(file);
+            FileWriter writer = new FileWriter(file, append);
             BufferedWriter bw = new BufferedWriter(writer);
+            if (transId != 0 && append) {
+                bw.newLine();
+            }
             bw.write("t # " + transId);
+            if (transId == -1) {
+                bw.close();
+                writer.close();
+                return;
+            }
             for (StaticVertex v : vMap.values()) {
                 bw.newLine();
                 bw.write("v " + v.id() + " " + v.label());

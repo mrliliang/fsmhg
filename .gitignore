@@ -28,3 +28,4 @@ hs_err_pid*
 /target
 /src/test/data
 /snapshots/
+snapshots.txt
