@@ -5,7 +5,7 @@ import com.liang.fsmhg.graph.LabeledVertex;
 
 public class PointPattern extends Pattern {
 
-    int label;
+    private int label;
 
     public PointPattern(int label) {
         super(null, null);

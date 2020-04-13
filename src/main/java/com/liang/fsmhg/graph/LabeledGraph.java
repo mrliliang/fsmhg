@@ -109,6 +109,6 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         if (this.graphId > other.graphId) {
             return 1;
         }
-        return 10;
+        return 0;
     }
 }

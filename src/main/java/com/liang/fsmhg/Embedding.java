@@ -24,12 +24,12 @@ public class Embedding {
     }
 
     private List<LabeledVertex> vertices(int count) {
-        if (parent == null) {
+        if (this.parent == null) {
             List<LabeledVertex> vertices = new ArrayList<>(count);
             vertices.add(v);
             return vertices;
         }
-        List<LabeledVertex> vertices = vertices(count + 1);
+        List<LabeledVertex> vertices = this.parent.vertices(count + 1);
         vertices.add(v);
         return vertices;
     }
