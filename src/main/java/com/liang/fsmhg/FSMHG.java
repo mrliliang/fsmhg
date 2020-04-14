@@ -714,11 +714,12 @@ public class FSMHG {
                 continue;
             }
 
-            TreeSet<DFSEdge> candidates = backCand.computeIfAbsent(e2.to(), vIndex -> new TreeSet<>());
+            TreeSet<DFSEdge> candidates;
             if (!e2.isForward()) {
+                candidates = backCand.computeIfAbsent(e2.to(), vIndex -> new TreeSet<>());
                 candidates.add(e2);
             } else {
-                candidates = forCand.computeIfAbsent(e2.to(), vIndex -> new TreeSet<>());
+                candidates = forCand.computeIfAbsent(e2.from(), vIndex -> new TreeSet<>());
                 candidates.add(new DFSEdge(e2.from(), p.code().nodeCount(), e2.fromLabel(), e2.toLabel(), e2.edgeLabel()));
             }
         }
