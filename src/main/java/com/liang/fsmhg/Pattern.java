@@ -194,4 +194,12 @@ public class Pattern {
         }
     }
 
+    List<Pattern> rightSiblings() {
+        List<Pattern> list = new ArrayList<>();
+        if (parent != null) {
+            list.addAll(parent.children.tailMap(this.edge).values());
+        }
+        return list;
+    }
+
 }

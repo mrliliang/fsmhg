@@ -1,1 +1,1 @@
-java -jar target/fsmhg.jar -d test -s 0.5
+java -jar target/fsmhg.jar -d test -s 0.3 -o out/test_result

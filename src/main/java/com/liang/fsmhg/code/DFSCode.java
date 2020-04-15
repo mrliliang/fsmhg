@@ -56,7 +56,6 @@ public class DFSCode implements Comparable<DFSCode> {
     }
 
     public LabeledGraph toGraph() {
-        // TODO: 2020/3/29 Convert DFS code to graph
         LabeledGraph g = new StaticGraph();
 
         for (DFSEdge edge : edges) {
@@ -160,7 +159,7 @@ public class DFSCode implements Comparable<DFSCode> {
         subCode.add(edge);
         LabeledGraph subPatternGraph = subCode.toGraph();
         for (int i = 1; i < edges.size(); i++) {
-            List<Integer> rmpath = rmPath(i);
+            List<Integer> rmpath = rmPath(i - 1);
             map = nextEdge(pg, subPatternGraph, embeddings, rmpath);
             Map.Entry<DFSEdge, List<Embedding>> entry = map.firstEntry();
             edge = entry.getKey();
@@ -196,28 +195,35 @@ public class DFSCode implements Comparable<DFSCode> {
         TreeMap<DFSEdge, List<Embedding>> eMap = new TreeMap<>();
         for (Embedding em : vMap.firstEntry().getValue()) {
             LabeledVertex v = em.vertex();
-            LabeledEdge minEdge = null;
+//            LabeledEdge minEdge = null;
             for (LabeledEdge e : pg.adjEdges(v.id())) {
-//                if (pg.vLabel(e.from()) > pg.vLabel(e.to())) {
-//                    continue;
-//                }
-                if (minEdge == null) {
-                    minEdge = e;
-                } else if (pg.eLabel(e) < pg.eLabel(minEdge) ||
-                        (pg.eLabel(e) == pg.eLabel(minEdge) &&
-                                pg.vLabel(e.to()) <= pg.vLabel(minEdge.to()))) {
-                    minEdge = e;
+                if (pg.vLabel(e.from()) > pg.vLabel(e.to())) {
+                    continue;
                 }
-            }
-            if (minEdge != null) {
-                DFSEdge dfsEdge = new DFSEdge(0, 1, pg.vLabel(minEdge.from()), pg.vLabel(minEdge.to()), pg.eLabel(minEdge));
+//                if (minEdge == null) {
+//                    minEdge = e;
+//                } else if (pg.eLabel(e) < pg.eLabel(minEdge) ||
+//                        (pg.eLabel(e) == pg.eLabel(minEdge) &&
+//                                pg.vLabel(e.to()) <= pg.vLabel(minEdge.to()))) {
+//                    minEdge = e;
+//                }
+                DFSEdge dfsEdge = new DFSEdge(0, 1, pg.vLabel(e.from()), pg.vLabel(e.to()), pg.eLabel(e));
                 List<Embedding> embeddingList = eMap.get(dfsEdge);
                 if (embeddingList == null) {
                     embeddingList = new ArrayList<>();
                     eMap.put(dfsEdge, embeddingList);
                 }
-                embeddingList.add(new Embedding(minEdge.to(), em));
+                embeddingList.add(new Embedding(e.to(), em));
             }
+//            if (minEdge != null) {
+//                DFSEdge dfsEdge = new DFSEdge(0, 1, pg.vLabel(minEdge.from()), pg.vLabel(minEdge.to()), pg.eLabel(minEdge));
+//                List<Embedding> embeddingList = eMap.get(dfsEdge);
+//                if (embeddingList == null) {
+//                    embeddingList = new ArrayList<>();
+//                    eMap.put(dfsEdge, embeddingList);
+//                }
+//                embeddingList.add(new Embedding(minEdge.to(), em));
+//            }
         }
 
         return eMap;
@@ -254,8 +260,8 @@ public class DFSCode implements Comparable<DFSCode> {
             List<LabeledVertex> emVertices = em.vertices();
             LabeledVertex rmVertex = emVertices.get(rmDfsId);
             for (int i : rmPath) {
-                LabeledVertex pathVertex = emVertices.get(rmPath.get(i));
-                if (subPatternGraph.edge(rmVertex.id(), pathVertex.id()) != null) {
+                LabeledVertex pathVertex = emVertices.get(i);
+                if (subPatternGraph.edge(rmDfsId, i) != null) {
                     continue;
                 }
 
@@ -285,31 +291,39 @@ public class DFSCode implements Comparable<DFSCode> {
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id());
             }
-            LabeledVertex rmVertex = emVertices.get(rmPath.get(rmPath.size() - 1));
+            LabeledVertex rmVertex = emVertices.get(rmDfsId);
 
             //Forward edge on right most vertex
-            LabeledEdge minRmForward = null;
+//            LabeledEdge minRmForward = null;
             for (LabeledEdge e : patternGraph.adjEdges(rmVertex.id())) {
                 if (emBits.get(e.to().id())) {
                     continue;
                 }
-                if (minRmForward == null) {
-                    minRmForward = e;
-                } else if (patternGraph.eLabel(e) < patternGraph.eLabel(minRmForward) ||
-                        (patternGraph.eLabel(e) == patternGraph.eLabel(minRmForward) &&
-                                patternGraph.vLabel(e.to()) <= patternGraph.vLabel(minRmForward.to()))) {
-                    minRmForward = e;
-                }
-            }
-            if (minRmForward != null) {
-                DFSEdge dfsEdge = new DFSEdge(rmDfsId, rmDfsId + 1, patternGraph.vLabel(rmVertex), patternGraph.vLabel(minRmForward.to()), patternGraph.eLabel(minRmForward));
+//                if (minRmForward == null) {
+//                    minRmForward = e;
+//                } else if (patternGraph.eLabel(e) < patternGraph.eLabel(minRmForward) ||
+//                        (patternGraph.eLabel(e) == patternGraph.eLabel(minRmForward) &&
+//                                patternGraph.vLabel(e.to()) <= patternGraph.vLabel(minRmForward.to()))) {
+//                    minRmForward = e;
+//                }
+
+                DFSEdge dfsEdge = new DFSEdge(rmDfsId, emVertices.size(), patternGraph.vLabel(rmVertex), patternGraph.vLabel(e.to()), patternGraph.eLabel(e));
                 List<Embedding> embeddingList = map.get(dfsEdge);
                 if (embeddingList == null) {
                     embeddingList = new ArrayList<>();
                     map.put(dfsEdge, embeddingList);
                 }
-                embeddingList.add(new Embedding(minRmForward.to(), em));
+                embeddingList.add(new Embedding(e.to(), em));
             }
+//            if (minRmForward != null) {
+//                DFSEdge dfsEdge = new DFSEdge(rmDfsId, emVertices.size(), patternGraph.vLabel(rmVertex), patternGraph.vLabel(minRmForward.to()), patternGraph.eLabel(minRmForward));
+//                List<Embedding> embeddingList = map.get(dfsEdge);
+//                if (embeddingList == null) {
+//                    embeddingList = new ArrayList<>();
+//                    map.put(dfsEdge, embeddingList);
+//                }
+//                embeddingList.add(new Embedding(minRmForward.to(), em));
+//            }
         }
         return map;
     }
@@ -317,7 +331,6 @@ public class DFSCode implements Comparable<DFSCode> {
 
     private TreeMap<DFSEdge, List<Embedding>> forwardPathEdge(LabeledGraph patternGraph, List<Embedding> embeddings, List<Integer> rmPath) {
         TreeMap<DFSEdge, List<Embedding>> map = new TreeMap<>();
-        int rmDfsId = rmPath.get(rmPath.size() - 1);
         for (Embedding em : embeddings) {
             List<LabeledVertex> emVertices = em.vertices();
             BitSet emBits = new BitSet();
@@ -353,32 +366,44 @@ public class DFSCode implements Comparable<DFSCode> {
 
 
             //Forward edge on right most path
-            for (int i = rmPath.get(rmPath.size() - 2); i >= 0; i--) {
+            for (int i = rmPath.size() - 2; i >= 0; i--) {
                 LabeledVertex pathVertex = emVertices.get(rmPath.get(i));
 
-                LabeledEdge minPathForward = null;
+//                LabeledEdge minPathForward = null;
+                boolean find = false;
                 for (LabeledEdge e : patternGraph.adjEdges(pathVertex.id())) {
                     if (emBits.get(e.to().id())) {
                         continue;
                     }
-                    if (minPathForward == null) {
-                        minPathForward = e;
-                    } else if (patternGraph.eLabel(e) < patternGraph.eLabel(minPathForward) ||
-                            (patternGraph.eLabel(e) == patternGraph.eLabel(minPathForward) &&
-                                    patternGraph.vLabel(e.to()) <= patternGraph.vLabel(minPathForward.to()))) {
-                        minPathForward = e;
-                    }
-                }
-                if (minPathForward != null) {
-                    DFSEdge dfsEdge = new DFSEdge(rmPath.get(i), rmDfsId + 1, patternGraph.vLabel(pathVertex), patternGraph.vLabel(minPathForward.to()), patternGraph.eLabel(minPathForward));
+                    find = true;
+//                    if (minPathForward == null) {
+//                        minPathForward = e;
+//                    } else if (patternGraph.eLabel(e) < patternGraph.eLabel(minPathForward) ||
+//                            (patternGraph.eLabel(e) == patternGraph.eLabel(minPathForward) &&
+//                                    patternGraph.vLabel(e.to()) <= patternGraph.vLabel(minPathForward.to()))) {
+//                        minPathForward = e;
+//                    }
+                    DFSEdge dfsEdge = new DFSEdge(rmPath.get(i), emVertices.size(), patternGraph.vLabel(pathVertex), patternGraph.vLabel(e.to()), patternGraph.eLabel(e));
                     List<Embedding> embeddingList = map.get(dfsEdge);
                     if (embeddingList == null) {
                         embeddingList = new ArrayList<>();
                         map.put(dfsEdge, embeddingList);
                     }
-                    embeddingList.add(new Embedding(minPathForward.to(), em));
+                    embeddingList.add(new Embedding(e.to(), em));
+                }
+                if (find) {
                     break;
                 }
+//                if (minPathForward != null) {
+//                    DFSEdge dfsEdge = new DFSEdge(rmPath.get(i), emVertices.size(), patternGraph.vLabel(pathVertex), patternGraph.vLabel(minPathForward.to()), patternGraph.eLabel(minPathForward));
+//                    List<Embedding> embeddingList = map.get(dfsEdge);
+//                    if (embeddingList == null) {
+//                        embeddingList = new ArrayList<>();
+//                        map.put(dfsEdge, embeddingList);
+//                    }
+//                    embeddingList.add(new Embedding(minPathForward.to(), em));
+//                    break;
+//                }
             }
         }
         return map;

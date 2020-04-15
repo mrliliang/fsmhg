@@ -15,7 +15,7 @@ public class FSMHG {
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
     private double minSup;
-    private int maxEdgeSize = Integer.MAX_VALUE;
+    private int maxEdgeSize;
     private boolean partition;
     private double similarity;
     private int clusterCounter;
@@ -100,25 +100,21 @@ public class FSMHG {
                 if (!isFrequent(pp)) {
                     continue;
                 }
-                this.patternCount++;
-                bw.write("t # " + (pointCount++) + " * " + pp.frequency());
+                pointCount++;
+                bw.write("t # " + (this.patternCount++) + " * " + pp.frequency());
                 bw.newLine();
                 bw.write("v 0 " + pp.label());
                 bw.newLine();
-            }
-            System.out.println(pointCount + " point patterns");
+                bw.newLine();
 
-            for (PointPattern pp : points.values()) {
-                if (!isFrequent(pp)) {
-                    continue;
-                }
-                for (Pattern p : pp.children()) {
-                    if (!isFrequent(p) || !p.checkMin()) {
+                for (Pattern child : pp.children()) {
+                    if (!isFrequent(child) || !child.checkMin()) {
                         continue;
                     }
-                    save(p, bw);
+                    save(child, bw);
                 }
             }
+            System.out.println(pointCount + " point patterns");
             System.out.println((this.patternCount - pointCount) + " connected patterns.");
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,24 +132,30 @@ public class FSMHG {
     private void save(Pattern p, BufferedWriter bw) throws IOException {
         bw.write("t # " + (this.patternCount++) + " * " + p.frequency());
         bw.newLine();
-        LabeledGraph g = p.code().toGraph();
+        DFSCode code = p.code();
+        LabeledGraph g = code.toGraph();
         for (int i = 0; i < g.vSize(); i++) {
             LabeledVertex v = g.vertex(i);
             bw.write("v " + i + " " + g.vLabel(v));
             bw.newLine();
         }
-        for (int i = 0; i < g.vSize(); i++) {
-            for (LabeledEdge e : g.adjEdges(i)) {
-                if (e.from().id() >= e.to().id()) {
-                    continue;
-                }
-                bw.write("e " + e.from().id() + " " + e.to().id() + " " + g.eLabel(e));
-                bw.newLine();
-            }
+//        for (int i = 0; i < g.vSize(); i++) {
+//            for (LabeledEdge e : g.adjEdges(i)) {
+//                if (e.from().id() >= e.to().id()) {
+//                    continue;
+//                }
+//                bw.write("e " + e.from().id() + " " + e.to().id() + " " + g.eLabel(e));
+//                bw.newLine();
+//            }
+//        }
+        for (DFSEdge e : code.edges()) {
+            bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
+            bw.newLine();
         }
+        bw.newLine();
 
         for (Pattern child : p.children()) {
-            if (!isFrequent(p) || !p.checkMin()) {
+            if (!isFrequent(child) || !child.checkMin()) {
                 continue;
             }
             save(child, bw);
@@ -163,7 +165,6 @@ public class FSMHG {
 
     // TODO: 2020/3/31 enumeration
     public void enumerate() {
-//        transDelimiter = trans.firstEntry().getValue();
         this.trans = loadTrans();
         System.out.println("Total trans: " + trans.size());
 
@@ -172,8 +173,6 @@ public class FSMHG {
         Map<DFSEdge, Pattern> edges;
         if (partition) {
             clusters = Cluster.partition(trans, similarity, 0);
-//            clusterDelimiter = clusters.get(0);
-//            clusterCounter = clusters.size();
             points = newPointsCluster(clusters);
             edges = newEdges(points, clusters);
         } else {
@@ -190,48 +189,11 @@ public class FSMHG {
             if (p.code().edgeSize() >= maxEdgeSize) {
                 break;
             }
-            subgraphMining(trans, p, rightSiblings(p, patterns, i + 1));
+            subgraphMining(trans, p);
         }
 
         saveResult();
     }
-
-    private List<Pattern> rightSiblings(Pattern p, List<Pattern> patterns, int fromIndex) {
-        int toIndex = fromIndex;
-        while (patterns.get(toIndex).parent() == p.parent()) {
-            toIndex++;
-        }
-        return patterns.subList(fromIndex, toIndex);
-    }
-
-    // TODO: 2020/3/31 increment enumeration
-//    public void incrementEnum(TreeMap<Long, LabeledGraph> newTrans) {
-////        transDelimiter = newTrans.firstEntry().getValue();
-//        this.trans.putAll(newTrans);
-//        List<Cluster> clusters;
-//        Map<Integer, PointPattern> points;
-//        Map<DFSEdge, Pattern> edges;
-//        if (partition) {
-//            clusters = Cluster.partition(new ArrayList<>(newTrans.values()), similarity, clusterCounter);
-////            clusterDelimiter = clusters.get(0);
-//            clusterCounter += clusters.size();
-//            points = newPoints(clusters);
-//            edges = newEdges(points, clusters);
-//        } else {
-//            points = newPoints(this.trans);
-//            edges = newEdges(points);
-//        }
-//
-//        List<Pattern> patterns = new ArrayList<>(edges.values());
-//        for (int i = 0; i < patterns.size(); i++) {
-//            Pattern p = patterns.get(i);
-//            if (!isFrequent(p) || p.code().edgeSize() < maxEdgeSize) {
-//                continue;
-//            }
-//            subgraphMining(newTrans, p, rightSiblings(p, patterns, i + 1));
-//        }
-//    }
-
 
     public Map<Integer, PointPattern> newPointsCluster(List<Cluster> clusters) {
         Map<Integer, PointPattern> newPoints = new TreeMap<>();
@@ -408,12 +370,12 @@ public class FSMHG {
     }
 
 
-    public void subgraphMining(List<LabeledGraph> trans, Pattern parent, List<Pattern> siblings) {
+    public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
             return;
         }
 
-        List<Pattern> children = enumerateChildren(parent, siblings);
+        List<Pattern> children = enumerateChildren(parent);
         if (children == null || children.size() == 0) {
             return;
         }
@@ -425,14 +387,14 @@ public class FSMHG {
             if (!isFrequent(p)) {
                 continue;
             }
-            subgraphMining(trans, p, children.subList(i + 1, children.size()));
+            subgraphMining(trans, p);
         }
     }
 
-    private List<Pattern> enumerateChildren(Pattern p, List<Pattern> siblings) {
+    private List<Pattern> enumerateChildren(Pattern p) {
         TreeMap<DFSEdge, Pattern> newChildren = new TreeMap<>();
 
-        join(p, siblings, newChildren);
+        join(p, p.rightSiblings(), newChildren);
         if (p.edge().isForward()) {
             extend(p, newChildren);
         }
@@ -706,7 +668,7 @@ public class FSMHG {
                 continue;
             }
             DFSEdge e2 = sib.edge();
-            if (e1.compareTo(e2) >= 0) {
+            if (e1.compareTo(e2) > 0) {
                 continue;
             }
 
@@ -748,7 +710,7 @@ public class FSMHG {
         }
     }
 
-    private TreeMap<DFSEdge, Pattern> extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
+    private void extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
         DFSEdge lastEdge = p.edge();
         DFSEdge firstEdge = p.code().get(0);
         TreeMap<DFSEdge, Pattern> candEdges = new TreeMap<>();
@@ -807,8 +769,6 @@ public class FSMHG {
         for (LabeledGraph g : commonTrans) {
             extendOtherEmbeddings(g, p, new TreeSet<>(candEdges.keySet()), children);
         }
-
-        return children;
     }
 
     private void joinInterEmbeddings(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeMap<DFSEdge, Pattern> children) {
@@ -981,7 +941,7 @@ public class FSMHG {
             LabeledVertex from = emVertices.get(rmPathIds.get(rmPathIds.size() - 1));
 
             //extend backward edges
-            for (int j = 0; j < rmPathIds.size() - 1; j++) {
+            for (int j = 0; j < rmPathIds.size() - 2; j++) {
                 int toId = rmPathIds.get(j);
                 LabeledVertex to = emVertices.get(toId);
                 LabeledEdge back = inter.edge(from.id(), to.id());
@@ -1045,7 +1005,7 @@ public class FSMHG {
                 LabeledVertex from = emVertices.get(rmPathIds.get(rmPathIds.size() - 1));
 
                 //extend backward edges
-                for (int j = 0; j < rmPathIds.size() - 1; j++) {
+                for (int j = 0; j < rmPathIds.size() - 2; j++) {
                     int toId = rmPathIds.get(j);
                     LabeledVertex to = emVertices.get(toId);
                     LabeledEdge back = dg.edge(from.id(), to.id());
@@ -1089,10 +1049,10 @@ public class FSMHG {
             }
 
             int fromId = rmPathIds.get(rmPathIds.size() - 1);
-            LabeledVertex from = emVertices.get(rmPathIds.get(rmPathIds.size() - 1));
+            LabeledVertex from = emVertices.get(fromId);
 
             //extend backward edges
-            for (int j = 0; j < rmPathIds.size() - 1; j++) {
+            for (int j = 0; j < rmPathIds.size() - 2; j++) {
                 int toId = rmPathIds.get(j);
                 LabeledVertex to = emVertices.get(toId);
                 LabeledEdge back = g.edge(from.id(), to.id());
@@ -1107,7 +1067,7 @@ public class FSMHG {
                 }
             }
 
-            //extend forward edges
+            //extend rm forward edges
             for (LabeledEdge e : g.adjEdges(from.id())) {
                 LabeledVertex to = e.to();
                 if (emBits.get(to.id())) {
@@ -1116,7 +1076,7 @@ public class FSMHG {
                 DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                 DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
-                    Pattern child = updateOtherExpansion(g, fromId, fromId + 1, g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
+                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
                     children.put(child.edge(), child);
                 }
             }
