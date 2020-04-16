@@ -180,6 +180,38 @@ public class DFSCode implements Comparable<DFSCode> {
         return true;
     }
 
+    public DFSCode minCode() {
+        DFSCode minCode = new DFSCode();
+
+        LabeledGraph pg = toGraph();
+
+        TreeMap<DFSEdge, List<Embedding>> map = firstEdge(pg);
+        DFSEdge edge = map.firstKey();
+        minCode.add(edge);
+
+        List<Embedding> embeddings = map.get(edge);
+        LabeledGraph subPatternGraph = minCode.toGraph();
+        for (int i = 1; i < edges.size(); i++) {
+            List<Integer> rmpath = minCode.rightMostPath();
+            map = nextEdge(pg, subPatternGraph, embeddings, rmpath);
+            Map.Entry<DFSEdge, List<Embedding>> entry = map.firstEntry();
+            edge = entry.getKey();
+            minCode.add(edge);
+            embeddings = entry.getValue();
+
+            if (subPatternGraph.vertex(edge.from()) == null) {
+                subPatternGraph.addVertex(edge.from(), edge.fromLabel());
+            }
+            if (subPatternGraph.vertex(edge.to()) == null) {
+                subPatternGraph.addVertex(edge.to(), edge.toLabel());
+            }
+            subPatternGraph.addEdge(edge.from(), edge.to(), edge.edgeLabel());
+            subPatternGraph.addEdge(edge.to(), edge.from(), edge.edgeLabel());
+        }
+
+        return minCode;
+    }
+
 
     private TreeMap<DFSEdge, List<Embedding>> firstEdge(LabeledGraph pg) {
         TreeMap<Integer, List<Embedding>> vMap = new TreeMap<>();

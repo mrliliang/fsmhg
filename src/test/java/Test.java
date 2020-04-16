@@ -1,10 +1,16 @@
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 
+import java.util.Formatter;
+
 
 public class Test {
 
     public static void main(String[] args) {
+        System.out.format("%.20f", 10000 * 0.5);
+        System.out.println();
+
+
         String code;
 //        code = "(0,1,X,a,Y)(1,2,Y,b,X)(2,0,X,a,X)(2,3,X,c,Z)(3,1,Z,b,Y)(1,4,Y,d,Z)";//false
 //        code = "(0,1,Y,a,X)(1,2,X,a,X)(2,0,X,b,Y)(2,3,X,c,Z)(3,0,Z,b,Y)(0,4,Y,d,Z)";//false
@@ -17,9 +23,12 @@ public class Test {
         code = "(0,1,2,2,2)(1,2,2,5,2)(2,3,2,5,2)(3,4,2,5,2)(1,5,2,5,2)(5,6,2,5,2)";//true
         code = "(0,1,2,2,2)(1,2,2,5,2)(2,3,2,5,2)(1,4,2,5,2)";//true
         code = "(0,1,2,2,2)(1,2,2,5,2)(2,3,2,5,2)(1,4,2,5,2)(4,5,2,5,2)";//true
+        code = "(0,1,2,5,2)(1,2,2,5,2)(2,3,2,5,2)(3,4,2,5,2)(3,5,2,5,2)(2,6,2,5,5)(6,7,5,5,2)";//true
+        code = "(0,1,2,2,2)(1,2,2,5,2)(2,3,2,5,2)(3,4,2,2,2)(3,5,2,5,2)(5,6,2,5,2)(1,7,2,5,2)";//true
         DFSCode dfsCode = code(code);
         System.out.println("min = " + dfsCode.isMin());
         System.out.println(dfsCode);
+        System.out.println(dfsCode.minCode());
 //        System.out.println(dfsCode.toGraph());
     }
 

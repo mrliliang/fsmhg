@@ -54,6 +54,7 @@ public class  DFSEdge implements Comparable<DFSEdge> {
             } else if (this.to > other.to) {
                 return 1;
             }
+
             if (this.edgeLabel < other.edgeLabel) {
                 return -1;
             } else if (this.edgeLabel > other.edgeLabel) {

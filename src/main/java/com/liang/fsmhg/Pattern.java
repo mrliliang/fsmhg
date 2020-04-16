@@ -125,7 +125,7 @@ public class Pattern {
     }
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
-        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, aLong -> new ArrayList<>());
+        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> new ArrayList<>());
         embeddings.add(em);
     }
 
@@ -161,7 +161,7 @@ public class Pattern {
     public Pattern addChild(int from, int to, int fromLabel, int toLabel, int eLabel) {
         DFSEdge e = new DFSEdge(from, to, fromLabel, toLabel, eLabel);
         Pattern child = new Pattern(e, this);
-        children.put(e, new Pattern(e, this));
+        children.put(e, child);
         return child;
     }
 
