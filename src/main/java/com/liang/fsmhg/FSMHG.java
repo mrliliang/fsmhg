@@ -39,6 +39,7 @@ public class FSMHG {
     private long emBitsTime = 0;
     private long emBitsCheckTime = 0;
     private long candCheckTime = 0;
+    private long insertChildTime = 0;
 
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -992,8 +993,12 @@ public class FSMHG {
                 if (cands.contains(dfsEdge)) {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
+
+                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
                     children.put(child.edge(), child);
+                    long insertChildEnd = System.currentTimeMillis();
+                    insertChildTime += (insertChildEnd - insertChildBegin);
                 } else {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
@@ -1026,8 +1031,12 @@ public class FSMHG {
                     if (cands.contains(dfsEdge)) {
                         long candCheckEnd = System.currentTimeMillis();
                         candCheckTime += (candCheckEnd - candCheckBegin);
+
+                        long insertChildBegin = System.currentTimeMillis();
                         Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
                         children.put(child.edge(), child);
+                        long insertChildEnd = System.currentTimeMillis();
+                        insertChildTime += (insertChildEnd - insertChildBegin);
                     } else {
                         long candCheckEnd = System.currentTimeMillis();
                         candCheckTime += (candCheckEnd - candCheckBegin);
