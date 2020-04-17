@@ -3,6 +3,7 @@ package com.liang.fsmhg;
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.*;
+import sun.jvm.hotspot.utilities.Bits;
 
 import java.io.*;
 import java.util.*;
@@ -1018,11 +1019,12 @@ public class FSMHG {
             }
 
             //join forward edge
-            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
-            emBits.setSize(maxVid + 1);
+//            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
+//            emBits.setSize(maxVid + 1);
+            BitSet emBits = new BitSet(maxVid + 1);
             long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
-                emBits.set(v.id(), true);
+                emBits.set(v.id());
             }
             long emBitsEnd = System.currentTimeMillis();
             emBitsTime += (emBitsEnd - emBitsBegin);
@@ -1030,7 +1032,7 @@ public class FSMHG {
                 LabeledVertex from = emVertics.get(entry.getKey());
                 for (LabeledEdge e : g.adjEdges(from.id())) {
                     long emBitsCheckBegin = System.currentTimeMillis();
-                    if (emBits.get(e.to().id()) != null) {
+                    if (emBits.get(e.to().id())) {
                         long emBitsCheckEnd = System.currentTimeMillis();
                         emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                         continue;
@@ -1186,10 +1188,11 @@ public class FSMHG {
             emVerticesTime += (emVerticesEnd - emVerticesBegin);
 
             long emBitsBegin = System.currentTimeMillis();
-            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
-            emBits.setSize(maxVid + 1);
+//            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
+//            emBits.setSize(maxVid + 1);
+            BitSet emBits = new BitSet(maxVid + 1);
             for (LabeledVertex v : emVertices) {
-                emBits.set(v.id(), true);
+                emBits.set(v.id());
             }
             long emBitsEnd = System.currentTimeMillis();
             emBitsTime += (emBitsEnd - emBitsBegin);
@@ -1229,7 +1232,7 @@ public class FSMHG {
             for (LabeledEdge e : g.adjEdges(from.id())) {
                 LabeledVertex to = e.to();
                 long emBitsCheckBegin = System.currentTimeMillis();
-                if (emBits.get(to.id()) != null) {
+                if (emBits.get(to.id())) {
                     long emBitsCheckEnd = System.currentTimeMillis();
                     emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                     continue;
