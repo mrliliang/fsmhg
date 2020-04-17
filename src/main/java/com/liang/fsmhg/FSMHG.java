@@ -1030,7 +1030,7 @@ public class FSMHG {
                 LabeledVertex from = emVertics.get(entry.getKey());
                 for (LabeledEdge e : g.adjEdges(from.id())) {
                     long emBitsCheckBegin = System.currentTimeMillis();
-                    if (emBits.get(e.to().id())) {
+                    if (emBits.get(e.to().id()) != null) {
                         long emBitsCheckEnd = System.currentTimeMillis();
                         emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                         continue;
@@ -1229,7 +1229,7 @@ public class FSMHG {
             for (LabeledEdge e : g.adjEdges(from.id())) {
                 LabeledVertex to = e.to();
                 long emBitsCheckBegin = System.currentTimeMillis();
-                if (emBits.get(to.id())) {
+                if (emBits.get(to.id()) != null) {
                     long emBitsCheckEnd = System.currentTimeMillis();
                     emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                     continue;
