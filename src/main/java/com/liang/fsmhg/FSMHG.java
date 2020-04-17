@@ -994,9 +994,10 @@ public class FSMHG {
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
                     children.put(child.edge(), child);
+                } else {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
-                long candCheckEnd = System.currentTimeMillis();
-                candCheckTime += (candCheckEnd - candCheckBegin);
             }
 
             //join forward edge
@@ -1027,9 +1028,10 @@ public class FSMHG {
                         candCheckTime += (candCheckEnd - candCheckBegin);
                         Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
                         children.put(child.edge(), child);
+                    } else {
+                        long candCheckEnd = System.currentTimeMillis();
+                        candCheckTime += (candCheckEnd - candCheckBegin);
                     }
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
             }
         }
@@ -1194,9 +1196,10 @@ public class FSMHG {
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
                     children.put(child.edge(), child);
+                } else {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
-                long candCheckEnd = System.currentTimeMillis();
-                candCheckTime += (candCheckEnd - candCheckBegin);
             }
 
             //extend rm forward edges
@@ -1219,9 +1222,10 @@ public class FSMHG {
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
                     children.put(child.edge(), child);
+                } else {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
-                long candCheckEnd = System.currentTimeMillis();
-                candCheckTime += (candCheckEnd - candCheckBegin);
             }
         }
 
