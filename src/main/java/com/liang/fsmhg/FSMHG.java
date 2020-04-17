@@ -736,15 +736,15 @@ public class FSMHG {
         long commonBegin = System.currentTimeMillis();
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
-        for (Pattern sib : siblings) {
-            if (partition) {
-                commonCluster.addAll(sib.clusters());
-            }
-            commonTrans.addAll(sib.unClusteredGraphs());
-        }
-        if (partition) {
-            commonCluster.retainAll(p.clusters());
-        }
+//        for (Pattern sib : siblings) {
+//            if (partition) {
+//                commonCluster.addAll(sib.clusters());
+//            }
+//            commonTrans.addAll(sib.unClusteredGraphs());
+//        }
+//        if (partition) {
+//            commonCluster.retainAll(p.clusters());
+//        }
         commonTrans.retainAll(p.unClusteredGraphs());
         long commonEnd = System.currentTimeMillis();
         joinCommonGraphTime += (commonEnd - commonBegin);
@@ -760,7 +760,7 @@ public class FSMHG {
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
         long actualJoinBegin = System.currentTimeMillis();
-        for (LabeledGraph g : commonTrans) {
+        for (LabeledGraph g : p.unClusteredGraphs()) {
             joinOtherEmbeddings(g, p, backCand, forCand, children);
         }
         long actualJoinEnd = System.currentTimeMillis();
@@ -810,16 +810,16 @@ public class FSMHG {
         long commonBegin = System.currentTimeMillis();
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
-        for (Pattern ep : candEdges.values()) {
-            if (partition) {
-                commonCluster.addAll(ep.clusters());
-            }
-            commonTrans.addAll(ep.unClusteredGraphs());
-        }
-        if (partition) {
-            commonCluster.retainAll(p.clusters());
-        }
-        commonTrans.retainAll(p.unClusteredGraphs());
+//        for (Pattern ep : candEdges.values()) {
+//            if (partition) {
+//                commonCluster.addAll(ep.clusters());
+//            }
+//            commonTrans.addAll(ep.unClusteredGraphs());
+//        }
+//        if (partition) {
+//            commonCluster.retainAll(p.clusters());
+//        }
+//        commonTrans.retainAll(p.unClusteredGraphs());
         long commonEnd = System.currentTimeMillis();
         extendCommonGraphTime += (commonEnd - commonBegin);
 
@@ -833,7 +833,7 @@ public class FSMHG {
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
         long actualExtendBegin = System.currentTimeMillis();
-        for (LabeledGraph g : commonTrans) {
+        for (LabeledGraph g : p.unClusteredGraphs()) {
             extendOtherEmbeddings(g, p, new TreeSet<>(candEdges.keySet()), children);
         }
         long actualExtendEnd = System.currentTimeMillis();
