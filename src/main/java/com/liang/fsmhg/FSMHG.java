@@ -197,6 +197,7 @@ public class FSMHG {
         for (PointPattern pp : this.points.values()) {
             collectPatterns(pp, patterns);
         }
+        System.out.println("Total number of connected patterns " + patterns.size());
 
         long begin = System.currentTimeMillis();
         for (Pattern p : patterns) {
