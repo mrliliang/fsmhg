@@ -30,6 +30,8 @@ public class FSMHG {
     private long extendCandTime = 0;
     private long joinCommonGraphTime = 0;
     private long extendCommonGraphTime = 0;
+    private long actualJoinTime = 0;
+    private long actualExtendTime = 0;
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
@@ -206,6 +208,8 @@ public class FSMHG {
         System.out.println("Extend cand time = " + extendCandTime);
         System.out.println("Join common grpah time = " + joinCommonGraphTime);
         System.out.println("Extend common graph time = " + extendCommonGraphTime);
+        System.out.println("Actual join time = " + actualJoinTime);
+        System.out.println("Actual extend time = " + actualExtendTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -755,9 +759,12 @@ public class FSMHG {
 
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
+        long actualJoinBegin = System.currentTimeMillis();
         for (LabeledGraph g : commonTrans) {
             joinOtherEmbeddings(g, p, backCand, forCand, children);
         }
+        long actualJoinEnd = System.currentTimeMillis();
+        actualJoinTime += (actualJoinEnd - actualJoinBegin);
     }
 
     private void extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
@@ -825,9 +832,12 @@ public class FSMHG {
         }
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
+        long actualExtendBegin = System.currentTimeMillis();
         for (LabeledGraph g : commonTrans) {
             extendOtherEmbeddings(g, p, new TreeSet<>(candEdges.keySet()), children);
         }
+        long actualExtendEnd = System.currentTimeMillis();
+        actualExtendTime += (actualExtendEnd - actualExtendBegin);
     }
 
     private void joinInterEmbeddings(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeMap<DFSEdge, Pattern> children) {
