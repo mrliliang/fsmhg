@@ -32,6 +32,8 @@ public class FSMHG {
     private long extendCommonGraphTime = 0;
     private long actualJoinTime = 0;
     private long actualExtendTime = 0;
+    private long pointTime = 0;
+    private long edgeTime = 0;
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
@@ -176,8 +178,15 @@ public class FSMHG {
             this.points = pointsCluster(clusters);
             edges = edges(points, clusters);
         } else {
+            long pointBegin = System.currentTimeMillis();
             this.points = points(this.trans);
+            long pointEnd = System.currentTimeMillis();
+            pointTime = pointEnd - pointBegin;
+
+            long edgesBegin = System.currentTimeMillis();
             edges = edges(points);
+            long edgesEnd = System.currentTimeMillis();
+            edgeTime = edgesEnd - edgesBegin;
         }
 
         List<Pattern> patterns = new ArrayList<>(edges.values());
@@ -189,10 +198,10 @@ public class FSMHG {
             if (p.code().edgeSize() >= maxEdgeSize) {
                 break;
             }
-            long begin = System.currentTimeMillis();
+//            long begin = System.currentTimeMillis();
             subgraphMining(trans, p);
-            long end = System.currentTimeMillis();
-            System.out.println(i + " subgraphMining time " + (end - begin));
+//            long end = System.currentTimeMillis();
+//            System.out.println(i + " subgraphMining time " + (end - begin));
         }
 
         long saveTime = System.currentTimeMillis();
@@ -210,6 +219,8 @@ public class FSMHG {
         System.out.println("Extend common graph time = " + extendCommonGraphTime);
         System.out.println("Actual join time = " + actualJoinTime);
         System.out.println("Actual extend time = " + actualExtendTime);
+        System.out.println("Points time = " + pointTime);
+        System.out.println("Edges time = " + edgeTime);
     }
 
     private void minCodeCheckTimeTest() {
