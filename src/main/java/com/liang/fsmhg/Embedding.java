@@ -5,6 +5,7 @@ import com.liang.fsmhg.graph.LabeledVertex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 
 public class Embedding {
 
@@ -27,9 +28,14 @@ public class Embedding {
     }
 
     public List<LabeledVertex> vertices() {
-        ArrayList<LabeledVertex> list = new ArrayList<>(size);
+        Vector<LabeledVertex> list = new Vector<>(size);
+        list.setSize(size);
 //        return vertices(1);
-        vertices(list);
+        Embedding em = this;
+        for (int i = size - 1; i >= 0; i--) {
+            list.set(i, em.v);
+            em = em.parent;
+        }
         return list;
     }
 
