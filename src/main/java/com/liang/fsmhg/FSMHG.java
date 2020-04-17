@@ -24,6 +24,9 @@ public class FSMHG {
 //    private LabeledGraph transDelimiter;
 //    private Cluster clusterDelimiter;
 
+    private long joinTime = 0;
+    private long extendTime = 0;
+
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
         this.output = output;
@@ -193,6 +196,8 @@ public class FSMHG {
         System.out.println("Save time = " + (endTime - saveTime));
 
         minCodeCheckTimeTest();
+        System.out.println("Total join time = " + joinTime);
+        System.out.println("Total extend time = " + extendTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -416,9 +421,15 @@ public class FSMHG {
     private List<Pattern> enumerateChildren(Pattern p) {
         TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
 
+        long joinBegin = System.currentTimeMillis();
         join(p, p.rightSiblings(), children);
+        long joinEnd = System.currentTimeMillis();
+        joinTime += (joinEnd - joinBegin);
         if (p.edge().isForward()) {
+            long extendBegin = System.currentTimeMillis();
             extend(p, children);
+            long extendEnd = System.currentTimeMillis();
+            extendTime += (extendEnd - extendBegin);
         }
 
         return new ArrayList<>(children.values());
