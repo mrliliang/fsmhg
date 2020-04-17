@@ -38,6 +38,7 @@ public class FSMHG {
     private long patternToGraphTime = 0;
     private long emBitsTime = 0;
     private long emBitsCheckTime = 0;
+    private long candCheckTime = 0;
 
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -229,6 +230,7 @@ public class FSMHG {
         System.out.println("Embedding vertices time = " + emVerticesTime);
         System.out.println("Embedding bits time = " + emBitsTime);
         System.out.println("Embedding bits check time " + emBitsCheckTime);
+        System.out.println("Candidates check time = " + candCheckTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -983,12 +985,18 @@ public class FSMHG {
                 if (back == null) {
                     continue;
                 }
+
+                long candCheckBegin = System.currentTimeMillis();
                 TreeSet<DFSEdge> cands = entry.getValue();
                 DFSEdge dfsEdge = new DFSEdge(emVertics.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                 if (cands.contains(dfsEdge)) {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
                     children.put(child.edge(), child);
                 }
+                long candCheckEnd = System.currentTimeMillis();
+                candCheckTime += (candCheckEnd - candCheckBegin);
             }
 
             //join forward edge
@@ -1010,12 +1018,18 @@ public class FSMHG {
                     }
                     long emBitsCheckEnd = System.currentTimeMillis();
                     emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
+
+                    long candCheckBegin = System.currentTimeMillis();
                     DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertics.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                     TreeSet<DFSEdge> cands = entry.getValue();
                     if (cands.contains(dfsEdge)) {
+                        long candCheckEnd = System.currentTimeMillis();
+                        candCheckTime += (candCheckEnd - candCheckBegin);
                         Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
                         children.put(child.edge(), child);
                     }
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
             }
         }
@@ -1172,12 +1186,17 @@ public class FSMHG {
                     continue;
                 }
 
+                long candCheckBegin = System.currentTimeMillis();
                 DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                 DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
                     children.put(child.edge(), child);
                 }
+                long candCheckEnd = System.currentTimeMillis();
+                candCheckTime += (candCheckEnd - candCheckBegin);
             }
 
             //extend rm forward edges
@@ -1191,12 +1210,18 @@ public class FSMHG {
                 }
                 long emBitsCheckEnd = System.currentTimeMillis();
                 emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
+
+                long candCheckBegin = System.currentTimeMillis();
                 DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                 DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
+                    long candCheckEnd = System.currentTimeMillis();
+                    candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
                     children.put(child.edge(), child);
                 }
+                long candCheckEnd = System.currentTimeMillis();
+                candCheckTime += (candCheckEnd - candCheckBegin);
             }
         }
 
