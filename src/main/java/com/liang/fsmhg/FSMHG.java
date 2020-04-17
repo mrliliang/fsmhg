@@ -1019,10 +1019,10 @@ public class FSMHG {
 
             //join forward edge
             Vector<Boolean> emBits = new Vector<>(maxVid + 1);
+            emBits.setSize(maxVid + 1);
             long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
                 emBits.set(v.id(), true);
-
             }
             long emBitsEnd = System.currentTimeMillis();
             emBitsTime += (emBitsEnd - emBitsBegin);
@@ -1187,6 +1187,7 @@ public class FSMHG {
 
             long emBitsBegin = System.currentTimeMillis();
             Vector<Boolean> emBits = new Vector<>(maxVid + 1);
+            emBits.setSize(maxVid + 1);
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id(), true);
             }
