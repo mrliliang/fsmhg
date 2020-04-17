@@ -183,9 +183,34 @@ public class FSMHG {
             subgraphMining(trans, p);
         }
 
+        long saveTime = System.currentTimeMillis();
         saveResult();
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
+        System.out.println("Save time = " + (endTime - saveTime));
+
+        minCodeCheckTimeTest();
+    }
+
+    private void minCodeCheckTimeTest() {
+        List<Pattern> patterns = new ArrayList<>();
+        for (PointPattern pp : this.points.values()) {
+            collectPatterns(pp, patterns);
+        }
+
+        long begin = System.currentTimeMillis();
+        for (Pattern p : patterns) {
+            p.code().isMin();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Min code check time = " + (end - begin));
+    }
+
+    private void collectPatterns(Pattern p, List<Pattern> patterns) {
+        for (Pattern child : p.children()) {
+            patterns.add(child);
+            collectPatterns(child, patterns);
+        }
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
