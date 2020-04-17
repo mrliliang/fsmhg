@@ -200,6 +200,8 @@ public class FSMHG {
         minCodeCheckTimeTest();
         System.out.println("Total join time = " + joinTime);
         System.out.println("Total extend time = " + extendTime);
+        System.out.println("Join cand time = " + joinCandTime);
+        System.out.println("Extend cand time = " + extendCandTime);
     }
 
     private void minCodeCheckTimeTest() {
