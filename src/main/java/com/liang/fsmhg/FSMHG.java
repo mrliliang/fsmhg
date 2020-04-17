@@ -24,6 +24,8 @@ public class FSMHG {
 //    private LabeledGraph transDelimiter;
 //    private Cluster clusterDelimiter;
 
+    private int maxVid = 0;
+
     private long joinTime = 0;
     private long extendTime = 0;
     private long joinCandTime = 0;
@@ -282,6 +284,9 @@ public class FSMHG {
             } else {
                 pattern.addIntersectionEmbedding(c, em);
             }
+            if (v.id() > maxVid) {
+                maxVid = v.id();
+            }
         }
     }
 
@@ -301,6 +306,9 @@ public class FSMHG {
 //                points.put(pattern.label(), pattern);
                 Embedding em = new Embedding(v, null);
                 pattern.addEmbedding(g, em);
+                if (v.id() > maxVid) {
+                    maxVid = v.id();
+                }
             }
         }
     }
@@ -406,6 +414,9 @@ public class FSMHG {
                 }
                 pp.addEmbedding(g, new Embedding(v, null));
 //                points.put(pp.label(), pp);
+                if (v.id() > maxVid) {
+                    maxVid = v.id();
+                }
             }
         }
         return points;
@@ -1007,14 +1018,7 @@ public class FSMHG {
             }
 
             //join forward edge
-            int initialCapacity = 0;
-            for (LabeledVertex v : emVertics) {
-                if (v.id() > initialCapacity) {
-                    initialCapacity = v.id();
-                }
-            }
-            initialCapacity++;
-            Vector<Boolean> emBits = new Vector<>(initialCapacity);
+            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
             long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
                 emBits.set(v.id(), true);
@@ -1182,14 +1186,7 @@ public class FSMHG {
             emVerticesTime += (emVerticesEnd - emVerticesBegin);
 
             long emBitsBegin = System.currentTimeMillis();
-            int initialCapacity = 0;
-            for (LabeledVertex v : emVertices) {
-                if (v.id() > initialCapacity) {
-                    initialCapacity = v.id();
-                }
-            }
-            initialCapacity++;
-            Vector<Boolean> emBits = new Vector<>(initialCapacity);
+            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id(), true);
             }
