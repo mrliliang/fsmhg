@@ -34,6 +34,9 @@ public class FSMHG {
     private long actualExtendTime = 0;
     private long pointTime = 0;
     private long edgeTime = 0;
+    private long emVerticesTime = 0;
+    private long patternToGraphTime = 0;
+
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
@@ -221,6 +224,7 @@ public class FSMHG {
         System.out.println("Actual extend time = " + actualExtendTime);
         System.out.println("Points time = " + pointTime);
         System.out.println("Edges time = " + edgeTime);
+        System.out.println("Embedding vertices time = " + emVerticesTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -962,7 +966,11 @@ public class FSMHG {
             return;
         }
         for (Embedding em : embeddings) {
+            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertics = em.vertices();
+            long emVerticesEnd = System.currentTimeMillis();
+            emVerticesTime += (emVerticesEnd - emVerticesBegin);
+
             //join backward edges
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
                 LabeledVertex from = emVertics.get(emVertics.size() - 1);
@@ -1122,7 +1130,10 @@ public class FSMHG {
         List<Integer> rmPathIds = code.rightMostPath();
 
         for (Embedding em : p.embeddings(g)) {
+            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertices = em.vertices();
+            long emVerticesEnd = System.currentTimeMillis();
+            emVerticesTime += (emVerticesEnd - emVerticesBegin);
             BitSet emBits = new BitSet();
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id());
