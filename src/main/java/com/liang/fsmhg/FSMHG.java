@@ -1013,6 +1013,7 @@ public class FSMHG {
                     initialCapacity = v.id();
                 }
             }
+            initialCapacity++;
             Vector<Boolean> emBits = new Vector<>(initialCapacity);
             long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
@@ -1187,6 +1188,7 @@ public class FSMHG {
                     initialCapacity = v.id();
                 }
             }
+            initialCapacity++;
             Vector<Boolean> emBits = new Vector<>(initialCapacity);
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id(), true);
