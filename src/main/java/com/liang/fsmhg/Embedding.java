@@ -30,7 +30,6 @@ public class Embedding {
     public List<LabeledVertex> vertices() {
         Vector<LabeledVertex> list = new Vector<>(size);
         list.setSize(size);
-//        return vertices(1);
         Embedding em = this;
         for (int i = size - 1; i >= 0; i--) {
             list.set(i, em.v);
