@@ -3,7 +3,6 @@ package com.liang.fsmhg;
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.*;
-import sun.jvm.hotspot.utilities.Bits;
 
 import java.io.*;
 import java.util.*;
