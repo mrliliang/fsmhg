@@ -28,6 +28,8 @@ public class FSMHG {
     private long extendTime = 0;
     private long joinCandTime = 0;
     private long extendCandTime = 0;
+    private long joinCommonGraphTime = 0;
+    private long extendCommonGraphTime = 0;
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
@@ -202,6 +204,8 @@ public class FSMHG {
         System.out.println("Total extend time = " + extendTime);
         System.out.println("Join cand time = " + joinCandTime);
         System.out.println("Extend cand time = " + extendCandTime);
+        System.out.println("Join common grpah time = " + joinCommonGraphTime);
+        System.out.println("Extend common graph time = " + extendCommonGraphTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -722,7 +726,10 @@ public class FSMHG {
                 candidates.add(new DFSEdge(e2.from(), p.code().nodeCount(), e2.fromLabel(), e2.toLabel(), e2.edgeLabel()));
             }
         }
+        long joinCandEnd = System.currentTimeMillis();
+        joinCandTime += (joinCandEnd - joinCandBegin);
 
+        long commonBegin = System.currentTimeMillis();
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern sib : siblings) {
@@ -735,8 +742,9 @@ public class FSMHG {
             commonCluster.retainAll(p.clusters());
         }
         commonTrans.retainAll(p.unClusteredGraphs());
-        long joinCandEnd = System.currentTimeMillis();
-        joinCandTime += (joinCandEnd - joinCandBegin);
+        long commonEnd = System.currentTimeMillis();
+        joinCommonGraphTime += (commonEnd - commonBegin);
+
 
         if (partition) {
             for (Cluster c : commonCluster) {
@@ -789,7 +797,10 @@ public class FSMHG {
                 candEdges.put(ep.edge(), ep);
             }
         }
+        long extendCandEnd = System.currentTimeMillis();
+        extendCandTime += (extendCandEnd - extendCandBegin);
 
+        long commonBegin = System.currentTimeMillis();
         TreeSet<Cluster> commonCluster = new TreeSet<>();
         TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
         for (Pattern ep : candEdges.values()) {
@@ -802,8 +813,9 @@ public class FSMHG {
             commonCluster.retainAll(p.clusters());
         }
         commonTrans.retainAll(p.unClusteredGraphs());
-        long extendCandEnd = System.currentTimeMillis();
-        extendCandTime += (extendCandEnd - extendCandBegin);
+        long commonEnd = System.currentTimeMillis();
+        extendCommonGraphTime += (commonEnd - commonBegin);
+
 
         if (partition) {
             for (Cluster c : commonCluster) {
