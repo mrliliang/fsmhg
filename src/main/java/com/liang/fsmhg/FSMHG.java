@@ -36,6 +36,8 @@ public class FSMHG {
     private long edgeTime = 0;
     private long emVerticesTime = 0;
     private long patternToGraphTime = 0;
+    private long emBitsTime = 0;
+    private long emBitsCheckTime = 0;
 
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -225,6 +227,8 @@ public class FSMHG {
         System.out.println("Points time = " + pointTime);
         System.out.println("Edges time = " + edgeTime);
         System.out.println("Embedding vertices time = " + emVerticesTime);
+        System.out.println("Embedding bits time = " + emBitsTime);
+        System.out.println("Embedding bits check time " + emBitsCheckTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -989,15 +993,23 @@ public class FSMHG {
 
             //join forward edge
             BitSet emBits = new BitSet();
+            long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
                 emBits.set(v.id());
             }
+            long emBitsEnd = System.currentTimeMillis();
+            emBitsTime += (emBitsEnd - emBitsBegin);
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertics.get(entry.getKey());
                 for (LabeledEdge e : g.adjEdges(from.id())) {
+                    long emBitsCheckBegin = System.currentTimeMillis();
                     if (emBits.get(e.to().id())) {
+                        long emBitsCheckEnd = System.currentTimeMillis();
+                        emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                         continue;
                     }
+                    long emBitsCheckEnd = System.currentTimeMillis();
+                    emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                     DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertics.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                     TreeSet<DFSEdge> cands = entry.getValue();
                     if (cands.contains(dfsEdge)) {
@@ -1134,10 +1146,14 @@ public class FSMHG {
             List<LabeledVertex> emVertices = em.vertices();
             long emVerticesEnd = System.currentTimeMillis();
             emVerticesTime += (emVerticesEnd - emVerticesBegin);
+
+            long emBitsBegin = System.currentTimeMillis();
             BitSet emBits = new BitSet();
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id());
             }
+            long emBitsEnd = System.currentTimeMillis();
+            emBitsTime += (emBitsEnd - emBitsBegin);
 
             int fromId = rmPathIds.get(rmPathIds.size() - 1);
             LabeledVertex from = emVertices.get(fromId);
@@ -1167,9 +1183,14 @@ public class FSMHG {
             //extend rm forward edges
             for (LabeledEdge e : g.adjEdges(from.id())) {
                 LabeledVertex to = e.to();
+                long emBitsCheckBegin = System.currentTimeMillis();
                 if (emBits.get(to.id())) {
+                    long emBitsCheckEnd = System.currentTimeMillis();
+                    emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                     continue;
                 }
+                long emBitsCheckEnd = System.currentTimeMillis();
+                emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                 DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                 DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
