@@ -26,6 +26,8 @@ public class FSMHG {
 
     private long joinTime = 0;
     private long extendTime = 0;
+    private long joinCandTime = 0;
+    private long extendCandTime = 0;
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.data = data;
@@ -691,6 +693,7 @@ public class FSMHG {
     }
 
     private void join(Pattern p, List<Pattern> siblings, TreeMap<DFSEdge, Pattern> children) {
+        long joinCandBegin = System.currentTimeMillis();
         TreeMap<Integer, TreeSet<DFSEdge>> backCand = new TreeMap<>();
         TreeMap<Integer, TreeSet<DFSEdge>> forCand = new TreeMap<>();
 
@@ -730,6 +733,8 @@ public class FSMHG {
             commonCluster.retainAll(p.clusters());
         }
         commonTrans.retainAll(p.unClusteredGraphs());
+        long joinCandEnd = System.currentTimeMillis();
+        joinCandTime += (joinCandEnd - joinCandBegin);
 
         if (partition) {
             for (Cluster c : commonCluster) {
@@ -746,6 +751,7 @@ public class FSMHG {
     }
 
     private void extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
+        long extendCandBegin = System.currentTimeMillis();
         DFSEdge lastEdge = p.edge();
         DFSEdge firstEdge = p.code().get(0);
         TreeMap<DFSEdge, Pattern> candEdges = new TreeMap<>();
@@ -794,6 +800,8 @@ public class FSMHG {
             commonCluster.retainAll(p.clusters());
         }
         commonTrans.retainAll(p.unClusteredGraphs());
+        long extendCandEnd = System.currentTimeMillis();
+        extendCandTime += (extendCandEnd - extendCandBegin);
 
         if (partition) {
             for (Cluster c : commonCluster) {
