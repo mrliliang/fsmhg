@@ -1214,9 +1214,13 @@ public class FSMHG {
                 }
 
                 long candCheckBegin = System.currentTimeMillis();
-                DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
-                DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
-                if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
+                DFSEdge dfsEdge;
+                if (g.vLabel(from) <= g.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
+                }
+                if (cand.contains(dfsEdge)) {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
@@ -1240,9 +1244,13 @@ public class FSMHG {
                 emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
 
                 long candCheckBegin = System.currentTimeMillis();
-                DFSEdge dfsEdge1 = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                DFSEdge dfsEdge2 = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
-                if (cand.contains(dfsEdge1) || cand.contains(dfsEdge2)) {
+                DFSEdge dfsEdge;
+                if (g.vLabel(from) <= g.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
+                }
+                if (cand.contains(dfsEdge)) {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
