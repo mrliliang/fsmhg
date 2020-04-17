@@ -180,7 +180,10 @@ public class FSMHG {
             if (p.code().edgeSize() >= maxEdgeSize) {
                 break;
             }
+            long begin = System.currentTimeMillis();
             subgraphMining(trans, p);
+            long end = System.currentTimeMillis();
+            System.out.println(i + " subgraphMining time " + (end - begin));
         }
 
         long saveTime = System.currentTimeMillis();
