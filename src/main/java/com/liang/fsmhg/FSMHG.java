@@ -220,8 +220,8 @@ public class FSMHG {
 //        System.out.println("Actual extend time = " + actualExtendTime);
 //        System.out.println("Points time = " + pointTime);
 //        System.out.println("Edges time = " + edgeTime);
-//        System.out.println("Embedding vertices time = " + emVerticesTime);
-//        System.out.println("Embedding bits time = " + emBitsTime);
+        System.out.println("Embedding vertices time = " + emVerticesTime);
+        System.out.println("Embedding bits time = " + emBitsTime);
 //        System.out.println("Embedding bits check time " + emBitsCheckTime);
 //        System.out.println("Candidates check time = " + candCheckTime);
 //        System.out.println("Child insert time = " + insertChildTime);
@@ -1428,7 +1428,9 @@ public class FSMHG {
             return;
         }
         for (Embedding em : embeddings) {
+            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertices = em.vertices();
+            this.emVerticesTime += (System.currentTimeMillis() - emVerticesBegin);
 
             //join backward edges
             if (!backCand.isEmpty()) {
@@ -1449,6 +1451,7 @@ public class FSMHG {
             }
 
             //join forward edges
+            long emBitsBegin = System.currentTimeMillis();
             BitSet emBits = new BitSet();
             if (!forCand.isEmpty() || !extendCands.isEmpty()) {
                 emBits = new BitSet(maxVid + 1);
@@ -1456,6 +1459,7 @@ public class FSMHG {
                     emBits.set(v.id());
                 }
             }
+            this.emBitsTime += (System.currentTimeMillis() - emBitsBegin);
             if (!forCand.isEmpty()) {
                 for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                     LabeledVertex from = emVertices.get(entry.getKey());
