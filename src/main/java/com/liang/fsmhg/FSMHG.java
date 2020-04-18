@@ -1428,6 +1428,8 @@ public class FSMHG {
         if (embeddings == null) {
             return;
         }
+        DFSCode code = p.code();
+        List<Integer> rmPathIds = code.rightMostPath();
         for (Embedding em : embeddings) {
 //            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertices = em.vertices();
@@ -1443,6 +1445,7 @@ public class FSMHG {
                         continue;
                     }
                     // TODO: 2020/4/18 more backward edges can be filtered out
+
 
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
@@ -1496,8 +1499,8 @@ public class FSMHG {
 //            }
 
             //extend backward edges
-            DFSCode code = p.code();
-            List<Integer> rmPathIds = code.rightMostPath();
+//            DFSCode code = p.code();
+//            List<Integer> rmPathIds = code.rightMostPath();
             int fromId = rmPathIds.get(rmPathIds.size() - 1);
             LabeledVertex from = emVertices.get(fromId);
             for (int j = 0; j < rmPathIds.size() - 2; j++) {
