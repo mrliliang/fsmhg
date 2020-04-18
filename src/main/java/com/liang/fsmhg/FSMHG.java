@@ -210,21 +210,21 @@ public class FSMHG {
         System.out.println("Save time = " + (endTime - saveTime));
 
         minCodeCheckTimeTest();
-        System.out.println("Total join time = " + joinTime);
-        System.out.println("Total extend time = " + extendTime);
-        System.out.println("Join cand time = " + joinCandTime);
-        System.out.println("Extend cand time = " + extendCandTime);
-        System.out.println("Join common grpah time = " + joinCommonGraphTime);
-        System.out.println("Extend common graph time = " + extendCommonGraphTime);
-        System.out.println("Actual join time = " + actualJoinTime);
-        System.out.println("Actual extend time = " + actualExtendTime);
-        System.out.println("Points time = " + pointTime);
-        System.out.println("Edges time = " + edgeTime);
-        System.out.println("Embedding vertices time = " + emVerticesTime);
-        System.out.println("Embedding bits time = " + emBitsTime);
-        System.out.println("Embedding bits check time " + emBitsCheckTime);
-        System.out.println("Candidates check time = " + candCheckTime);
-        System.out.println("Child insert time = " + insertChildTime);
+//        System.out.println("Total join time = " + joinTime);
+//        System.out.println("Total extend time = " + extendTime);
+//        System.out.println("Join cand time = " + joinCandTime);
+//        System.out.println("Extend cand time = " + extendCandTime);
+//        System.out.println("Join common grpah time = " + joinCommonGraphTime);
+//        System.out.println("Extend common graph time = " + extendCommonGraphTime);
+//        System.out.println("Actual join time = " + actualJoinTime);
+//        System.out.println("Actual extend time = " + actualExtendTime);
+//        System.out.println("Points time = " + pointTime);
+//        System.out.println("Edges time = " + edgeTime);
+//        System.out.println("Embedding vertices time = " + emVerticesTime);
+//        System.out.println("Embedding bits time = " + emBitsTime);
+//        System.out.println("Embedding bits check time " + emBitsCheckTime);
+//        System.out.println("Candidates check time = " + candCheckTime);
+//        System.out.println("Child insert time = " + insertChildTime);
     }
 
     private void minCodeCheckTimeTest() {
@@ -459,10 +459,25 @@ public class FSMHG {
     private List<Pattern> enumerateChildren(Pattern p) {
         TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
 
-        join(p, p.rightSiblings(), children);
-        if (p.edge().isForward()) {
-            extend(p, children);
+        TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
+        TreeMap<Integer, TreeSet<DFSEdge>> joinForCands = new TreeMap<>();
+        joinCands(p, joinBackCands, joinForCands);
+
+        TreeSet<DFSEdge> extendCands = new TreeSet<>();
+        extendCands(p, extendCands);
+
+        for (Cluster c : p.clusters()) {
+            joinExtendInter(c, p, joinBackCands, joinForCands, extendCands);
+            joinExtendDelta(c, p, joinBackCands, joinForCands, extendCands);
         }
+        for (LabeledGraph g : p.unClusteredGraphs()) {
+            joinExtendOther(g, p, joinBackCands, joinForCands, extendCands);
+        }
+
+//        join(p, p.rightSiblings(), children);
+//        if (p.edge().isForward()) {
+//            extend(p, children);
+//        }
 
 //        return new ArrayList<>(children.values());
 
@@ -1175,6 +1190,408 @@ public class FSMHG {
             }
         }
 
+    }
+
+
+
+    private void joinExtendInter(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
+        LabeledGraph inter = c.intersection();
+        List<Embedding> interEmbeddings = p.intersectionEmbeddings(c);
+        List<Embedding> borderEmbeddings = p.borderEmbeddings(c);
+
+        for (int interEmCount = 0, borderEmCount = 0 - interEmbeddings.size(); interEmCount < interEmbeddings.size() || borderEmCount < borderEmbeddings.size(); interEmCount++, borderEmCount++) {
+            Embedding em;
+            if (borderEmCount < 0) {
+                em = interEmbeddings.get(interEmCount);
+            } else {
+                em = borderEmbeddings.get(borderEmCount);
+            }
+            List<LabeledVertex> emVertices = em.vertices();
+            //join backward edges
+            if (!backCand.isEmpty()) {
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(emVertices.size() - 1);
+                    LabeledVertex to = emVertices.get(entry.getKey());
+                    LabeledEdge back = inter.edge(from.id(), to.id());
+                    if (back == null) {
+                        continue;
+                    }
+                    TreeSet<DFSEdge> cands = entry.getValue();
+                    DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
+                    if (cands.contains(dfsEdge)) {
+                        Pattern child;
+                        if (borderEmCount < 0) {
+                            child = updateInterExpansion(c, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+                        } else {
+                            child = updateBorderExpansion(c, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+                        }
+                    }
+                }
+            }
+
+            //join forward edge
+            BitSet emBits = new BitSet();
+            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
+                emBits = new BitSet(maxVid + 1);
+                for (LabeledVertex v : emVertices) {
+                    emBits.set(v.id());
+                }
+            }
+            if (!forCand.isEmpty()) {
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(entry.getKey());
+                    for (LabeledEdge e : inter.adjEdges(from.id())) {
+                        if (emBits.get(e.to().id())) {
+                            continue;
+                        }
+                        DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), inter.vLabel(from), inter.vLabel(e.to()), inter.eLabel(e));
+                        TreeSet<DFSEdge> cands = entry.getValue();
+                        if (cands.contains(dfsEdge)) {
+                            Pattern child;
+                            if (borderEmCount < 0) {
+                                child = updateInterExpansion(c, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+                            } else {
+                                child = updateBorderExpansion(c, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //extend
+            if (extendCands.isEmpty()) {
+                continue;
+            }
+
+            //extend backward edges
+            DFSCode code = p.code();
+            List<Integer> rmPathIds = code.rightMostPath();
+            int fromId = rmPathIds.get(rmPathIds.size() - 1);
+            LabeledVertex from = emVertices.get(rmPathIds.get(rmPathIds.size() - 1));
+            for (int j = 0; j < rmPathIds.size() - 2; j++) {
+                int toId = rmPathIds.get(j);
+                LabeledVertex to = emVertices.get(toId);
+                LabeledEdge back = inter.edge(from.id(), to.id());
+                if (back == null) {
+                    continue;
+                }
+                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                LabeledEdge pathEdge = inter.edge(to.id(), nextTo.id());
+                if (inter.eLabel(pathEdge) > inter.eLabel(back) || (inter.eLabel(pathEdge) == inter.eLabel(back) && inter.vLabel(nextTo) > inter.vLabel(back.from()))) {
+                    continue;
+                }
+
+                DFSEdge dfsEdge;
+                if (inter.vLabel(from) <= inter.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(to), inter.vLabel(from), inter.eLabel(back));
+                }
+                if (extendCands.contains(dfsEdge)) {
+                    Pattern child;
+                    if (borderEmCount < 0) {
+                        child = updateInterExpansion(c, fromId, toId, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back), em, p);
+                    } else {
+                        child = updateBorderExpansion(c, fromId, toId, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back), em, p);
+                    }
+                }
+            }
+
+            //extend forward edges
+            for (LabeledEdge e : inter.adjEdges(from.id())) {
+                LabeledVertex to = e.to();
+                if (emBits.get(to.id())) {
+                    continue;
+                }
+                DFSEdge dfsEdge;
+                if (inter.vLabel(from) <= inter.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(to), inter.vLabel(from), inter.eLabel(e));
+                }
+                if (extendCands.contains(dfsEdge)) {
+                    Pattern child;
+                    if (borderEmCount < 0) {
+                        child = updateInterExpansion(c, fromId, fromId + 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(e), new Embedding(to, em), p);
+                    } else {
+                        child = updateBorderExpansion(c, fromId, fromId + 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(e), new Embedding(to, em), p);
+                    }
+                }
+            }
+
+        }
+    }
+
+    private void joinExtendDelta(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
+        for (LabeledGraph g : c) {
+            Cluster.DeltaGraph dg = c.deltaGraph(g);
+
+            for (Embedding em : p.borderEmbeddings(c)) {
+                if (!isBorderEmbedding(em, dg.border())) {
+                    continue;
+                }
+                List<LabeledVertex> emVertices = em.vertices();
+                //join backward edges
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(emVertices.size() - 1);
+                    LabeledVertex to = emVertices.get(entry.getKey());
+                    LabeledEdge back = dg.edge(from.id(), to.id());
+                    if (back == null) {
+                        continue;
+                    }
+                    TreeSet<DFSEdge> cands = entry.getValue();
+                    DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), dg.vLabel(from), dg.vLabel(to), dg.eLabel(back));
+                    if (cands.contains(dfsEdge)) {
+                        Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+                    }
+                }
+
+                //join forward edge
+                BitSet emBits = new BitSet();
+                if (!forCand.isEmpty() || !extendCands.isEmpty()) {
+                    emBits = new BitSet(maxVid + 1);
+                    for (LabeledVertex v : emVertices) {
+                        emBits.set(v.id());
+                    }
+                }
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(entry.getKey());
+                    for (LabeledEdge e : dg.adjEdges(from.id())) {
+                        if (emBits.get(e.to().id())) {
+                            continue;
+                        }
+                        DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), dg.vLabel(from), dg.vLabel(e.to()), dg.eLabel(e));
+                        TreeSet<DFSEdge> cands = entry.getValue();
+                        if (cands.contains(dfsEdge)) {
+                            Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+                        }
+                    }
+                }
+
+                //extend
+                if (extendCands.isEmpty()) {
+                    continue;
+                }
+
+                //extend backward edges
+                DFSCode code = p.code();
+                List<Integer> rmPathIds = code.rightMostPath();
+                int fromId = rmPathIds.get(rmPathIds.size() - 1);
+                LabeledVertex from = emVertices.get(fromId);
+                for (int j = 0; j < rmPathIds.size() - 2; j++) {
+                    int toId = rmPathIds.get(j);
+                    LabeledVertex to = emVertices.get(toId);
+                    LabeledEdge back = dg.edge(from.id(), to.id());
+                    if (back == null) {
+                        continue;
+                    }
+                    LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+                        continue;
+                    }
+
+                    DFSEdge dfsEdge;
+                    if (dg.vLabel(from) <= dg.vLabel(to)) {
+                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(from), dg.vLabel(to), dg.eLabel(back));
+                    } else {
+                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(to), dg.vLabel(from), dg.eLabel(back));
+                    }
+                    if (extendCands.contains(dfsEdge)) {
+                        Pattern child = updateOtherExpansion(g, fromId, toId, dg.vLabel(from), dg.vLabel(to), dg.eLabel(back), em, p);
+                    }
+                }
+
+                //extend forward edges
+                for (LabeledEdge e : dg.adjEdges(from.id())) {
+                    LabeledVertex to = e.to();
+                    if (emBits.get(to.id())) {
+                        continue;
+                    }
+                    DFSEdge dfsEdge;
+                    if (dg.vLabel(from) <= dg.vLabel(to)) {
+                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(from), dg.vLabel(to), dg.eLabel(e));
+                    } else {
+                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(to), dg.vLabel(from), dg.eLabel(e));
+                    }
+                    if (extendCands.contains(dfsEdge)) {
+                        Pattern child = updateOtherExpansion(g, fromId, fromId + 1, dg.vLabel(from), dg.vLabel(to), dg.eLabel(e), new Embedding(to, em), p);
+                    }
+                }
+            }
+        }
+    }
+
+    private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
+        List<Embedding> embeddings = p.embeddings(g);
+        if (embeddings == null) {
+            return;
+        }
+        for (Embedding em : embeddings) {
+            List<LabeledVertex> emVertices = em.vertices();
+
+            //join backward edges
+            if (!backCand.isEmpty()) {
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(emVertices.size() - 1);
+                    LabeledVertex to = emVertices.get(entry.getKey());
+                    LabeledEdge back = g.edge(from.id(), to.id());
+                    if (back == null) {
+                        continue;
+                    }
+
+                    TreeSet<DFSEdge> cands = entry.getValue();
+                    DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                    if (cands.contains(dfsEdge)) {
+                        Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+                    }
+                }
+            }
+
+            //join forward edges
+            BitSet emBits = new BitSet();
+            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
+                emBits = new BitSet(maxVid + 1);
+                for (LabeledVertex v : emVertices) {
+                    emBits.set(v.id());
+                }
+            }
+            if (!forCand.isEmpty()) {
+                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
+                    LabeledVertex from = emVertices.get(entry.getKey());
+                    for (LabeledEdge e : g.adjEdges(from.id())) {
+                        if (emBits.get(e.to().id())) {
+                            continue;
+                        }
+
+                        DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
+                        TreeSet<DFSEdge> cands = entry.getValue();
+                        if (cands.contains(dfsEdge)) {
+                            Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+                        }
+                    }
+                }
+            }
+
+            //extend
+            if (extendCands.isEmpty()) {
+                continue;
+            }
+
+            //extend backward edges
+            DFSCode code = p.code();
+            List<Integer> rmPathIds = code.rightMostPath();
+            int fromId = rmPathIds.get(rmPathIds.size() - 1);
+            LabeledVertex from = emVertices.get(fromId);
+            for (int j = 0; j < rmPathIds.size() - 2; j++) {
+                int toId = rmPathIds.get(j);
+                LabeledVertex to = emVertices.get(toId);
+                LabeledEdge back = g.edge(from.id(), to.id());
+                if (back == null) {
+                    continue;
+                }
+                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+                if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+                    continue;
+                }
+
+                DFSEdge dfsEdge;
+                if (g.vLabel(from) <= g.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
+                }
+                if (extendCands.contains(dfsEdge)) {
+                    Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
+                }
+            }
+
+            //extend rm forward edges
+            for (LabeledEdge e : g.adjEdges(from.id())) {
+                LabeledVertex to = e.to();
+                if (emBits.get(to.id())) {
+                    continue;
+                }
+
+                DFSEdge dfsEdge;
+                if (g.vLabel(from) <= g.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
+                }
+                if (extendCands.contains(dfsEdge)) {
+                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
+                }
+            }
+
+        }
+    }
+
+    private void joinCands(Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand) {
+        DFSEdge e1 = p.edge();
+        for (Pattern sib : p.rightSiblings()) {
+            if (!isFrequent(sib)) {
+                continue;
+            }
+            DFSEdge e2 = sib.edge();
+            if (e1.compareTo(e2) > 0) {
+                continue;
+            }
+
+            if (!e1.isForward() && !e2.isForward() && e1.to() == e2.to()) {
+                continue;
+            }
+
+            TreeSet<DFSEdge> candidates;
+            if (!e2.isForward()) {
+                candidates = backCand.computeIfAbsent(e2.to(), vIndex -> new TreeSet<>());
+                candidates.add(e2);
+            } else {
+                candidates = forCand.computeIfAbsent(e2.from(), vIndex -> new TreeSet<>());
+                candidates.add(new DFSEdge(e2.from(), p.code().nodeCount(), e2.fromLabel(), e2.toLabel(), e2.edgeLabel()));
+            }
+        }
+    }
+
+    private void extendCands(Pattern p, TreeSet<DFSEdge> extendCands) {
+        DFSEdge lastEdge = p.edge();
+        if (!lastEdge.isForward()) {
+            return;
+        }
+        DFSEdge firstEdge = p.code().get(0);
+        for (Pattern ep : this.points.get(firstEdge.fromLabel()).children()) {
+            if (!isFrequent(ep)) {
+                continue;
+            }
+            DFSEdge e = ep.edge();
+            if (e.toLabel() == lastEdge.toLabel() && e.edgeLabel() >= firstEdge.edgeLabel()) {
+                extendCands.add(e);
+            }
+        }
+        for (PointPattern pp : this.points.tailMap(firstEdge.fromLabel(), false).headMap(lastEdge.toLabel()).values()) {
+            if (!isFrequent(pp)) {
+                continue;
+            }
+            for (Pattern ep : pp.children()) {
+                if (!isFrequent(ep)) {
+                    continue;
+                }
+                DFSEdge e = ep.edge();
+                if (e.toLabel() == lastEdge.toLabel()) {
+                    extendCands.add(e);
+                }
+            }
+        }
+        PointPattern rmPoint = this.points.get(lastEdge.toLabel());
+        if (rmPoint != null && isFrequent(rmPoint)) {
+            for (Pattern ep : rmPoint.children()) {
+                if (!isFrequent(ep)) {
+                    continue;
+                }
+                extendCands.add(ep.edge());
+            }
+        }
     }
 
     private boolean isFrequent(Pattern p) {
