@@ -1449,11 +1449,11 @@ public class FSMHG {
                         continue;
                     }
                     // TODO: 2020/4/18 more backward edges can be filtered out
-                    LabeledVertex nextTo = emVertices.get(rmPathSet.higher(entry.getKey()));
-                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
-                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
-                        continue;
-                    }
+//                    LabeledVertex nextTo = emVertices.get(rmPathSet.higher(entry.getKey()));
+//                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+//                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+//                        continue;
+//                    }
 
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
@@ -1526,11 +1526,11 @@ public class FSMHG {
                 if (back == null) {
                     continue;
                 }
-                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
-                LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
-                if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
-                    continue;
-                }
+//                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+//                LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+//                if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+//                    continue;
+//                }
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
