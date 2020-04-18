@@ -1452,15 +1452,15 @@ public class FSMHG {
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (cands.contains(dfsEdge)) {
-                        long insertChildBegin = System.currentTimeMillis();
+//                        long insertChildBegin = System.currentTimeMillis();
                         Pattern child = p.child(dfsEdge);
-                        long insertChildEnd = System.currentTimeMillis();
-                        insertChildTime += (insertChildEnd - insertChildBegin);
+//                        long insertChildEnd = System.currentTimeMillis();
+//                        insertChildTime += (insertChildEnd - insertChildBegin);
 
-                        long insertEmBegin = System.currentTimeMillis();
+//                        long insertEmBegin = System.currentTimeMillis();
                         child.addEmbedding(g, em);
-                        long insertEmEnd = System.currentTimeMillis();
-                        insertEmbeddingTime += (insertEmEnd - insertEmBegin);
+//                        long insertEmEnd = System.currentTimeMillis();
+//                        insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                     }
                 }
 //            }
@@ -1486,15 +1486,15 @@ public class FSMHG {
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
                         if (cands.contains(dfsEdge)) {
-                            long insertChildBegin = System.currentTimeMillis();
+//                            long insertChildBegin = System.currentTimeMillis();
                             Pattern child = p.child(dfsEdge);
-                            long insertChildEnd = System.currentTimeMillis();
-                            insertChildTime += (insertChildEnd - insertChildBegin);
+//                            long insertChildEnd = System.currentTimeMillis();
+//                            insertChildTime += (insertChildEnd - insertChildBegin);
 
-                            long insertEmBegin = System.currentTimeMillis();
+//                            long insertEmBegin = System.currentTimeMillis();
                             child.addEmbedding(g, new Embedding(e.to(), em));
-                            long insertEmEnd = System.currentTimeMillis();
-                            insertEmbeddingTime += (insertEmEnd - insertEmBegin);
+//                            long insertEmEnd = System.currentTimeMillis();
+//                            insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                         }
                     }
                 }
@@ -1527,15 +1527,15 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 }
                 if (extendCands.contains(dfsEdge)) {
-                    long insertChildBegin = System.currentTimeMillis();
+//                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
-                    long insertChildEnd = System.currentTimeMillis();
-                    insertChildTime += (insertChildEnd - insertChildBegin);
+//                    long insertChildEnd = System.currentTimeMillis();
+//                    insertChildTime += (insertChildEnd - insertChildBegin);
 
-                    long insertEmBegin = System.currentTimeMillis();
+//                    long insertEmBegin = System.currentTimeMillis();
                     child.addEmbedding(g, em);
-                    long insertEmEnd = System.currentTimeMillis();
-                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
+//                    long insertEmEnd = System.currentTimeMillis();
+//                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                 }
             }
 
@@ -1553,15 +1553,15 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
                 if (extendCands.contains(dfsEdge)) {
-                    long insertChildBegin = System.currentTimeMillis();
+//                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                    long insertChildEnd = System.currentTimeMillis();
-                    insertChildTime += (insertChildEnd - insertChildBegin);
+//                    long insertChildEnd = System.currentTimeMillis();
+//                    insertChildTime += (insertChildEnd - insertChildBegin);
 
-                    long insertEmBegin = System.currentTimeMillis();
+//                    long insertEmBegin = System.currentTimeMillis();
                     child.addEmbedding(g, new Embedding(to, em));
-                    long insertEmEnd = System.currentTimeMillis();
-                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
+//                    long insertEmEnd = System.currentTimeMillis();
+//                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                 }
             }
 
