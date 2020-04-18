@@ -188,10 +188,10 @@ public class FSMHG {
 
     // TODO: 2020/3/31 enumeration
     public void enumerate() {
+        long startTime = System.currentTimeMillis();
         this.trans = loadTrans();
         System.out.println("Total trans: " + this.trans.size());
 //        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
-        long startTime = System.currentTimeMillis();
 //        List<Cluster> clusters;
 ////        Map<Integer, PointPattern> points;
 //        Map<DFSEdge, Pattern> edges;
