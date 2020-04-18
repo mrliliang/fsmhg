@@ -227,6 +227,7 @@ public class FSMHG {
 //        System.out.println("Embedding bits check time " + emBitsCheckTime);
 //        System.out.println("Candidates check time = " + candCheckTime);
         System.out.println("Child insert time = " + insertChildTime);
+        System.out.println("Insert embedding time = " + insertEmbeddingTime);
     }
 
 //    private void minCodeCheckTimeTest() {
