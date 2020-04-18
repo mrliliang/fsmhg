@@ -14,7 +14,7 @@ public class Pattern {
     private DFSEdge edge;
     private Pattern parent;
 
-    private TreeMap<LabeledGraph, List<Embedding>> embeddingMap;
+    private HashMap<LabeledGraph, List<Embedding>> embeddingMap;
     private TreeMap<Cluster, List<Embedding>> intersectionEmbeddings;
     private TreeMap<Cluster, List<Embedding>> borderEmbeddings;
 
@@ -27,7 +27,7 @@ public class Pattern {
         this.edge = edge;
         this.parent = parent;
 
-        embeddingMap = new TreeMap<>();
+        embeddingMap = new HashMap<>();
         intersectionEmbeddings = new TreeMap<>();
         borderEmbeddings = new TreeMap<>();
 
@@ -78,14 +78,15 @@ public class Pattern {
     }
 
     public List<LabeledGraph> unClusteredGraphs(LabeledGraph graphDelimiter) {
-        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.tailMap(graphDelimiter).keySet());
-        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
-        for (Cluster c : clusters) {
-            graphs.removeAll(c.snapshots());
-        }
-
-        return new ArrayList<>(graphs);
+//        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.tailMap(graphDelimiter).keySet());
+//        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
+//        clusters.addAll(borderEmbeddings.keySet());
+//        for (Cluster c : clusters) {
+//            graphs.removeAll(c.snapshots());
+//        }
+//
+//        return new ArrayList<>(graphs);
+        return new ArrayList<>();
     }
 
     public List<Cluster> clusters() {

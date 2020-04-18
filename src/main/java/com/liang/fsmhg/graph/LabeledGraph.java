@@ -111,4 +111,9 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         }
         return 0;
     }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(graphId);
+    }
 }
