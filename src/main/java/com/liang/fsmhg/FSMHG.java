@@ -15,6 +15,7 @@ public class FSMHG {
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
     private double minSup;
+    private int absSup;
     private int maxEdgeSize;
     private boolean partition;
     private double similarity;
@@ -177,7 +178,7 @@ public class FSMHG {
     public void enumerate() {
         this.trans = loadTrans();
         System.out.println("Total trans: " + this.trans.size());
-
+        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
         long startTime = System.currentTimeMillis();
         List<Cluster> clusters;
 //        Map<Integer, PointPattern> points;
@@ -1599,7 +1600,7 @@ public class FSMHG {
     }
 
     private boolean isFrequent(Pattern p) {
-        return p.frequency() >= this.trans.size() * minSup;
+        return p.frequency() >= this.absSup;
     }
 
 }
