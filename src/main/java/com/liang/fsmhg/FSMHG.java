@@ -1557,10 +1557,10 @@ public class FSMHG {
                     continue;
                 }
                 // TODO: 2020/4/18 more forward edges can be filtered out
-                if (g.vLabel(e.to()) < firstEdge.fromLabel()
-                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
-                    continue;
-                }
+//                if (g.vLabel(e.to()) < firstEdge.fromLabel()
+//                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
+//                    continue;
+//                }
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
