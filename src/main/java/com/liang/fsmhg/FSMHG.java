@@ -1526,11 +1526,11 @@ public class FSMHG {
                 if (back == null) {
                     continue;
                 }
-//                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
-//                LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
-//                if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
-//                    continue;
-//                }
+                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+                if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+                    continue;
+                }
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
