@@ -154,22 +154,20 @@ public class Pattern {
     }
 
     public Pattern child(DFSEdge e) {
-        return children.computeIfAbsent(e, new Function<DFSEdge, Pattern>() {
-            @Override
-            public Pattern apply(DFSEdge dfsEdge) {
-                return new Pattern(e, Pattern.this);
-            }
-        });
+        Pattern child = children.get(e);
+        if (child == null) {
+            children.put(e, new Pattern(e, Pattern.this));
+        }
+        return child;
     }
 
     public Pattern child(int from, int to, int fromLabel, int toLabel, int eLabel) {
         DFSEdge e = new DFSEdge(from, to, fromLabel, toLabel, eLabel);
-        return children.computeIfAbsent(e, new Function<DFSEdge, Pattern>() {
-            @Override
-            public Pattern apply(DFSEdge dfsEdge) {
-                return new Pattern(e, Pattern.this);
-            }
-        });
+        Pattern child = children.get(e);
+        if (child == null) {
+            children.put(e, new Pattern(e, Pattern.this));
+        }
+        return child;
     }
 
     public Pattern addChild(int from, int to, int fromLabel, int toLabel, int eLabel) {
