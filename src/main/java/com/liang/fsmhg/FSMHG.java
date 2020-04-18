@@ -22,8 +22,6 @@ public class FSMHG {
     private int clusterCounter;
     private int patternCount = 0;
 
-    private BitSet emBits;
-
 //    private LabeledGraph transDelimiter;
 //    private Cluster clusterDelimiter;
 
@@ -195,7 +193,6 @@ public class FSMHG {
             this.points = points(this.trans);
             edges = edges(points);
         }
-        emBits = new BitSet(maxVid + 1);
 
         List<Pattern> patterns = new ArrayList<>(edges.values());
         for (int i = 0; i < patterns.size(); i++) {
@@ -1472,10 +1469,9 @@ public class FSMHG {
 
             //join forward edges
 //            long emBitsBegin = System.currentTimeMillis();
-//            BitSet emBits = null;
+            BitSet emBits = null;
 //            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
-//                emBits = new BitSet(maxVid + 1);
-                emBits.clear();
+                emBits = new BitSet(maxVid + 1);
                 for (LabeledVertex v : emVertices) {
                     emBits.set(v.id());
                 }
