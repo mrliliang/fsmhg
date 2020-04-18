@@ -190,34 +190,34 @@ public class FSMHG {
     public void enumerate() {
         this.trans = loadTrans();
         System.out.println("Total trans: " + this.trans.size());
-        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
+//        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
         long startTime = System.currentTimeMillis();
-        List<Cluster> clusters;
-//        Map<Integer, PointPattern> points;
-        Map<DFSEdge, Pattern> edges;
-        if (partition) {
-            clusters = Cluster.partition(trans, similarity, 0);
-            this.points = pointsCluster(clusters);
-            edges = edges(points, clusters);
-        } else {
-            this.points = points(this.trans);
-            edges = edges(points);
-        }
-
-        List<Pattern> patterns = new ArrayList<>(edges.values());
-        for (int i = 0; i < patterns.size(); i++) {
-            Pattern p = patterns.get(i);
-            if (!isFrequent(p)) {
-                continue;
-            }
-            if (p.code().edgeSize() >= maxEdgeSize) {
-                break;
-            }
-            subgraphMining(trans, p);
-        }
-
+//        List<Cluster> clusters;
+////        Map<Integer, PointPattern> points;
+//        Map<DFSEdge, Pattern> edges;
+//        if (partition) {
+//            clusters = Cluster.partition(trans, similarity, 0);
+//            this.points = pointsCluster(clusters);
+//            edges = edges(points, clusters);
+//        } else {
+//            this.points = points(this.trans);
+//            edges = edges(points);
+//        }
+//
+//        List<Pattern> patterns = new ArrayList<>(edges.values());
+//        for (int i = 0; i < patterns.size(); i++) {
+//            Pattern p = patterns.get(i);
+//            if (!isFrequent(p)) {
+//                continue;
+//            }
+//            if (p.code().edgeSize() >= maxEdgeSize) {
+//                break;
+//            }
+//            subgraphMining(trans, p);
+//        }
+//
         long saveTime = System.currentTimeMillis();
-        saveResult();
+//        saveResult();
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
         System.out.println("Save time = " + (endTime - saveTime));
