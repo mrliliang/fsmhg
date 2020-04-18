@@ -1434,7 +1434,7 @@ public class FSMHG {
 //            this.emVerticesTime += (System.currentTimeMillis() - emVerticesBegin);
 
             //join backward edges
-            if (!backCand.isEmpty()) {
+//            if (!backCand.isEmpty()) {
                 for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
                     LabeledVertex from = emVertices.get(emVertices.size() - 1);
                     LabeledVertex to = emVertices.get(entry.getKey());
@@ -1455,19 +1455,19 @@ public class FSMHG {
                         insertChildTime += (insertChildEnd - insertChildBegin);
                     }
                 }
-            }
+//            }
 
             //join forward edges
 //            long emBitsBegin = System.currentTimeMillis();
             BitSet emBits = null;
-            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
+//            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
                 emBits = new BitSet(maxVid + 1);
                 for (LabeledVertex v : emVertices) {
                     emBits.set(v.id());
                 }
-            }
+//            }
 //            this.emBitsTime += (System.currentTimeMillis() - emBitsBegin);
-            if (!forCand.isEmpty()) {
+//            if (!forCand.isEmpty()) {
                 for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                     LabeledVertex from = emVertices.get(entry.getKey());
                     for (LabeledEdge e : g.adjEdges(from.id())) {
@@ -1488,12 +1488,12 @@ public class FSMHG {
                         }
                     }
                 }
-            }
+//            }
 
             //extend
-            if (extendCands.isEmpty()) {
-                continue;
-            }
+//            if (extendCands.isEmpty()) {
+//                continue;
+//            }
 
             //extend backward edges
             DFSCode code = p.code();
