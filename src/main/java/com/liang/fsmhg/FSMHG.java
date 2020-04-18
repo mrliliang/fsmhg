@@ -67,7 +67,7 @@ public class FSMHG {
             }
         }
 
-//        long transTravelBegin = System.currentTimeMillis();
+        long transTravelBegin = System.currentTimeMillis();
         for (LabeledGraph g : trans) {
             for (LabeledVertex v : g.vertices()) {
                 for (LabeledEdge e : g.adjEdges(v.id())) {
@@ -75,7 +75,7 @@ public class FSMHG {
                 }
             }
         }
-//        transTravelTime = System.currentTimeMillis() - transTravelBegin;
+        transTravelTime = System.currentTimeMillis() - transTravelBegin;
         return trans;
     }
 
