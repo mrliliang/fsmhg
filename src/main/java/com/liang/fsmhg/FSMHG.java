@@ -187,15 +187,8 @@ public class FSMHG {
             this.points = pointsCluster(clusters);
             edges = edges(points, clusters);
         } else {
-            long pointBegin = System.currentTimeMillis();
             this.points = points(this.trans);
-            long pointEnd = System.currentTimeMillis();
-            pointTime = pointEnd - pointBegin;
-
-            long edgesBegin = System.currentTimeMillis();
             edges = edges(points);
-            long edgesEnd = System.currentTimeMillis();
-            edgeTime = edgesEnd - edgesBegin;
         }
 
         List<Pattern> patterns = new ArrayList<>(edges.values());
@@ -207,10 +200,7 @@ public class FSMHG {
             if (p.code().edgeSize() >= maxEdgeSize) {
                 break;
             }
-//            long begin = System.currentTimeMillis();
             subgraphMining(trans, p);
-//            long end = System.currentTimeMillis();
-//            System.out.println(i + " subgraphMining time " + (end - begin));
         }
 
         long saveTime = System.currentTimeMillis();
@@ -469,27 +459,21 @@ public class FSMHG {
     private List<Pattern> enumerateChildren(Pattern p) {
         TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
 
-        long joinBegin = System.currentTimeMillis();
         join(p, p.rightSiblings(), children);
-        long joinEnd = System.currentTimeMillis();
-        joinTime += (joinEnd - joinBegin);
         if (p.edge().isForward()) {
-            long extendBegin = System.currentTimeMillis();
             extend(p, children);
-            long extendEnd = System.currentTimeMillis();
-            extendTime += (extendEnd - extendBegin);
         }
 
-        return new ArrayList<>(children.values());
+//        return new ArrayList<>(children.values());
 
-//        for (Cluster c : p.clusters(clusterDemimiter)) {
-//            expandInterEmbeddings(p, c, newChildren);
-//            expandBorderEmbeddings(p, c, newChildren);
+//        for (Cluster c : p.clusters()) {
+//            expandInterEmbeddings(p, c, children);
+//            expandBorderEmbeddings(p, c, children);
 //        }
-//        for (LabeledGraph g : p.unClusteredGraphs(graphDelimiter)) {
-//            expandOtherEmbeddings(p, g, newChildren);
+//        for (LabeledGraph g : p.unClusteredGraphs()) {
+//            expandOtherEmbeddings(p, g, children);
 //        }
-//        return new ArrayList<>(newChildren.values());
+        return new ArrayList<>(children.values());
     }
 
     private void expandInterEmbeddings(Pattern p, Cluster c, Map<DFSEdge, Pattern> newChildren) {
@@ -739,7 +723,6 @@ public class FSMHG {
     }
 
     private void join(Pattern p, List<Pattern> siblings, TreeMap<DFSEdge, Pattern> children) {
-        long joinCandBegin = System.currentTimeMillis();
         TreeMap<Integer, TreeSet<DFSEdge>> backCand = new TreeMap<>();
         TreeMap<Integer, TreeSet<DFSEdge>> forCand = new TreeMap<>();
 
@@ -766,12 +749,9 @@ public class FSMHG {
                 candidates.add(new DFSEdge(e2.from(), p.code().nodeCount(), e2.fromLabel(), e2.toLabel(), e2.edgeLabel()));
             }
         }
-        long joinCandEnd = System.currentTimeMillis();
-        joinCandTime += (joinCandEnd - joinCandBegin);
 
-        long commonBegin = System.currentTimeMillis();
-        TreeSet<Cluster> commonCluster = new TreeSet<>();
-        TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
+//        TreeSet<Cluster> commonCluster = new TreeSet<>();
+//        TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
 //        for (Pattern sib : siblings) {
 //            if (partition) {
 //                commonCluster.addAll(sib.clusters());
@@ -781,13 +761,11 @@ public class FSMHG {
 //        if (partition) {
 //            commonCluster.retainAll(p.clusters());
 //        }
-        commonTrans.retainAll(p.unClusteredGraphs());
-        long commonEnd = System.currentTimeMillis();
-        joinCommonGraphTime += (commonEnd - commonBegin);
+//        commonTrans.retainAll(p.unClusteredGraphs());
 
 
         if (partition) {
-            for (Cluster c : commonCluster) {
+            for (Cluster c : p.clusters()) {
                 joinInterEmbeddings(c, p, backCand, forCand, children);
                 joinDeltaEmbeddings(c, p, backCand, forCand, children);
             }
@@ -795,16 +773,12 @@ public class FSMHG {
 
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
-        long actualJoinBegin = System.currentTimeMillis();
         for (LabeledGraph g : p.unClusteredGraphs()) {
             joinOtherEmbeddings(g, p, backCand, forCand, children);
         }
-        long actualJoinEnd = System.currentTimeMillis();
-        actualJoinTime += (actualJoinEnd - actualJoinBegin);
     }
 
     private void extend(Pattern p, TreeMap<DFSEdge, Pattern> children) {
-        long extendCandBegin = System.currentTimeMillis();
         DFSEdge lastEdge = p.edge();
         DFSEdge firstEdge = p.code().get(0);
         TreeMap<DFSEdge, Pattern> candEdges = new TreeMap<>();
@@ -840,12 +814,9 @@ public class FSMHG {
                 candEdges.put(ep.edge(), ep);
             }
         }
-        long extendCandEnd = System.currentTimeMillis();
-        extendCandTime += (extendCandEnd - extendCandBegin);
 
-        long commonBegin = System.currentTimeMillis();
-        TreeSet<Cluster> commonCluster = new TreeSet<>();
-        TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
+//        TreeSet<Cluster> commonCluster = new TreeSet<>();
+//        TreeSet<LabeledGraph> commonTrans = new TreeSet<>();
 //        for (Pattern ep : candEdges.values()) {
 //            if (partition) {
 //                commonCluster.addAll(ep.clusters());
@@ -856,24 +827,19 @@ public class FSMHG {
 //            commonCluster.retainAll(p.clusters());
 //        }
 //        commonTrans.retainAll(p.unClusteredGraphs());
-        long commonEnd = System.currentTimeMillis();
-        extendCommonGraphTime += (commonEnd - commonBegin);
 
 
         if (partition) {
-            for (Cluster c : commonCluster) {
+            for (Cluster c : p.clusters()) {
                 extendInterEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
                 extendDeltaEmbeddings(c, p, new TreeSet<>(candEdges.keySet()), children);
             }
         }
         // TODO: 2020/4/16 support counting is incorrect
 //        commonTrans.addAll(p.unClusteredGraphs());
-        long actualExtendBegin = System.currentTimeMillis();
         for (LabeledGraph g : p.unClusteredGraphs()) {
             extendOtherEmbeddings(g, p, new TreeSet<>(candEdges.keySet()), children);
         }
-        long actualExtendEnd = System.currentTimeMillis();
-        actualExtendTime += (actualExtendEnd - actualExtendBegin);
     }
 
     private void joinInterEmbeddings(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeMap<DFSEdge, Pattern> children) {
@@ -987,10 +953,7 @@ public class FSMHG {
             return;
         }
         for (Embedding em : embeddings) {
-            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertics = em.vertices();
-            long emVerticesEnd = System.currentTimeMillis();
-            emVerticesTime += (emVerticesEnd - emVerticesBegin);
 
             //join backward edges
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
@@ -1001,21 +964,11 @@ public class FSMHG {
                     continue;
                 }
 
-                long candCheckBegin = System.currentTimeMillis();
                 TreeSet<DFSEdge> cands = entry.getValue();
                 DFSEdge dfsEdge = new DFSEdge(emVertics.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                 if (cands.contains(dfsEdge)) {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
-
-                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
 //                    children.put(child.edge(), child);
-                    long insertChildEnd = System.currentTimeMillis();
-                    insertChildTime += (insertChildEnd - insertChildBegin);
-                } else {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
             }
 
@@ -1023,39 +976,22 @@ public class FSMHG {
 //            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
 //            emBits.setSize(maxVid + 1);
             BitSet emBits = new BitSet(maxVid + 1);
-            long emBitsBegin = System.currentTimeMillis();
             for (LabeledVertex v : emVertics) {
                 emBits.set(v.id());
             }
-            long emBitsEnd = System.currentTimeMillis();
-            emBitsTime += (emBitsEnd - emBitsBegin);
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertics.get(entry.getKey());
                 for (LabeledEdge e : g.adjEdges(from.id())) {
-                    long emBitsCheckBegin = System.currentTimeMillis();
                     if (emBits.get(e.to().id())) {
-                        long emBitsCheckEnd = System.currentTimeMillis();
-                        emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                         continue;
                     }
-                    long emBitsCheckEnd = System.currentTimeMillis();
-                    emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
 
-                    long candCheckBegin = System.currentTimeMillis();
                     DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertics.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                     TreeSet<DFSEdge> cands = entry.getValue();
                     if (cands.contains(dfsEdge)) {
-                        long candCheckEnd = System.currentTimeMillis();
-                        candCheckTime += (candCheckEnd - candCheckBegin);
-
-                        long insertChildBegin = System.currentTimeMillis();
                         Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
 //                        children.put(child.edge(), child);
-                        long insertChildEnd = System.currentTimeMillis();
-                        insertChildTime += (insertChildEnd - insertChildBegin);
                     } else {
-                        long candCheckEnd = System.currentTimeMillis();
-                        candCheckTime += (candCheckEnd - candCheckBegin);
                     }
                 }
             }
@@ -1183,20 +1119,12 @@ public class FSMHG {
         List<Integer> rmPathIds = code.rightMostPath();
 
         for (Embedding em : p.embeddings(g)) {
-            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertices = em.vertices();
-            long emVerticesEnd = System.currentTimeMillis();
-            emVerticesTime += (emVerticesEnd - emVerticesBegin);
 
-            long emBitsBegin = System.currentTimeMillis();
-//            Vector<Boolean> emBits = new Vector<>(maxVid + 1);
-//            emBits.setSize(maxVid + 1);
             BitSet emBits = new BitSet(maxVid + 1);
             for (LabeledVertex v : emVertices) {
                 emBits.set(v.id());
             }
-            long emBitsEnd = System.currentTimeMillis();
-            emBitsTime += (emBitsEnd - emBitsBegin);
 
             int fromId = rmPathIds.get(rmPathIds.size() - 1);
             LabeledVertex from = emVertices.get(fromId);
@@ -1215,7 +1143,6 @@ public class FSMHG {
                     continue;
                 }
 
-                long candCheckBegin = System.currentTimeMillis();
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
@@ -1223,29 +1150,18 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 }
                 if (cand.contains(dfsEdge)) {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
 //                    children.put(child.edge(), child);
-                } else {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
             }
 
             //extend rm forward edges
             for (LabeledEdge e : g.adjEdges(from.id())) {
                 LabeledVertex to = e.to();
-                long emBitsCheckBegin = System.currentTimeMillis();
                 if (emBits.get(to.id())) {
-                    long emBitsCheckEnd = System.currentTimeMillis();
-                    emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
                     continue;
                 }
-                long emBitsCheckEnd = System.currentTimeMillis();
-                emBitsCheckTime += (emBitsCheckEnd - emBitsCheckBegin);
 
-                long candCheckBegin = System.currentTimeMillis();
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
@@ -1253,13 +1169,8 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
                 if (cand.contains(dfsEdge)) {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
 //                    children.put(child.edge(), child);
-                } else {
-                    long candCheckEnd = System.currentTimeMillis();
-                    candCheckTime += (candCheckEnd - candCheckBegin);
                 }
             }
         }
