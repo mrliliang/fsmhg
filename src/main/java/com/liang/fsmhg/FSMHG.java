@@ -449,18 +449,20 @@ public class FSMHG {
         }
 
         List<Pattern> children = enumerateChildren(parent);
-        if (children == null || children.size() == 0) {
+//        if (children == null || children.size() == 0) {
+//            return;
+//        }
+        if (!parent.hasChild()) {
             return;
         }
-        for (int i = 0; i < children.size(); i++) {
-            Pattern p = children.get(i);
-            if (p.code().edgeSize() >= maxEdgeSize) {
+        for (Pattern child : parent.children()) {
+            if (child.code().edgeSize() >= maxEdgeSize) {
                 return;
             }
-            if (!isFrequent(p)) {
+            if (!isFrequent(child)) {
                 continue;
             }
-            subgraphMining(trans, p);
+            subgraphMining(trans, child);
         }
     }
 
@@ -1008,7 +1010,7 @@ public class FSMHG {
 
                     long insertChildBegin = System.currentTimeMillis();
                     Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
-                    children.put(child.edge(), child);
+//                    children.put(child.edge(), child);
                     long insertChildEnd = System.currentTimeMillis();
                     insertChildTime += (insertChildEnd - insertChildBegin);
                 } else {
@@ -1048,7 +1050,7 @@ public class FSMHG {
 
                         long insertChildBegin = System.currentTimeMillis();
                         Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
-                        children.put(child.edge(), child);
+//                        children.put(child.edge(), child);
                         long insertChildEnd = System.currentTimeMillis();
                         insertChildTime += (insertChildEnd - insertChildBegin);
                     } else {
@@ -1224,7 +1226,7 @@ public class FSMHG {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
-                    children.put(child.edge(), child);
+//                    children.put(child.edge(), child);
                 } else {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
@@ -1254,7 +1256,7 @@ public class FSMHG {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
                     Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
-                    children.put(child.edge(), child);
+//                    children.put(child.edge(), child);
                 } else {
                     long candCheckEnd = System.currentTimeMillis();
                     candCheckTime += (candCheckEnd - candCheckBegin);
@@ -1268,27 +1270,4 @@ public class FSMHG {
         return p.frequency() >= this.trans.size() * minSup;
     }
 
-    private static DFSCode code(String code) {
-        DFSCode dfsCode = new DFSCode();
-        String[] edges = code.split("\\)");
-        for (String edge : edges) {
-            DFSEdge dfsEdge = edge(edge);
-            dfsCode.add(dfsEdge);
-        }
-        return dfsCode;
-    }
-
-    private static DFSEdge edge(String edge) {
-        String[] item = edge.substring(1).split(",");
-        int from = Integer.parseInt(item[0]);
-        int to = Integer.parseInt(item[1]);
-//        int fromLabel = item[2].charAt(0);
-//        int toLabel = item[4].charAt(0);
-//        int eLabel = item[3].charAt(0);
-        int fromLabel = Integer.parseInt(item[2]);
-        int toLabel = Integer.parseInt(item[4]);
-        int eLabel = Integer.parseInt(item[3]);
-
-        return new DFSEdge(from, to, fromLabel, toLabel, eLabel);
-    }
 }

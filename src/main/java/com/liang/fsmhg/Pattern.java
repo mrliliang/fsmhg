@@ -165,6 +165,10 @@ public class Pattern {
         return child;
     }
 
+    public boolean hasChild() {
+        return !this.children.isEmpty();
+    }
+
     public List<Pattern> children() {
         List<Pattern> patterns = new ArrayList<>();
         patterns.addAll(this.children.values());
