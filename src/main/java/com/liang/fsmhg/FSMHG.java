@@ -1431,6 +1431,7 @@ public class FSMHG {
         DFSCode code = p.code();
         DFSEdge firstEdge = code.get(0);
         List<Integer> rmPathIds = code.rightMostPath();
+        TreeSet<Integer> rmPathSet = new TreeSet<>(rmPathIds);
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         for (Embedding em : embeddings) {
 //            long emVerticesBegin = System.currentTimeMillis();
@@ -1448,7 +1449,7 @@ public class FSMHG {
                         continue;
                     }
                     // TODO: 2020/4/18 more backward edges can be filtered out
-                    LabeledVertex nextTo = emVertices.get(backCand.higherKey(entry.getKey()));
+                    LabeledVertex nextTo = emVertices.get(rmPathSet.higher(entry.getKey()));
                     LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
                     if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
                         continue;
@@ -1485,7 +1486,7 @@ public class FSMHG {
                             continue;
                         }
                         // TODO: 2020/4/18 more forward edges can be filtered out
-//                        LabeledVertex nextFrom = emVertices.get(backCand.higherKey(entry.getKey()));
+//                        LabeledVertex nextFrom = emVertices.get(rmPathSet.higher(entry.getKey()));
 //                        LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
 //                        if (g.eLabel(pathEdge) > g.eLabel(e) || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
 //                            continue;
