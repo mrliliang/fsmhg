@@ -210,7 +210,7 @@ public class FSMHG {
         System.out.println("Duration = " + (endTime - startTime));
         System.out.println("Save time = " + (endTime - saveTime));
 
-        minCodeCheckTimeTest();
+//        minCodeCheckTimeTest();
 //        System.out.println("Total join time = " + joinTime);
 //        System.out.println("Total extend time = " + extendTime);
 //        System.out.println("Join cand time = " + joinCandTime);
@@ -228,20 +228,20 @@ public class FSMHG {
 //        System.out.println("Child insert time = " + insertChildTime);
     }
 
-    private void minCodeCheckTimeTest() {
-        long begin = System.currentTimeMillis();
-        List<Pattern> patterns = new ArrayList<>();
-        for (PointPattern pp : this.points.values()) {
-            collectPatterns(pp, patterns);
-        }
-        System.out.println("Total number of connected patterns " + patterns.size());
-
-        for (Pattern p : patterns) {
-            p.code().isMin();
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("Min code check time = " + (end - begin));
-    }
+//    private void minCodeCheckTimeTest() {
+//        long begin = System.currentTimeMillis();
+//        List<Pattern> patterns = new ArrayList<>();
+//        for (PointPattern pp : this.points.values()) {
+//            collectPatterns(pp, patterns);
+//        }
+//        System.out.println("Total number of connected patterns " + patterns.size());
+//
+//        for (Pattern p : patterns) {
+//            p.code().isMin();
+//        }
+//        long end = System.currentTimeMillis();
+//        System.out.println("Min code check time = " + (end - begin));
+//    }
 
     private void collectPatterns(Pattern p, List<Pattern> patterns) {
         for (Pattern child : p.children()) {
@@ -1429,9 +1429,9 @@ public class FSMHG {
             return;
         }
         for (Embedding em : embeddings) {
-            long emVerticesBegin = System.currentTimeMillis();
+//            long emVerticesBegin = System.currentTimeMillis();
             List<LabeledVertex> emVertices = em.vertices();
-            this.emVerticesTime += (System.currentTimeMillis() - emVerticesBegin);
+//            this.emVerticesTime += (System.currentTimeMillis() - emVerticesBegin);
 
             //join backward edges
             if (!backCand.isEmpty()) {
@@ -1452,7 +1452,7 @@ public class FSMHG {
             }
 
             //join forward edges
-            long emBitsBegin = System.currentTimeMillis();
+//            long emBitsBegin = System.currentTimeMillis();
             BitSet emBits = new BitSet();
             if (!forCand.isEmpty() || !extendCands.isEmpty()) {
                 emBits = new BitSet(maxVid + 1);
@@ -1460,7 +1460,7 @@ public class FSMHG {
                     emBits.set(v.id());
                 }
             }
-            this.emBitsTime += (System.currentTimeMillis() - emBitsBegin);
+//            this.emBitsTime += (System.currentTimeMillis() - emBitsBegin);
             if (!forCand.isEmpty()) {
                 for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                     LabeledVertex from = emVertices.get(entry.getKey());
