@@ -1486,11 +1486,15 @@ public class FSMHG {
                             continue;
                         }
                         // TODO: 2020/4/18 more forward edges can be filtered out
-//                        LabeledVertex nextFrom = emVertices.get(rmPathSet.higher(entry.getKey()));
-//                        LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
-//                        if (g.eLabel(pathEdge) > g.eLabel(e) || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
-//                            continue;
-//                        }
+                        LabeledVertex nextFrom = emVertices.get(rmPathSet.higher(entry.getKey()));
+                        LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
+                        if (g.eLabel(pathEdge) > g.eLabel(e)
+                                || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
+                            continue;
+                        }
+                        if (g.vLabel(pathEdge.to()) < firstEdge.fromLabel()) {
+                            continue;
+                        }
 
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
@@ -1549,11 +1553,12 @@ public class FSMHG {
                     continue;
                 }
                 // TODO: 2020/4/18 more forward edges can be filtered out
-//                if ((g.vLabel(e.to()) < firstEdge.toLabel()
-//                        || (g.vLabel(e.to()) == firstEdge.toLabel() && g.eLabel(e) < firstEdge.edgeLabel()))
-//                        || (g.vLabel(e.from()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
-//                    continue;
-//                }
+                if (g.vLabel(e.to()) < firstEdge.fromLabel()
+                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())
+                        || (g.vLabel(e.from()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())
+                        || (g.vLabel(e.from()) == firstEdge.fromLabel() && g.eLabel(e) == firstEdge.edgeLabel() && g.vLabel(e.to()) < firstEdge.toLabel())) {
+                    continue;
+                }
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
