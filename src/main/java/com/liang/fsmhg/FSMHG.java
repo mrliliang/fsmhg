@@ -1496,9 +1496,7 @@ public class FSMHG {
                                 || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
                             continue;
                         }
-                        if (g.vLabel(pathEdge.to()) < firstEdge.fromLabel()) {
-                            continue;
-                        }
+
 
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
