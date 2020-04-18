@@ -1558,9 +1558,7 @@ public class FSMHG {
                 }
                 // TODO: 2020/4/18 more forward edges can be filtered out
                 if (g.vLabel(e.to()) < firstEdge.fromLabel()
-                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())
-                        || (g.vLabel(e.from()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())
-                        || (g.vLabel(e.from()) == firstEdge.fromLabel() && g.eLabel(e) == firstEdge.edgeLabel() && g.vLabel(e.to()) < firstEdge.toLabel())) {
+                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
                     continue;
                 }
 
