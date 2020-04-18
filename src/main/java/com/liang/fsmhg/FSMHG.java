@@ -1452,9 +1452,9 @@ public class FSMHG {
                     if (cands.contains(dfsEdge)) {
                         long insertChildBegin = System.currentTimeMillis();
                         Pattern child = p.child(dfsEdge);
-                        child.addEmbedding(g, em);
                         long insertChildEnd = System.currentTimeMillis();
                         insertChildTime += (insertChildEnd - insertChildBegin);
+                        child.addEmbedding(g, em);
                     }
                 }
 //            }
@@ -1482,9 +1482,9 @@ public class FSMHG {
                         if (cands.contains(dfsEdge)) {
                             long insertChildBegin = System.currentTimeMillis();
                             Pattern child = p.child(dfsEdge);
-                            child.addEmbedding(g, new Embedding(e.to(), em));
                             long insertChildEnd = System.currentTimeMillis();
                             insertChildTime += (insertChildEnd - insertChildBegin);
+                            child.addEmbedding(g, new Embedding(e.to(), em));
                         }
                     }
                 }
@@ -1519,9 +1519,9 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
-                    child.addEmbedding(g, em);
                     long insertChildEnd = System.currentTimeMillis();
                     insertChildTime += (insertChildEnd - insertChildBegin);
+                    child.addEmbedding(g, em);
                 }
             }
 
@@ -1541,9 +1541,9 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                    child.addEmbedding(g, new Embedding(to, em));
                     long insertChildEnd = System.currentTimeMillis();
                     insertChildTime += (insertChildEnd - insertChildBegin);
+                    child.addEmbedding(g, new Embedding(to, em));
                 }
             }
 
