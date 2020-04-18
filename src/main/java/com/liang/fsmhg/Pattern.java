@@ -213,12 +213,16 @@ public class Pattern {
         }
     }
 
-    List<Pattern> rightSiblings() {
+    public List<Pattern> rightSiblings() {
         List<Pattern> list = new ArrayList<>();
         if (parent != null) {
             list.addAll(parent.children.tailMap(this.edge).values());
         }
         return list;
+    }
+
+    public void removeChild(Pattern child) {
+        children.remove(child.edge);
     }
 
 }

@@ -21,6 +21,7 @@ public class FSMHG {
     private double similarity;
     private int clusterCounter;
     private int patternCount = 0;
+    private int pointCount = 0;
 
 //    private LabeledGraph transDelimiter;
 //    private Cluster clusterDelimiter;
@@ -194,6 +195,13 @@ public class FSMHG {
             edges = edges(points);
         }
 
+        for (PointPattern pp : this.points.values()) {
+            if (isFrequent(pp)) {
+                this.pointCount++;
+                this.patternCount++;
+            }
+        }
+
         List<Pattern> patterns = new ArrayList<>(edges.values());
         for (int i = 0; i < patterns.size(); i++) {
             Pattern p = patterns.get(i);
@@ -205,9 +213,11 @@ public class FSMHG {
             }
             subgraphMining(trans, p);
         }
+        System.out.println(this.pointCount + " point patterns");
+        System.out.println((this.patternCount - this.pointCount) + " connected patterns.");
 //
 //        long saveTime = System.currentTimeMillis();
-        saveResult();
+//        saveResult();
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
 //        System.out.println("Save time = " + (endTime - saveTime));
@@ -230,28 +240,6 @@ public class FSMHG {
         System.out.println("Child insert time = " + insertChildTime);
         System.out.println("Insert embedding time = " + insertEmbeddingTime);
         System.out.println("Trans travel time = " + transTravelTime);
-    }
-
-//    private void minCodeCheckTimeTest() {
-//        long begin = System.currentTimeMillis();
-//        List<Pattern> patterns = new ArrayList<>();
-//        for (PointPattern pp : this.points.values()) {
-//            collectPatterns(pp, patterns);
-//        }
-//        System.out.println("Total number of connected patterns " + patterns.size());
-//
-//        for (Pattern p : patterns) {
-//            p.code().isMin();
-//        }
-//        long end = System.currentTimeMillis();
-//        System.out.println("Min code check time = " + (end - begin));
-//    }
-
-    private void collectPatterns(Pattern p, List<Pattern> patterns) {
-        for (Pattern child : p.children()) {
-            patterns.add(child);
-            collectPatterns(child, patterns);
-        }
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -442,6 +430,7 @@ public class FSMHG {
         if (!parent.checkMin()) {
             return;
         }
+        this.patternCount++;
 
         List<Pattern> children = enumerateChildren(parent);
 //        if (children == null || children.size() == 0) {
@@ -451,13 +440,14 @@ public class FSMHG {
             return;
         }
         for (Pattern child : parent.children()) {
-            if (child.code().edgeSize() >= maxEdgeSize) {
-                return;
-            }
             if (!isFrequent(child)) {
                 continue;
             }
+            if (child.code().edgeSize() >= maxEdgeSize) {
+                return;
+            }
             subgraphMining(trans, child);
+            parent.removeChild(child);
         }
     }
 
