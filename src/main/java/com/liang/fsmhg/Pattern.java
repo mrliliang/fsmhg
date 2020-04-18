@@ -125,7 +125,7 @@ public class Pattern {
     }
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
-        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> new ArrayList<>());
+        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> new LinkedList<>());
         embeddings.add(em);
     }
 
