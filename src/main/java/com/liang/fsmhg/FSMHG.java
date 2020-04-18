@@ -22,6 +22,8 @@ public class FSMHG {
     private int clusterCounter;
     private int patternCount = 0;
 
+    private BitSet emBits;
+
 //    private LabeledGraph transDelimiter;
 //    private Cluster clusterDelimiter;
 
@@ -66,16 +68,6 @@ public class FSMHG {
                 trans.addAll(readTrans(f));
             }
         }
-
-        long transTravelBegin = System.currentTimeMillis();
-        for (LabeledGraph g : trans) {
-            for (LabeledVertex v : g.vertices()) {
-                for (LabeledEdge e : g.adjEdges(v.id())) {
-
-                }
-            }
-        }
-        transTravelTime = System.currentTimeMillis() - transTravelBegin;
         return trans;
     }
 
@@ -191,36 +183,37 @@ public class FSMHG {
         long startTime = System.currentTimeMillis();
         this.trans = loadTrans();
         System.out.println("Total trans: " + this.trans.size());
-//        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
-//        List<Cluster> clusters;
-////        Map<Integer, PointPattern> points;
-//        Map<DFSEdge, Pattern> edges;
-//        if (partition) {
-//            clusters = Cluster.partition(trans, similarity, 0);
-//            this.points = pointsCluster(clusters);
-//            edges = edges(points, clusters);
-//        } else {
-//            this.points = points(this.trans);
-//            edges = edges(points);
-//        }
+        this.absSup = (int) Math.ceil(this.trans.size() * this.minSup);
+        List<Cluster> clusters;
+//        Map<Integer, PointPattern> points;
+        Map<DFSEdge, Pattern> edges;
+        if (partition) {
+            clusters = Cluster.partition(trans, similarity, 0);
+            this.points = pointsCluster(clusters);
+            edges = edges(points, clusters);
+        } else {
+            this.points = points(this.trans);
+            edges = edges(points);
+        }
+        emBits = new BitSet(maxVid + 1);
+
+        List<Pattern> patterns = new ArrayList<>(edges.values());
+        for (int i = 0; i < patterns.size(); i++) {
+            Pattern p = patterns.get(i);
+            if (!isFrequent(p)) {
+                continue;
+            }
+            if (p.code().edgeSize() >= maxEdgeSize) {
+                break;
+            }
+            subgraphMining(trans, p);
+        }
 //
-//        List<Pattern> patterns = new ArrayList<>(edges.values());
-//        for (int i = 0; i < patterns.size(); i++) {
-//            Pattern p = patterns.get(i);
-//            if (!isFrequent(p)) {
-//                continue;
-//            }
-//            if (p.code().edgeSize() >= maxEdgeSize) {
-//                break;
-//            }
-//            subgraphMining(trans, p);
-//        }
-//
-        long saveTime = System.currentTimeMillis();
-//        saveResult();
+//        long saveTime = System.currentTimeMillis();
+        saveResult();
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
-        System.out.println("Save time = " + (endTime - saveTime));
+//        System.out.println("Save time = " + (endTime - saveTime));
 
 //        minCodeCheckTimeTest();
 //        System.out.println("Total join time = " + joinTime);
@@ -1479,9 +1472,10 @@ public class FSMHG {
 
             //join forward edges
 //            long emBitsBegin = System.currentTimeMillis();
-            BitSet emBits = null;
+//            BitSet emBits = null;
 //            if (!forCand.isEmpty() || !extendCands.isEmpty()) {
-                emBits = new BitSet(maxVid + 1);
+//                emBits = new BitSet(maxVid + 1);
+                emBits.clear();
                 for (LabeledVertex v : emVertices) {
                     emBits.set(v.id());
                 }
