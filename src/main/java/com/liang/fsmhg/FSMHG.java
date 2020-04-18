@@ -43,6 +43,7 @@ public class FSMHG {
     private long emBitsCheckTime = 0;
     private long candCheckTime = 0;
     private long insertChildTime = 0;
+    private long insertEmbeddingTime = 0;
 
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -1454,7 +1455,11 @@ public class FSMHG {
                         Pattern child = p.child(dfsEdge);
                         long insertChildEnd = System.currentTimeMillis();
                         insertChildTime += (insertChildEnd - insertChildBegin);
+
+                        long insertEmBegin = System.currentTimeMillis();
                         child.addEmbedding(g, em);
+                        long insertEmEnd = System.currentTimeMillis();
+                        insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                     }
                 }
 //            }
@@ -1484,7 +1489,11 @@ public class FSMHG {
                             Pattern child = p.child(dfsEdge);
                             long insertChildEnd = System.currentTimeMillis();
                             insertChildTime += (insertChildEnd - insertChildBegin);
+
+                            long insertEmBegin = System.currentTimeMillis();
                             child.addEmbedding(g, new Embedding(e.to(), em));
+                            long insertEmEnd = System.currentTimeMillis();
+                            insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                         }
                     }
                 }
@@ -1521,7 +1530,11 @@ public class FSMHG {
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     long insertChildEnd = System.currentTimeMillis();
                     insertChildTime += (insertChildEnd - insertChildBegin);
+
+                    long insertEmBegin = System.currentTimeMillis();
                     child.addEmbedding(g, em);
+                    long insertEmEnd = System.currentTimeMillis();
+                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                 }
             }
 
@@ -1543,7 +1556,11 @@ public class FSMHG {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     long insertChildEnd = System.currentTimeMillis();
                     insertChildTime += (insertChildEnd - insertChildBegin);
+
+                    long insertEmBegin = System.currentTimeMillis();
                     child.addEmbedding(g, new Embedding(to, em));
+                    long insertEmEnd = System.currentTimeMillis();
+                    insertEmbeddingTime += (insertEmEnd - insertEmBegin);
                 }
             }
 
