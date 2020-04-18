@@ -153,9 +153,23 @@ public class Pattern {
         embeddings.add(em);
     }
 
+    public Pattern child(DFSEdge e) {
+        return children.computeIfAbsent(e, new Function<DFSEdge, Pattern>() {
+            @Override
+            public Pattern apply(DFSEdge dfsEdge) {
+                return new Pattern(e, Pattern.this);
+            }
+        });
+    }
+
     public Pattern child(int from, int to, int fromLabel, int toLabel, int eLabel) {
         DFSEdge e = new DFSEdge(from, to, fromLabel, toLabel, eLabel);
-        return children.get(e);
+        return children.computeIfAbsent(e, new Function<DFSEdge, Pattern>() {
+            @Override
+            public Pattern apply(DFSEdge dfsEdge) {
+                return new Pattern(e, Pattern.this);
+            }
+        });
     }
 
     public Pattern addChild(int from, int to, int fromLabel, int toLabel, int eLabel) {

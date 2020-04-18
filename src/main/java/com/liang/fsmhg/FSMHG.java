@@ -731,9 +731,9 @@ public class FSMHG {
 
     private Pattern updateOtherExpansion(LabeledGraph g, int dfsFrom, int dfsTo, int fromLabel, int toLabel, int eLabel, Embedding em, Pattern parent) {
         Pattern child = parent.child(dfsFrom, dfsTo, fromLabel, toLabel, eLabel);
-        if (child == null) {
-            child = parent.addChild(dfsFrom, dfsTo, fromLabel, toLabel, eLabel);
-        }
+//        if (child == null) {
+//            child = parent.addChild(dfsFrom, dfsTo, fromLabel, toLabel, eLabel);
+//        }
         child.addEmbedding(g, em);
         return child;
     }
@@ -1442,18 +1442,21 @@ public class FSMHG {
                     if (back == null) {
                         continue;
                     }
+                    // TODO: 2020/4/18 more backward edges can be filtered out
 
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (cands.contains(dfsEdge)) {
-                        Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+//                        Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
+                        Pattern child = p.child(dfsEdge);
+                        child.addEmbedding(g, em);
                     }
                 }
             }
 
             //join forward edges
 //            long emBitsBegin = System.currentTimeMillis();
-            BitSet emBits = new BitSet();
+            BitSet emBits = null;
             if (!forCand.isEmpty() || !extendCands.isEmpty()) {
                 emBits = new BitSet(maxVid + 1);
                 for (LabeledVertex v : emVertices) {
@@ -1468,11 +1471,14 @@ public class FSMHG {
                         if (emBits.get(e.to().id())) {
                             continue;
                         }
+                        // TODO: 2020/4/18 more forward edges can be filtered out
 
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
                         if (cands.contains(dfsEdge)) {
-                            Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+//                            Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
+                            Pattern child = p.child(dfsEdge);
+                            child.addEmbedding(g, new Embedding(e.to(), em));
                         }
                     }
                 }
@@ -1508,7 +1514,9 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 }
                 if (extendCands.contains(dfsEdge)) {
-                    Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);;
+//                    Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);
+                    Pattern child = p.child(fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                    child.addEmbedding(g, em);
                 }
             }
 
@@ -1518,6 +1526,7 @@ public class FSMHG {
                 if (emBits.get(to.id())) {
                     continue;
                 }
+                // TODO: 2020/4/18 more forward edges can be filtered out
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
@@ -1526,7 +1535,9 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
                 if (extendCands.contains(dfsEdge)) {
-                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
+//                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
+                    Pattern child = p.child(fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
+                    child.addEmbedding(g, new Embedding(to, em));
                 }
             }
 
