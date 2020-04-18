@@ -156,7 +156,8 @@ public class Pattern {
     public Pattern child(DFSEdge e) {
         Pattern child = children.get(e);
         if (child == null) {
-            children.put(e, new Pattern(e, Pattern.this));
+            child = new Pattern(e, this);
+            children.put(e, child);
         }
         return child;
     }
@@ -165,7 +166,8 @@ public class Pattern {
         DFSEdge e = new DFSEdge(from, to, fromLabel, toLabel, eLabel);
         Pattern child = children.get(e);
         if (child == null) {
-            children.put(e, new Pattern(e, Pattern.this));
+            child = new Pattern(e, this);
+            children.put(e, child);
         }
         return child;
     }
