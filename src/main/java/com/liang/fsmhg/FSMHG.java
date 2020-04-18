@@ -1450,11 +1450,11 @@ public class FSMHG {
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (cands.contains(dfsEdge)) {
-//                        long insertChildBegin = System.currentTimeMillis();
+                        long insertChildBegin = System.currentTimeMillis();
                         Pattern child = p.child(dfsEdge);
                         child.addEmbedding(g, em);
-//                        long insertChildEnd = System.currentTimeMillis();
-//                        insertChildTime += (insertChildEnd - insertChildBegin);
+                        long insertChildEnd = System.currentTimeMillis();
+                        insertChildTime += (insertChildEnd - insertChildBegin);
                     }
                 }
 //            }
@@ -1480,11 +1480,11 @@ public class FSMHG {
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
                         if (cands.contains(dfsEdge)) {
-//                            long insertChildBegin = System.currentTimeMillis();
+                            long insertChildBegin = System.currentTimeMillis();
                             Pattern child = p.child(dfsEdge);
                             child.addEmbedding(g, new Embedding(e.to(), em));
-//                            long insertChildEnd = System.currentTimeMillis();
-//                            insertChildTime += (insertChildEnd - insertChildBegin);
+                            long insertChildEnd = System.currentTimeMillis();
+                            insertChildTime += (insertChildEnd - insertChildBegin);
                         }
                     }
                 }
@@ -1517,11 +1517,11 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 }
                 if (extendCands.contains(dfsEdge)) {
-//                    long insertChildBegin = System.currentTimeMillis();
+                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     child.addEmbedding(g, em);
-//                    long insertChildEnd = System.currentTimeMillis();
-//                    insertChildTime += (insertChildEnd - insertChildBegin);
+                    long insertChildEnd = System.currentTimeMillis();
+                    insertChildTime += (insertChildEnd - insertChildBegin);
                 }
             }
 
@@ -1539,12 +1539,11 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
                 if (extendCands.contains(dfsEdge)) {
-//                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
-//                    long insertChildBegin = System.currentTimeMillis();
+                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     child.addEmbedding(g, new Embedding(to, em));
-//                    long insertChildEnd = System.currentTimeMillis();
-//                    insertChildTime += (insertChildEnd - insertChildBegin);
+                    long insertChildEnd = System.currentTimeMillis();
+                    insertChildTime += (insertChildEnd - insertChildBegin);
                 }
             }
 
