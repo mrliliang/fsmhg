@@ -1449,22 +1449,22 @@ public class FSMHG {
                         continue;
                     }
                     // TODO: 2020/4/18 more backward edges can be filtered out
-//                    LabeledVertex nextTo = emVertices.get(rmPathSet.higher(entry.getKey()));
-//                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
-//                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
-//                        continue;
-//                    }
+                    LabeledVertex nextTo = emVertices.get(rmPathSet.higher(entry.getKey()));
+                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+                        continue;
+                    }
 
                     TreeSet<DFSEdge> cands = entry.getValue();
                     DFSEdge dfsEdge = new DFSEdge(emVertices.size() - 1, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
-                    if (cands.contains(dfsEdge)) {
+//                    if (cands.contains(dfsEdge)) {
 //                        Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), em, p);
 //                        long insertChildBegin = System.currentTimeMillis();
                         Pattern child = p.child(dfsEdge);
                         child.addEmbedding(g, em);
 //                        long insertChildEnd = System.currentTimeMillis();
 //                        insertChildTime += (insertChildEnd - insertChildBegin);
-                    }
+//                    }
                 }
 //            }
 
@@ -1486,28 +1486,33 @@ public class FSMHG {
                             continue;
                         }
                         // TODO: 2020/4/18 more forward edges can be filtered out
-//                        Integer nextFromId = rmPathSet.higher(entry.getKey());
-//                        if (nextFromId == null) {
-//                            continue;
-//                        }
-//                        LabeledVertex nextFrom = emVertices.get(nextFromId);
-//                        LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
-//                        if (g.eLabel(pathEdge) > g.eLabel(e)
-//                                || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
-//                            continue;
-//                        }
+                        Integer nextFromId = rmPathSet.higher(entry.getKey());
+                        if (nextFromId != null) {
+                            LabeledVertex nextFrom = emVertices.get(nextFromId);
+                            LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
+                            if (g.eLabel(pathEdge) > g.eLabel(e)
+                                    || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))
+                                    || g.vLabel(e.to()) < firstEdge.fromLabel()) {
+                                continue;
+                            }
+                        } else {
+                            if (g.vLabel(e.to()) < firstEdge.fromLabel()
+                                    || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
+                                continue;
+                            }
+                        }
 
 
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         TreeSet<DFSEdge> cands = entry.getValue();
-                        if (cands.contains(dfsEdge)) {
+//                        if (cands.contains(dfsEdge)) {
 //                            Pattern child = updateOtherExpansion(g, dfsEdge.from(), dfsEdge.to(), dfsEdge.fromLabel(), dfsEdge.toLabel(), dfsEdge.edgeLabel(), new Embedding(e.to(), em), p);
 //                            long insertChildBegin = System.currentTimeMillis();
                             Pattern child = p.child(dfsEdge);
                             child.addEmbedding(g, new Embedding(e.to(), em));
 //                            long insertChildEnd = System.currentTimeMillis();
 //                            insertChildTime += (insertChildEnd - insertChildBegin);
-                        }
+//                        }
                     }
                 }
 //            }
@@ -1538,14 +1543,14 @@ public class FSMHG {
                 } else {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
                 }
-                if (extendCands.contains(dfsEdge)) {
+//                if (extendCands.contains(dfsEdge)) {
 //                    Pattern child = updateOtherExpansion(g, fromId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back), em, p);
 //                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     child.addEmbedding(g, em);
 //                    long insertChildEnd = System.currentTimeMillis();
 //                    insertChildTime += (insertChildEnd - insertChildBegin);
-                }
+//                }
             }
 
             //extend rm forward edges
@@ -1555,10 +1560,10 @@ public class FSMHG {
                     continue;
                 }
                 // TODO: 2020/4/18 more forward edges can be filtered out
-//                if (g.vLabel(e.to()) < firstEdge.fromLabel()
-//                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
-//                    continue;
-//                }
+                if (g.vLabel(e.to()) < firstEdge.fromLabel()
+                        || (g.vLabel(e.to()) == firstEdge.fromLabel() && g.eLabel(e) < firstEdge.edgeLabel())) {
+                    continue;
+                }
 
                 DFSEdge dfsEdge;
                 if (g.vLabel(from) <= g.vLabel(to)) {
@@ -1566,14 +1571,14 @@ public class FSMHG {
                 } else {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
-                if (extendCands.contains(dfsEdge)) {
+//                if (extendCands.contains(dfsEdge)) {
 //                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
 //                    long insertChildBegin = System.currentTimeMillis();
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     child.addEmbedding(g, new Embedding(to, em));
 //                    long insertChildEnd = System.currentTimeMillis();
 //                    insertChildTime += (insertChildEnd - insertChildBegin);
-                }
+//                }
             }
 
         }
