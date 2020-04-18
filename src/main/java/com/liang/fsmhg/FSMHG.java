@@ -1571,14 +1571,16 @@ public class FSMHG {
                 } else {
                     dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                 }
-                if (extendCands.contains(dfsEdge)) {
-//                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
-//                    long insertChildBegin = System.currentTimeMillis();
-                    Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                    child.addEmbedding(g, new Embedding(to, em));
-//                    long insertChildEnd = System.currentTimeMillis();
-//                    insertChildTime += (insertChildEnd - insertChildBegin);
-                }
+//                if (extendCands.contains(dfsEdge)) {
+////                    Pattern child = updateOtherExpansion(g, fromId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e), new Embedding(to, em), p);
+////                    long insertChildBegin = System.currentTimeMillis();
+//                    Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
+//                    child.addEmbedding(g, new Embedding(to, em));
+////                    long insertChildEnd = System.currentTimeMillis();
+////                    insertChildTime += (insertChildEnd - insertChildBegin);
+//                }
+                Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
+                child.addEmbedding(g, new Embedding(to, em));
             }
 
         }
