@@ -1486,7 +1486,11 @@ public class FSMHG {
                             continue;
                         }
                         // TODO: 2020/4/18 more forward edges can be filtered out
-                        LabeledVertex nextFrom = emVertices.get(rmPathSet.higher(entry.getKey()));
+                        Integer nextFromId = rmPathSet.higher(entry.getKey());
+                        if (nextFromId == null) {
+                            continue;
+                        }
+                        LabeledVertex nextFrom = emVertices.get(nextFromId);
                         LabeledEdge pathEdge = g.edge(from.id(), nextFrom.id());
                         if (g.eLabel(pathEdge) > g.eLabel(e)
                                 || (g.eLabel(pathEdge) == g.eLabel(e) && g.vLabel(nextFrom) > g.vLabel(e.to()))) {
