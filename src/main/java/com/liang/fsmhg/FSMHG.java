@@ -44,6 +44,7 @@ public class FSMHG {
     private long candCheckTime = 0;
     private long insertChildTime = 0;
     private long insertEmbeddingTime = 0;
+    private long transTravelTime = 0;
 
 
     public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -65,6 +66,16 @@ public class FSMHG {
                 trans.addAll(readTrans(f));
             }
         }
+
+        long transTravelBegin = System.currentTimeMillis();
+        for (LabeledGraph g : trans) {
+            for (LabeledVertex v : g.vertices()) {
+                for (LabeledEdge e : g.adjEdges(v.id())) {
+
+                }
+            }
+        }
+        transTravelTime = System.currentTimeMillis() - transTravelBegin;
         return trans;
     }
 
@@ -228,6 +239,7 @@ public class FSMHG {
 //        System.out.println("Candidates check time = " + candCheckTime);
         System.out.println("Child insert time = " + insertChildTime);
         System.out.println("Insert embedding time = " + insertEmbeddingTime);
+        System.out.println("Trans travel time = " + transTravelTime);
     }
 
 //    private void minCodeCheckTimeTest() {
