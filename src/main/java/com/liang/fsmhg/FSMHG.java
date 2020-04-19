@@ -448,6 +448,11 @@ public class FSMHG {
                 if (back == null) {
                     continue;
                 }
+                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                LabeledEdge pathEdge = inter.edge(to.id(), nextTo.id());
+                if (inter.eLabel(pathEdge) > inter.eLabel(back) || (inter.eLabel(pathEdge) == inter.eLabel(back) && inter.vLabel(nextTo) > inter.vLabel(back.from()))) {
+                    continue;
+                }
 
                 DFSEdge dfsEdge;
                 if (inter.vLabel(from) <= inter.vLabel(to)) {
@@ -547,6 +552,11 @@ public class FSMHG {
                     LabeledVertex to = emVertices.get(toId);
                     LabeledEdge back = dg.edge(from.id(), to.id());
                     if (back == null) {
+                        continue;
+                    }
+                    LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
+                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
                         continue;
                     }
 
