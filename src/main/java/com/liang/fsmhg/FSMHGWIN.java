@@ -1071,6 +1071,74 @@ public class FSMHGWIN {
 
     }
 
+
+    private void joinCands(Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand) {
+        DFSEdge e1 = p.edge();
+        for (Pattern sib : p.rightSiblings()) {
+            if (!isFrequent(sib)) {
+                continue;
+            }
+            DFSEdge e2 = sib.edge();
+            if (e1.compareTo(e2) > 0) {
+                continue;
+            }
+
+            if (!e1.isForward() && !e2.isForward() && e1.to() == e2.to()) {
+                continue;
+            }
+
+            TreeSet<DFSEdge> candidates;
+            if (!e2.isForward()) {
+                candidates = backCand.computeIfAbsent(e2.to(), vIndex -> new TreeSet<>());
+                candidates.add(e2);
+            } else {
+                candidates = forCand.computeIfAbsent(e2.from(), vIndex -> new TreeSet<>());
+                candidates.add(new DFSEdge(e2.from(), p.code().nodeCount(), e2.fromLabel(), e2.toLabel(), e2.edgeLabel()));
+            }
+        }
+    }
+
+    private void extendCands(Pattern p, TreeSet<DFSEdge> extendCands) {
+        DFSEdge lastEdge = p.edge();
+        if (!lastEdge.isForward()) {
+            return;
+        }
+        DFSEdge firstEdge = p.code().get(0);
+        for (Pattern ep : this.points.get(firstEdge.fromLabel()).children()) {
+            if (!isFrequent(ep)) {
+                continue;
+            }
+            DFSEdge e = ep.edge();
+            if (e.toLabel() == lastEdge.toLabel() && e.edgeLabel() >= firstEdge.edgeLabel()) {
+                extendCands.add(e);
+            }
+        }
+        for (PointPattern pp : this.points.tailMap(firstEdge.fromLabel(), false).headMap(lastEdge.toLabel()).values()) {
+            if (!isFrequent(pp)) {
+                continue;
+            }
+            for (Pattern ep : pp.children()) {
+                if (!isFrequent(ep)) {
+                    continue;
+                }
+                DFSEdge e = ep.edge();
+                if (e.toLabel() == lastEdge.toLabel()) {
+                    extendCands.add(e);
+                }
+            }
+        }
+        PointPattern rmPoint = this.points.get(lastEdge.toLabel());
+        if (rmPoint != null && isFrequent(rmPoint)) {
+            for (Pattern ep : rmPoint.children()) {
+                if (!isFrequent(ep)) {
+                    continue;
+                }
+                extendCands.add(ep.edge());
+            }
+        }
+    }
+
+
     private boolean isFrequent(Pattern p) {
         return p.frequency() >= this.trans.size() * minSup;
     }
