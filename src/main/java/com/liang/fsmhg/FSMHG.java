@@ -147,8 +147,7 @@ public class FSMHG {
                 continue;
             }
             this.pointCount++;
-            this.patternCount++;
-            pw.save(pp, this.patternCount);
+            pw.save(pp, this.patternCount++);
             for (Pattern p : pp.children()) {
                 if (!isFrequent(p)) {
                     continue;
@@ -341,8 +340,7 @@ public class FSMHG {
         if (!parent.checkMin()) {
             return;
         }
-        this.patternCount++;
-        pw.save(parent, this.patternCount);
+        pw.save(parent, this.patternCount++);
         if (parent.code().edgeSize() >= maxEdgeSize) {
             return;
         }
