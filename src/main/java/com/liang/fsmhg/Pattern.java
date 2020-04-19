@@ -225,4 +225,8 @@ public class Pattern {
         children.remove(child.edge);
     }
 
+    public void removeAllChildren() {
+        children.clear();
+    }
+
 }
