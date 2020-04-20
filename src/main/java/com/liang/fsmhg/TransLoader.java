@@ -82,33 +82,32 @@ public class TransLoader {
     public List<LabeledGraph> loadTrans(int num) {
         List<LabeledGraph> trans = new ArrayList<>(num);
         for (int i = 0; i < num; i++) {
-            if(!hasNext()) {
+            LabeledGraph g = nextTrans();
+            if(g == null) {
                 close();
                 break;
             }
-            trans.add(nextTrans());
+            trans.add(g);
         }
         return trans;
-    }
-
-    private boolean hasNext() {
-        return currentTransId != -1;
     }
 
     private LabeledGraph nextTrans() {
         try {
             String line;
             LabeledGraph g = null;
+            if (currentTransId != -1) {
+                g = new StaticGraph(currentTransId);
+            }
             while ((line = br.readLine()) != null) {
-                if (currentTransId != -1) {
-                    g = new StaticGraph(currentTransId);
-                }
-
                 String[] str = line.split(" ");
                 if (line.startsWith("t")) {
-                    currentTransId = Integer.parseInt(line.split(" ")[2]);
-                    if (currentTransId > 0) {
+                    currentTransId = Long.parseLong(line.split(" ")[2]);
+                    if (currentTransId == -1 || currentTransId > 0) {
                         break;
+                    }
+                    if (currentTransId == 0) {
+                        g = new StaticGraph(currentTransId);
                     }
                 } else if (line.startsWith("v")) {
                     g.addVertex(Integer.parseInt(str[1]), Integer.parseInt(str[2]));

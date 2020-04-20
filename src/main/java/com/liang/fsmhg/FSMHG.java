@@ -52,7 +52,6 @@ public class FSMHG {
         this.partition = partition;
         this.similarity = similarity;
         this.points = new TreeMap<>();
-        this.pw = new PatternWriter(output);
     }
 
     // TODO: 2020/3/31 enumeration

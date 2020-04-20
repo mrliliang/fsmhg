@@ -39,14 +39,26 @@ public class FSMHGWIN {
         this.similarity = similarity;
         this.points = new TreeMap<>();
         this.clusters = new ArrayList<>();
+        this.trans = new ArrayList<>();
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
         long startTime = System.currentTimeMillis();
         System.out.println("Window " + this.windowCount++);
+        this.patternCount = 0;
+        this.pointCount = 0;
+
+        List<LabeledGraph> removed;
+        List<LabeledGraph> added;
         int index = this.trans.indexOf(newTrans.get(0));
-        List<LabeledGraph> removed = this.trans.subList(0, index);
-        List<LabeledGraph> added = newTrans.subList(newTrans.size() - index, newTrans.size());
+        if (index == -1) {
+            removed = this.trans;
+            added = newTrans;
+        } else {
+            removed = this.trans.subList(0, index);
+            added = newTrans.subList(newTrans.size() - index, newTrans.size());
+        }
+
         this.trans = newTrans;
         this.absSup = this.trans.size() * this.minSup;
 

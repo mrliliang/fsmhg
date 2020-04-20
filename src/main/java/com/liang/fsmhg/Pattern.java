@@ -95,6 +95,9 @@ public class Pattern {
     }
 
     public List<Cluster> clusters(Cluster clusterDelimiter) {
+        if (clusterDelimiter == null) {
+            return new ArrayList<>();
+        }
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
         clusters.addAll(borderEmbeddings.keySet());
         return new ArrayList<>(new TreeSet<>(clusters).tailSet(clusterDelimiter));
