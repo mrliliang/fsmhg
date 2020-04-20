@@ -20,7 +20,7 @@ public class Main {
             return;
         }
 
-
+        output.mkdir();
         FSMHGWIN fsmhgwin = new FSMHGWIN(output, arguments.support, arguments.maxEdgeNum, false, 0);
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
         while (trans.size() == arguments.window) {
