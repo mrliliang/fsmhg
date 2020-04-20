@@ -125,7 +125,7 @@ public class Main {
 
             if (cmd.hasOption("e")) {
                 int e = Integer.parseInt(cmd.getOptionValue("e"));
-                if (e != ENUM_FSMHG || e != ENUM_FSMHG_WIN) {
+                if (e != ENUM_FSMHG && e != ENUM_FSMHG_WIN) {
                     System.out.println("Invalid enumerator");
                     System.exit(1);
                 }
