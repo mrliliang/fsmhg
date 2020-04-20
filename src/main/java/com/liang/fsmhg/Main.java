@@ -91,21 +91,23 @@ public class Main {
                 System.exit(1);
             }
 
-            if (cmd.hasOption("w") && !cmd.hasOption("ss")) {
-                System.out.println("Must specify window sliding speed");
-                System.exit(1);
-            }
+            if (cmd.hasOption("w")) {
+                arguments.window = Integer.parseInt(cmd.getOptionValue("w"));
+                if (arguments.window <= 0) {
+                    System.out.println("Window size must be >= 1");
+                    System.exit(1);
+                }
 
-            arguments.window = Integer.parseInt(cmd.getOptionValue("w"));
-            if (arguments.window <= 0) {
-                System.out.println("Window size must be >= 1");
-                System.exit(1);
-            }
+                if (!cmd.hasOption("ss")) {
+                    System.out.println("Must specify window sliding speed");
+                    System.exit(1);
+                }
 
-            arguments.sliding = Integer.parseInt(cmd.getOptionValue("ss"));
-            if (arguments.sliding <= 0) {
-                System.out.println("Window sliding speed must be >= 1");
-                System.exit(1);
+                arguments.sliding = Integer.parseInt(cmd.getOptionValue("ss"));
+                if (arguments.sliding <= 0) {
+                    System.out.println("Window sliding speed must be >= 1");
+                    System.exit(1);
+                }
             }
 
             return arguments;
