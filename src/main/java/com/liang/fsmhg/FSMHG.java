@@ -9,7 +9,6 @@ import java.util.*;
 
 public class FSMHG {
 
-    private File data;
     private File output;
 
     private TreeMap<Integer, PointPattern> points;
@@ -46,8 +45,7 @@ public class FSMHG {
     private long transTravelTime = 0;
 
 
-    public FSMHG(File data, File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
-        this.data = data;
+    public FSMHG(File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.output = output;
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
@@ -57,76 +55,10 @@ public class FSMHG {
         this.pw = new PatternWriter(output);
     }
 
-    private void saveResult() {
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try {
-            int pointCount = 0;
-            fw = new FileWriter(this.output);
-            bw = new BufferedWriter(fw);
-            for (PointPattern pp : points.values()) {
-                if (!isFrequent(pp)) {
-                    continue;
-                }
-                pointCount++;
-                bw.write("t # " + (this.patternCount++) + " * " + pp.frequency());
-                bw.newLine();
-                bw.write("v 0 " + pp.label());
-                bw.newLine();
-                bw.newLine();
-
-                for (Pattern child : pp.children()) {
-                    if (!isFrequent(child) || !child.checkMin()) {
-                        continue;
-                    }
-                    save(child, bw);
-                }
-            }
-            System.out.println(pointCount + " point patterns");
-            System.out.println((this.patternCount - pointCount) + " connected patterns.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bw.close();
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-    }
-
-    private void save(Pattern p, BufferedWriter bw) throws IOException {
-        bw.write("t # " + (this.patternCount++) + " * " + p.frequency());
-        bw.newLine();
-        DFSCode code = p.code();
-        LabeledGraph g = code.toGraph();
-        for (int i = 0; i < g.vSize(); i++) {
-            LabeledVertex v = g.vertex(i);
-            bw.write("v " + i + " " + g.vLabel(v));
-            bw.newLine();
-        }
-        for (DFSEdge e : code.edges()) {
-            bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
-            bw.newLine();
-        }
-        bw.newLine();
-
-        for (Pattern child : p.children()) {
-            if (!isFrequent(child) || !child.checkMin()) {
-                continue;
-            }
-            save(child, bw);
-        }
-    }
-
-
-
     // TODO: 2020/3/31 enumeration
-    public void enumerate() {
+    public void enumerate(List<LabeledGraph> trans) {
         long startTime = System.currentTimeMillis();
-        this.trans = new TransLoader(this.data).loadTrans();
+        this.trans = trans;
         System.out.println("Total trans: " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
@@ -762,4 +694,67 @@ public class FSMHG {
         return p.frequency() >= this.absSup;
     }
 
+    private void saveResult() {
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+        try {
+            int pointCount = 0;
+            fw = new FileWriter(this.output);
+            bw = new BufferedWriter(fw);
+            for (PointPattern pp : points.values()) {
+                if (!isFrequent(pp)) {
+                    continue;
+                }
+                pointCount++;
+                bw.write("t # " + (this.patternCount++) + " * " + pp.frequency());
+                bw.newLine();
+                bw.write("v 0 " + pp.label());
+                bw.newLine();
+                bw.newLine();
+
+                for (Pattern child : pp.children()) {
+                    if (!isFrequent(child) || !child.checkMin()) {
+                        continue;
+                    }
+                    save(child, bw);
+                }
+            }
+            System.out.println(pointCount + " point patterns");
+            System.out.println((this.patternCount - pointCount) + " connected patterns.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    private void save(Pattern p, BufferedWriter bw) throws IOException {
+        bw.write("t # " + (this.patternCount++) + " * " + p.frequency());
+        bw.newLine();
+        DFSCode code = p.code();
+        LabeledGraph g = code.toGraph();
+        for (int i = 0; i < g.vSize(); i++) {
+            LabeledVertex v = g.vertex(i);
+            bw.write("v " + i + " " + g.vLabel(v));
+            bw.newLine();
+        }
+        for (DFSEdge e : code.edges()) {
+            bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
+            bw.newLine();
+        }
+        bw.newLine();
+
+        for (Pattern child : p.children()) {
+            if (!isFrequent(child) || !child.checkMin()) {
+                continue;
+            }
+            save(child, bw);
+        }
+    }
 }

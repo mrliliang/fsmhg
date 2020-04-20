@@ -1,18 +1,33 @@
 package com.liang.fsmhg;
 
+import com.liang.fsmhg.graph.LabeledGraph;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
         Arguments arguments = Arguments.parse(args);
 
-        File data = new File(arguments.data);
         File output = new File(arguments.output);
-        FSMHG fsmhg = new FSMHG(data, output, arguments.support, arguments.maxEdgeNum,false, 0);
-        fsmhg.enumerate();
+        FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum,false, 0);
+        File data = new File(arguments.data);
+        TransLoader loader = new TransLoader(data);
+        if (arguments.window <= 0) {
+            fsmhg.enumerate(loader.loadTrans());
+            return;
+        }
+
+
+        FSMHGWIN fsmhgwin = new FSMHGWIN(output, arguments.support, arguments.maxEdgeNum, false, 0);
+        List<LabeledGraph> trans = loader.loadTrans(arguments.window);
+        while (trans.size() == arguments.window) {
+            fsmhgwin.enumerate(trans);
+            trans = trans.subList(arguments.sliding, trans.size());
+            trans.addAll(loader.loadTrans(arguments.sliding));
+        }
     }
 
     private static class Arguments {
@@ -20,6 +35,9 @@ public class Main {
         public String output;
         public double support;
         public int maxEdgeNum = Integer.MAX_VALUE;
+        public int window;
+        public int sliding;
+
 
         private Arguments() {
 
@@ -31,6 +49,8 @@ public class Main {
             ops.addOption("o", "output", true, "The file name of the result");
             ops.addOption("s", "support",true, "Support threshold");
             ops.addOption("m", "max-edge", true, "The maximal number of edges of a pattern");
+            ops.addOption("w", "window size", true, "Open sliding window mode and specify the window size (>= 1)");
+            ops.addOption("ss", "sliding speed", true, "Window sliding speed (>0 1)");
             ops.addOption("h", "Help");
 
             HelpFormatter formatter = new HelpFormatter();
@@ -65,6 +85,29 @@ public class Main {
             if (cmd.hasOption("m")) {
                 arguments.maxEdgeNum = Integer.parseInt(cmd.getOptionValue("m"));
             }
+
+            if (!cmd.hasOption("w") && cmd.hasOption("ss")) {
+                System.out.println("Must specify window size");
+                System.exit(1);
+            }
+
+            if (cmd.hasOption("w") && !cmd.hasOption("ss")) {
+                System.out.println("Must specify window sliding speed");
+                System.exit(1);
+            }
+
+            arguments.window = Integer.parseInt(cmd.getOptionValue("w"));
+            if (arguments.window <= 0) {
+                System.out.println("Window size must be >= 1");
+                System.exit(1);
+            }
+
+            arguments.sliding = Integer.parseInt(cmd.getOptionValue("ss"));
+            if (arguments.sliding <= 0) {
+                System.out.println("Window sliding speed must be >= 1");
+                System.exit(1);
+            }
+
             return arguments;
         }
     }
