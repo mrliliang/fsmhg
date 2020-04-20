@@ -1,0 +1,1 @@
+java -jar target/fsmhg.jar -d test -s 0.3 -o out/win -w 9000 -ss 100
