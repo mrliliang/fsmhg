@@ -59,7 +59,7 @@ public class FSMHGWIN implements Enumerator{
         }
 
         this.trans = newTrans;
-        this.absSup = this.trans.size() * this.minSup;
+        this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
         shrink(removed);
         grow(added);
