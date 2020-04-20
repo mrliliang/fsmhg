@@ -40,8 +40,8 @@ public class Main {
     }
 
     private static class Arguments {
-        public static final int ENUM_FSMHG = 1;
-        public static final int ENUM_FSMHG_WIN = 2;
+        public static final int ENUM_FSMHG_WIN = 1;
+        public static final int ENUM_FSMHG = 2;
         public String data;
         public String output;
         public double support;
@@ -63,7 +63,7 @@ public class Main {
             ops.addOption("m", "max-edge", true, "The maximal number of edges of a pattern");
             ops.addOption("w", "window size", true, "Open sliding window mode and specify the window size (>= 1)");
             ops.addOption("ss", "sliding speed", true, "Window sliding speed (>0 1)");
-            ops.addOption("e", "enumerator", true, "1(FSMHG)/2(FSMHG-WIN)");
+            ops.addOption("e", "enumerator", true, "1(FSMHG-WIN)/2(FSMHG)");
             ops.addOption("h", "Help");
 
             HelpFormatter formatter = new HelpFormatter();
