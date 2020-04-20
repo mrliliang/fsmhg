@@ -672,9 +672,9 @@ public class FSMHGWIN {
     private void joinCands(Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand) {
         DFSEdge e1 = p.edge();
         for (Pattern sib : p.rightSiblings()) {
-            if (!isFrequent(sib)) {
-                continue;
-            }
+//            if (!isFrequent(sib)) {
+//                continue;
+//            }
             DFSEdge e2 = sib.edge();
             if (e1.compareTo(e2) > 0) {
                 continue;
@@ -702,22 +702,22 @@ public class FSMHGWIN {
         }
         DFSEdge firstEdge = p.code().get(0);
         for (Pattern ep : this.points.get(firstEdge.fromLabel()).children()) {
-            if (!isFrequent(ep)) {
-                continue;
-            }
+//            if (!isFrequent(ep)) {
+//                continue;
+//            }
             DFSEdge e = ep.edge();
             if (e.toLabel() == lastEdge.toLabel() && e.edgeLabel() >= firstEdge.edgeLabel()) {
                 extendCands.add(e);
             }
         }
         for (PointPattern pp : this.points.tailMap(firstEdge.fromLabel(), false).headMap(lastEdge.toLabel()).values()) {
-            if (!isFrequent(pp)) {
-                continue;
-            }
+//            if (!isFrequent(pp)) {
+//                continue;
+//            }
             for (Pattern ep : pp.children()) {
-                if (!isFrequent(ep)) {
-                    continue;
-                }
+//                if (!isFrequent(ep)) {
+//                    continue;
+//                }
                 DFSEdge e = ep.edge();
                 if (e.toLabel() == lastEdge.toLabel()) {
                     extendCands.add(e);
@@ -727,9 +727,9 @@ public class FSMHGWIN {
         PointPattern rmPoint = this.points.get(lastEdge.toLabel());
         if (rmPoint != null && isFrequent(rmPoint)) {
             for (Pattern ep : rmPoint.children()) {
-                if (!isFrequent(ep)) {
-                    continue;
-                }
+//                if (!isFrequent(ep)) {
+//                    continue;
+//                }
                 extendCands.add(ep.edge());
             }
         }
