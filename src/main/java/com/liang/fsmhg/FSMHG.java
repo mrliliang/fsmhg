@@ -7,9 +7,7 @@ import com.liang.fsmhg.graph.*;
 import java.io.*;
 import java.util.*;
 
-public class FSMHG {
-
-    private File output;
+public class FSMHG implements Enumerator {
 
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
@@ -25,28 +23,7 @@ public class FSMHG {
 
     private PatternWriter pw;
 
-    private long joinTime = 0;
-    private long extendTime = 0;
-    private long joinCandTime = 0;
-    private long extendCandTime = 0;
-    private long joinCommonGraphTime = 0;
-    private long extendCommonGraphTime = 0;
-    private long actualJoinTime = 0;
-    private long actualExtendTime = 0;
-    private long pointTime = 0;
-    private long edgeTime = 0;
-    private long emVerticesTime = 0;
-    private long patternToGraphTime = 0;
-    private long emBitsTime = 0;
-    private long emBitsCheckTime = 0;
-    private long candCheckTime = 0;
-    private long insertChildTime = 0;
-    private long insertEmbeddingTime = 0;
-    private long transTravelTime = 0;
-
-
-    public FSMHG(File output, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
-        this.output = output;
+    public FSMHG(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
         this.partition = partition;
@@ -92,6 +69,7 @@ public class FSMHG {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
+        reset();
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -693,67 +671,15 @@ public class FSMHG {
         return p.frequency() >= this.absSup;
     }
 
-    private void saveResult() {
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try {
-            int pointCount = 0;
-            fw = new FileWriter(this.output);
-            bw = new BufferedWriter(fw);
-            for (PointPattern pp : points.values()) {
-                if (!isFrequent(pp)) {
-                    continue;
-                }
-                pointCount++;
-                bw.write("t # " + (this.patternCount++) + " * " + pp.frequency());
-                bw.newLine();
-                bw.write("v 0 " + pp.label());
-                bw.newLine();
-                bw.newLine();
-
-                for (Pattern child : pp.children()) {
-                    if (!isFrequent(child) || !child.checkMin()) {
-                        continue;
-                    }
-                    save(child, bw);
-                }
-            }
-            System.out.println(pointCount + " point patterns");
-            System.out.println((this.patternCount - pointCount) + " connected patterns.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bw.close();
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
+    private void reset() {
+        this.patternCount = 0;
+        this.pointCount = 0;
+        this.maxVid = 0;
     }
 
-    private void save(Pattern p, BufferedWriter bw) throws IOException {
-        bw.write("t # " + (this.patternCount++) + " * " + p.frequency());
-        bw.newLine();
-        DFSCode code = p.code();
-        LabeledGraph g = code.toGraph();
-        for (int i = 0; i < g.vSize(); i++) {
-            LabeledVertex v = g.vertex(i);
-            bw.write("v " + i + " " + g.vLabel(v));
-            bw.newLine();
-        }
-        for (DFSEdge e : code.edges()) {
-            bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
-            bw.newLine();
-        }
-        bw.newLine();
-
-        for (Pattern child : p.children()) {
-            if (!isFrequent(child) || !child.checkMin()) {
-                continue;
-            }
-            save(child, bw);
-        }
+    @Override
+    public void setOutput(File out) {
+        this.pw = new PatternWriter(out);
     }
+
 }

@@ -12,10 +12,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class FSMHGWIN {
+public class FSMHGWIN implements Enumerator{
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
-    private File outdir;
+    private File out;
     private double minSup;
     private double absSup;
     private int maxEdgeSize = Integer.MAX_VALUE;
@@ -31,8 +31,7 @@ public class FSMHGWIN {
     private int pointCount = 0;
 
 
-    public FSMHGWIN(File outdir, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
-        this.outdir = outdir;
+    public FSMHGWIN(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
         this.partition = partition;
@@ -741,7 +740,7 @@ public class FSMHGWIN {
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {
-            fw = new FileWriter(new File(this.outdir, String.format("WIN%03d", this.windowCount)));
+            fw = new FileWriter(out);
             bw = new BufferedWriter(fw);
             for (PointPattern pp : points.values()) {
                 if (!isFrequent(pp)) {
@@ -796,6 +795,10 @@ public class FSMHGWIN {
             }
             save(child, bw);
         }
+    }
+
+    public void setOutput(File out) {
+        this.out = out;
     }
 
 }

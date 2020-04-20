@@ -12,31 +12,43 @@ public class Main {
         Arguments arguments = Arguments.parse(args);
 
         File output = new File(arguments.output);
-        FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum,false, 0);
+        output.delete();
         File data = new File(arguments.data);
         TransLoader loader = new TransLoader(data);
         if (arguments.window <= 0) {
+            FSMHG fsmhg = new FSMHG(arguments.support, arguments.maxEdgeNum,false, 0);
+            fsmhg.setOutput(output);
             fsmhg.enumerate(loader.loadTrans());
             return;
         }
 
         output.mkdir();
-        FSMHGWIN fsmhgwin = new FSMHGWIN(output, arguments.support, arguments.maxEdgeNum, false, 0);
+        Enumerator enumerator;
+        if (arguments.enumerator == Arguments.ENUM_FSMHG_WIN) {
+            enumerator = new FSMHGWIN(arguments.support, arguments.maxEdgeNum, false, 0);
+        } else {
+            enumerator = new FSMHG(arguments.support, arguments.maxEdgeNum, false, 0);
+        }
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
+        int winCount = 0;
         while (trans.size() == arguments.window) {
-            fsmhgwin.enumerate(trans);
+            enumerator.setOutput(new File(output, String.format("WIN%03d", winCount++)));
+            enumerator.enumerate(trans);
             trans = trans.subList(arguments.sliding, trans.size());
             trans.addAll(loader.loadTrans(arguments.sliding));
         }
     }
 
     private static class Arguments {
+        public static final int ENUM_FSMHG = 1;
+        public static final int ENUM_FSMHG_WIN = 2;
         public String data;
         public String output;
         public double support;
         public int maxEdgeNum = Integer.MAX_VALUE;
         public int window;
         public int sliding;
+        public int enumerator = ENUM_FSMHG_WIN;
 
 
         private Arguments() {
@@ -51,6 +63,7 @@ public class Main {
             ops.addOption("m", "max-edge", true, "The maximal number of edges of a pattern");
             ops.addOption("w", "window size", true, "Open sliding window mode and specify the window size (>= 1)");
             ops.addOption("ss", "sliding speed", true, "Window sliding speed (>0 1)");
+            ops.addOption("e", "enumerator", true, "1(FSMHG)/2(FSMHG-WIN)");
             ops.addOption("h", "Help");
 
             HelpFormatter formatter = new HelpFormatter();
@@ -108,6 +121,15 @@ public class Main {
                     System.out.println("Window sliding speed must be >= 1");
                     System.exit(1);
                 }
+            }
+
+            if (cmd.hasOption("e")) {
+                int e = Integer.parseInt(cmd.getOptionValue("e"));
+                if (e != ENUM_FSMHG || e != ENUM_FSMHG_WIN) {
+                    System.out.println("Invalid enumerator");
+                    System.exit(1);
+                }
+                arguments.enumerator = e;
             }
 
             return arguments;
