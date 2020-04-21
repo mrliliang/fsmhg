@@ -8,5 +8,5 @@ import java.util.List;
 public interface Enumerator {
     void enumerate(List<LabeledGraph> trans);
 
-    void setOutput(File out);
+    // void setOutput(File out);
 }

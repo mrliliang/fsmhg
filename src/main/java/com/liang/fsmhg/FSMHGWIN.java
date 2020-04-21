@@ -12,7 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class FSMHGWIN implements Enumerator{
+public class FSMHGWIN {
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
     private File out;
@@ -26,7 +26,7 @@ public class FSMHGWIN implements Enumerator{
     private int maxVid = 0;
     private LabeledGraph transDelimiter;
     private Cluster clusterDelimiter;
-    private int windowCount = 0;
+    // private int windowCount = 0;
     private int patternCount = 0;
     private int pointCount = 0;
 
@@ -43,7 +43,7 @@ public class FSMHGWIN implements Enumerator{
 
     public void enumerate(List<LabeledGraph> newTrans) {
         long startTime = System.currentTimeMillis();
-        System.out.println("Window " + this.windowCount++);
+        // System.out.println("Window " + this.windowCount++);
         this.patternCount = 0;
         this.pointCount = 0;
 
@@ -59,6 +59,7 @@ public class FSMHGWIN implements Enumerator{
         }
 
         this.trans = newTrans;
+        System.out.println("Total trans : " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
         shrink(removed);
@@ -66,9 +67,10 @@ public class FSMHGWIN implements Enumerator{
 
         saveResult();
         long endTime = System.currentTimeMillis();
-        System.out.println("Duration = " + (endTime - startTime));
         System.out.println(pointCount + " point patterns");
         System.out.println((this.patternCount - pointCount) + " connected patterns.");
+        System.out.println("Duration = " + (endTime - startTime));
+        
     }
 
     private void shrink(List<LabeledGraph> graphs) {

@@ -7,7 +7,6 @@ import java.io.File;
 import java.util.List;
 
 public class Main {
-
     public static void main(String[] args) {
         Arguments arguments = Arguments.parse(args);
 
@@ -16,24 +15,24 @@ public class Main {
         File data = new File(arguments.data);
         TransLoader loader = new TransLoader(data);
         if (arguments.window <= 0) {
-            FSMHG fsmhg = new FSMHG(arguments.support, arguments.maxEdgeNum,false, 0);
-            fsmhg.setOutput(output);
+            FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum,false, 0);
             fsmhg.enumerate(loader.loadTrans());
             return;
         }
 
         output.mkdir();
-        Enumerator enumerator;
-        if (arguments.enumerator == Arguments.ENUM_FSMHG_WIN) {
-            enumerator = new FSMHGWIN(arguments.support, arguments.maxEdgeNum, false, 0);
-        } else {
-            enumerator = new FSMHG(arguments.support, arguments.maxEdgeNum, false, 0);
-        }
+        FSMHGWIN fsmhgwin = new FSMHGWIN(arguments.support, arguments.maxEdgeNum, false, 0);
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
         int winCount = 0;
         while (trans.size() == arguments.window) {
-            enumerator.setOutput(new File(output, String.format("WIN%03d", winCount++)));
-            enumerator.enumerate(trans);
+            System.out.println("Window " + winCount);
+            File outfile = new File(output, String.format("WIN%03d", winCount++));
+            if (arguments.enumerator == Arguments.ENUM_FSMHG_WIN) {
+                fsmhgwin.setOutput(outfile);
+                fsmhgwin.enumerate(trans);
+            } else {
+                new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, false, 0).enumerate(trans);
+            }
             trans = trans.subList(arguments.sliding, trans.size());
             trans.addAll(loader.loadTrans(arguments.sliding));
         }

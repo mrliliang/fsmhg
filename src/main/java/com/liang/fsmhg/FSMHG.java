@@ -7,7 +7,7 @@ import com.liang.fsmhg.graph.*;
 import java.io.*;
 import java.util.*;
 
-public class FSMHG implements Enumerator {
+public class FSMHG {
 
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
@@ -23,12 +23,13 @@ public class FSMHG implements Enumerator {
 
     private PatternWriter pw;
 
-    public FSMHG(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
+    public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
         this.partition = partition;
         this.similarity = similarity;
         this.points = new TreeMap<>();
+        this.pw = new PatternWriter(out);
     }
 
     // TODO: 2020/3/31 enumeration
@@ -69,7 +70,7 @@ public class FSMHG implements Enumerator {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
-        reset();
+        // reset();
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -671,15 +672,15 @@ public class FSMHG implements Enumerator {
         return p.frequency() >= this.absSup;
     }
 
-    private void reset() {
-        this.patternCount = 0;
-        this.pointCount = 0;
-        this.maxVid = 0;
-    }
+    // private void reset() {
+    //     this.patternCount = 0;
+    //     this.pointCount = 0;
+    //     this.maxVid = 0;
+    // }
 
-    @Override
-    public void setOutput(File out) {
-        this.pw = new PatternWriter(out);
-    }
+    // @Override
+    // public void setOutput(File out) {
+    //     this.pw = new PatternWriter(out);
+    // }
 
 }
