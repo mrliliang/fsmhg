@@ -25,16 +25,22 @@ public class Main {
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
         int winCount = 0;
         while (trans.size() == arguments.window) {
+            if (winCount == 6) {
+                System.out.println();
+            }
             System.out.println("Window " + winCount);
-            File outfile = new File(output, String.format("WIN%03d", winCount++));
+            File outfile = new File(output, String.format("WIN%03d", winCount));
             if (arguments.enumerator == Arguments.ENUM_FSMHG_WIN) {
                 fsmhgwin.setOutput(outfile);
                 fsmhgwin.enumerate(trans);
             } else {
-                new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, false, 0).enumerate(trans);
+                FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, false, 0);
+                fsmhg.setWinId(winCount);
+                fsmhg.enumerate(trans);
             }
             trans = trans.subList(arguments.sliding, trans.size());
             trans.addAll(loader.loadTrans(arguments.sliding));
+            winCount++;
         }
     }
 

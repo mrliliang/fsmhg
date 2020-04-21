@@ -26,9 +26,9 @@ public class FSMHGWIN {
     private int maxVid = 0;
     private LabeledGraph transDelimiter;
     private Cluster clusterDelimiter;
-    // private int windowCount = 0;
     private int patternCount = 0;
     private int pointCount = 0;
+    private int windowCount = -1;
 
 
     public FSMHGWIN(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -42,8 +42,8 @@ public class FSMHGWIN {
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
+        this.windowCount++;
         long startTime = System.currentTimeMillis();
-        // System.out.println("Window " + this.windowCount++);
         this.patternCount = 0;
         this.pointCount = 0;
 
@@ -52,13 +52,15 @@ public class FSMHGWIN {
         int index = this.trans.indexOf(newTrans.get(0));
         if (index == -1) {
             removed = this.trans;
-            added = newTrans;
+            this.trans = newTrans;
+            added = this.trans;
         } else {
             removed = this.trans.subList(0, index);
-            added = newTrans.subList(newTrans.size() - index, newTrans.size());
+            this.trans = newTrans;
+            added = this.trans.subList(this.trans.size() - index, this.trans.size());
         }
 
-        this.trans = newTrans;
+        // this.trans = newTrans;
         System.out.println("Total trans : " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
@@ -74,7 +76,6 @@ public class FSMHGWIN {
     }
 
     private void shrink(List<LabeledGraph> graphs) {
-        // TODO: 2020/4/3 shrink
         List<Cluster> changed = new ArrayList<>();
         Iterator<Cluster> it = this.clusters.iterator();
         while (it.hasNext()) {
@@ -82,7 +83,6 @@ public class FSMHGWIN {
             if (!c.remove(graphs)) {
                 break;
             }
-            // TODO: 2020/4/19 shrink is incorrect
             if (c.size() == 0) {
                 changed.add(c);
             }
@@ -312,6 +312,12 @@ public class FSMHGWIN {
     }
 
     private List<Pattern> enumerateChildren(Pattern p) {
+        if (this.windowCount == 6) {
+            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)";
+            if (testCode.equals(p.code().toString())) {
+                System.out.println();
+            }
+        }
         TreeMap<DFSEdge, Pattern> addedChildren = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -662,6 +668,13 @@ public class FSMHGWIN {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     child.addEmbedding(g, new Embedding(to, em));
                     addedChildren.put(child.edge(), child);
+                    if (this.windowCount == 6) {
+                        String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
+                        // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
+                        if (testCode.equals(child.code().toString())) {
+                            System.out.println("frequency " + child.frequency());
+                        }
+                    }
                 }
             }
 
@@ -792,6 +805,15 @@ public class FSMHGWIN {
         bw.newLine();
 
         for (Pattern child : p.children()) {
+            if (this.windowCount == 6) {
+                String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
+                // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
+                if (testCode.equals(child.code().toString())) {
+                    System.out.println(testCode);
+                    System.out.println("support when output = " + child.frequency());
+                    Test.outputGraphIds(child.graphs(), new File("out/graphids-fsmhgwin"));
+                }
+            }
             if (!isFrequent(child) || !child.checkMin()) {
                 continue;
             }

@@ -248,6 +248,15 @@ public class FSMHG {
             return;
         }
         pw.save(parent, this.patternCount++);
+        if (this.winid == 6) {
+            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
+            // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
+            if (testCode.equals(parent.code().toString())) {
+                System.out.println(testCode);
+                System.out.println("support when output = " + parent.frequency());
+                Test.outputGraphIds(parent.graphs(), new File("out/graphids-fsmhg"));
+            }
+        }
         if (parent.code().edgeSize() >= maxEdgeSize) {
             return;
         }
@@ -267,6 +276,12 @@ public class FSMHG {
     }
 
     private List<Pattern> enumerateChildren(Pattern p) {
+        if (this.winid == 6) {
+            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)";
+            if (testCode.equals(p.code().toString())) {
+                System.out.println();
+            }
+        }
         TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -682,5 +697,11 @@ public class FSMHG {
     // public void setOutput(File out) {
     //     this.pw = new PatternWriter(out);
     // }
+
+    private int winid;
+    public void setWinId(int winid) {
+        this.winid = winid;
+    }
+
 
 }

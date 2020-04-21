@@ -210,8 +210,8 @@ public class Pattern {
             }
         }
 
-        for (Pattern p : children()) {
-            p.remove(removedGraphs, removedClusters);
+        for (Pattern child : children()) {
+            child.remove(removedGraphs, removedClusters);
         }
     }
 
@@ -225,6 +225,24 @@ public class Pattern {
 
     public void removeChild(Pattern child) {
         children.remove(child.edge);
+    }
+
+    public List<LabeledGraph> graphs() {
+        return new ArrayList<>(embeddingMap.keySet());
+    }
+
+    public long[] graphIds() {
+        TreeSet<Long> set = new TreeSet<>();
+        for (LabeledGraph g : embeddingMap.keySet()) {
+            set.add(g.graphId());
+        }
+
+        long[] ids = new long[set.size()];
+        int index = 0;
+        for (Long i : set) {
+            ids[index++] = i;
+        }
+        return ids;
     }
 
 }
