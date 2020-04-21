@@ -31,3 +31,7 @@ hs_err_pid*
 snapshots.txt
 /test_result
 /test.fp
+/.vscode/
+/.settings/
+/.classpath
+/.project
