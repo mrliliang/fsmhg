@@ -21,62 +21,9 @@
                     <target>8</target>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <version>3.0.2</version>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <mainClass>com.liang.fsmhg.Main</mainClass>-->
-<!--                            <addClasspath>true</addClasspath>-->
-<!--&lt;!&ndash;                            <classpathPrefix>lib/</classpathPrefix>&ndash;&gt;-->
-<!--                        </manifest>-->
-<!--&lt;!&ndash;                        <manifestEntries>&ndash;&gt;-->
-<!--&lt;!&ndash;                            <Class-Path>.</Class-Path>&ndash;&gt;-->
-<!--&lt;!&ndash;                        </manifestEntries>&ndash;&gt;-->
-<!--                    </archive>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-dependency-plugin</artifactId>-->
-<!--                <version>3.1.2</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>copy-dependencies</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>copy-dependencies</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <type>jar</type>-->
-<!--                            <includeTypes>jar</includeTypes>-->
-<!--                            <outputDirectory>-->
-<!--                                ${project.build.directory}/lib-->
-<!--                            </outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <artifactId>maven-assembly-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <mainClass>com.liang.fsmhg.Main</mainClass>-->
-<!--                        </manifest>-->
-<!--                    </archive>-->
-<!--                    <descriptorRefs>-->
-<!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
-<!--                    </descriptorRefs>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
 
-            <!-- 内置打包法 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <!-- 用这个maven打包插件 -->
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.2</version>
                 <executions>
@@ -88,7 +35,6 @@
                         </goals>
                         <configuration>
                             <finalName>fsmhg</finalName>
-                            <!-- 默认值为true.注意这个属性,如果你用这个插件来deploy,或者发布到中央仓库，这个属性会缩减你的pom文件,会把你依赖的<dependency>干掉 -->
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer
@@ -106,7 +52,6 @@
                         </goals>
                         <configuration>
                             <finalName>verify</finalName>
-                            <!-- 默认值为true.注意这个属性,如果你用这个插件来deploy,或者发布到中央仓库，这个属性会缩减你的pom文件,会把你依赖的<dependency>干掉 -->
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer
@@ -118,6 +63,7 @@
                     </execution>
                 </executions>
             </plugin>
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -130,7 +76,6 @@
     </build>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
