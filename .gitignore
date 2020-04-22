@@ -35,3 +35,5 @@ snapshots.txt
 /.settings/
 /.classpath
 /.project
+/data
+/synthetic

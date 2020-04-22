@@ -1,7 +1,6 @@
 package com.liang.fsmhg;
 
 import com.liang.fsmhg.code.DFSCode;
-import com.liang.fsmhg.graph.LabeledVertex;
 
 public class PointPattern extends Pattern {
 

@@ -1,11 +1,10 @@
 package com.liang.fsmhg;
 
-import com.liang.fsmhg.graph.LabeledVertex;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
+
+import com.liang.fsmhg.graph.LabeledVertex;
 
 public class Embedding {
 

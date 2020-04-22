@@ -1,7 +1,5 @@
 package com.liang.fsmhg.graph;
 
-import com.liang.fsmhg.graph.Vertex;
-
 public abstract class LabeledVertex {
     private int id;
 

@@ -1,11 +1,15 @@
 package com.liang.fsmhg;
 
-import com.liang.fsmhg.graph.LabeledGraph;
-import com.liang.fsmhg.graph.StaticGraph;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.liang.fsmhg.graph.LabeledGraph;
+import com.liang.fsmhg.graph.StaticGraph;
 
 public class TransLoader {
     private File data;
@@ -17,8 +21,10 @@ public class TransLoader {
     public TransLoader(File data) {
         this.data = data;
         try {
-            fr = new FileReader(data);
-            br = new BufferedReader(fr);
+            if (!data.isDirectory()) {
+                fr = new FileReader(data);
+                br = new BufferedReader(fr);
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -33,7 +39,6 @@ public class TransLoader {
                 trans.addAll(readTrans(f));
             }
         }
-        close();
         return trans;
     }
 

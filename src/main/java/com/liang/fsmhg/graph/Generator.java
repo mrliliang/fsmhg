@@ -4,11 +4,19 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import com.liang.fsmhg.Utils;
 
 public class Generator {
 
+    private File dir;
     private int initialEntity;
     private int averageDegree;
     private int snapshotNum;
@@ -25,7 +33,8 @@ public class Generator {
     private TreeMap<Integer, TreeSet<Integer>> vGroup;
     private int totalDegree;
 
-    public Generator(int initialEntity, int averageDegree, int snapshotNum, double insertRate, double insertDelRate, int vLabelNum, int eLabelNum) {
+    public Generator(File dir, int initialEntity, int averageDegree, int snapshotNum, double insertRate, double insertDelRate, int vLabelNum, int eLabelNum) {
+        this.dir = dir;
         this.initialEntity = initialEntity;
 //        this.maxEntity = maxEntity;
         this.averageDegree = averageDegree;
@@ -42,7 +51,9 @@ public class Generator {
     }
 
     public void generate() {
-        boolean append = true;
+        Utils.deleteFileDir(dir);
+        dir.mkdir();
+        boolean append = false;
         firstSnapshot();
         output(0, append);
         for (int i = 1; i < snapshotNum; i++) {
@@ -130,11 +141,12 @@ public class Generator {
             eSize += adjEdges.size();
         }
         eSize /= 2;
-        String filename = String.format("snapshots/T%04dV%dE%d.txt", transId, vSize, eSize);
+        
+        String filename = String.format("T%04dV%dE%d.txt", transId, vSize, eSize);
         if (append) {
             filename = "snapshots.txt";
         }
-        File file = new File(filename);
+        File file = new File(dir, filename);
         try {
             FileWriter writer = new FileWriter(file, append);
             BufferedWriter bw = new BufferedWriter(writer);
@@ -211,16 +223,17 @@ public class Generator {
     }
 
     public static void main(String[] args) {
+        File dir = new File("synthetic");
         int initialEntity = 20;
         int averageDegree = 4;
-        int snapshotNum = 1000;
-        double insertRate = 0.2;
-        double insertDelRate = 3;
+        int snapshotNum = 300;
+        double insertRate = 0.1;
+        double insertDelRate = 2;
 
         int vLabelNum = 100;
         int eLabelNum = 100;
 
-        Generator generator = new Generator(initialEntity, averageDegree, snapshotNum, insertRate, insertDelRate, vLabelNum, eLabelNum);
+        Generator generator = new Generator(dir, initialEntity, averageDegree, snapshotNum, insertRate, insertDelRate, vLabelNum, eLabelNum);
         generator.generate();
     }
 

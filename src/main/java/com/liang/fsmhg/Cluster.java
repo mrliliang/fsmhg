@@ -1,10 +1,18 @@
 package com.liang.fsmhg;
 
 
-import com.liang.fsmhg.graph.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import javax.swing.*;
-import java.util.*;
+import com.liang.fsmhg.graph.AdjEdges;
+import com.liang.fsmhg.graph.LabeledEdge;
+import com.liang.fsmhg.graph.LabeledGraph;
+import com.liang.fsmhg.graph.LabeledVertex;
 
 public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private int index;
@@ -118,6 +126,9 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             AdjEdges edges1 = s.adjEdges(v.id());
             for (LabeledEdge e : commonEdges.get(v.id())) {
                 LabeledEdge e1 = edges1.edgeTo(e.to().id());
+                if (e1 == null) {
+                    continue;
+                }
                 if (last.vLabel(e.from()) == s.vLabel(e1.from())
                         && last.vLabel(e.to()) == s.vLabel(e1.to())
                         && last.eLabel(e) == s.eLabel(e1)) {
@@ -238,9 +249,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             clusters.add(cluster);
             cluster = new Cluster(similarity);
             cluster.setIndex(startIndex++);
+            cluster.add(s);
         }
-        cluster.computeDeltas();
-        clusters.add(cluster);
+        if (cluster.size() > 0) {
+            cluster.computeDeltas();
+            clusters.add(cluster);
+        }
         return clusters;
     }
 
