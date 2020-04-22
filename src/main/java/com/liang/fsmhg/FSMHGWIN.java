@@ -1,16 +1,22 @@
 package com.liang.fsmhg;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.LabeledEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
 
 public class FSMHGWIN {
     private TreeMap<Integer, PointPattern> points;
@@ -28,7 +34,6 @@ public class FSMHGWIN {
     private Cluster clusterDelimiter;
     private int patternCount = 0;
     private int pointCount = 0;
-    private int windowCount = -1;
 
 
     public FSMHGWIN(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
@@ -42,7 +47,6 @@ public class FSMHGWIN {
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
-        this.windowCount++;
         long startTime = System.currentTimeMillis();
         this.patternCount = 0;
         this.pointCount = 0;
@@ -60,7 +64,6 @@ public class FSMHGWIN {
             added = this.trans.subList(this.trans.size() - index, this.trans.size());
         }
 
-        // this.trans = newTrans;
         System.out.println("Total trans : " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
@@ -72,7 +75,6 @@ public class FSMHGWIN {
         System.out.println(pointCount + " point patterns");
         System.out.println((this.patternCount - pointCount) + " connected patterns.");
         System.out.println("Duration = " + (endTime - startTime));
-        
     }
 
     private void shrink(List<LabeledGraph> graphs) {
@@ -94,13 +96,13 @@ public class FSMHGWIN {
     }
 
     private void grow(List<LabeledGraph> added) {
-        transDelimiter = added.get(0);
+        transDelimiter = added.get(added.size() - 1);
         List<Cluster> addedClusters;
         Map<Integer, PointPattern> addedPoints;
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
             addedClusters = Cluster.partition(added, similarity, clusterCounter);
-            clusterDelimiter = addedClusters.get(0);
+            clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
             clusterCounter += addedClusters.size();
             this.clusters.addAll(addedClusters);
             addedPoints = pointsCluster(addedClusters);
@@ -117,6 +119,8 @@ public class FSMHGWIN {
                 continue;
             }
             subgraphMining(added, p);
+            p.setClusterDelimiter(this.clusterDelimiter);
+            p.setGraphDelimiter(this.transDelimiter);
         }
     }
 
@@ -308,16 +312,12 @@ public class FSMHGWIN {
                 continue;
             }
             subgraphMining(trans, child);
+            child.setClusterDelimiter(this.clusterDelimiter);
+            child.setGraphDelimiter(this.transDelimiter);
         }
     }
 
     private List<Pattern> enumerateChildren(Pattern p) {
-        if (this.windowCount == 6) {
-            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)";
-            if (testCode.equals(p.code().toString())) {
-                System.out.println();
-            }
-        }
         TreeMap<DFSEdge, Pattern> addedChildren = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -327,20 +327,11 @@ public class FSMHGWIN {
         TreeSet<DFSEdge> extendCands = new TreeSet<>();
         extendCands(p, extendCands);
 
-        List<Cluster> clusters;
-        List<LabeledGraph> graphs;
-        if (p.hasChild()) {
-            clusters = p.clusters(clusterDelimiter);
-            graphs = p.unClusteredGraphs(transDelimiter);
-        } else {
-            clusters = p.clusters();
-            graphs = p.unClusteredGraphs();
-        }
-        for (Cluster c : clusters) {
+        for (Cluster c : p.clustersAfterDelimiter()) {
             joinExtendInter(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
             joinExtendDelta(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
         }
-        for (LabeledGraph g : graphs) {
+        for (LabeledGraph g : p.unClusteredGraphsAfterDelimiter()) {
             joinExtendOther(g, p, joinBackCands, joinForCands, extendCands, addedChildren);
         }
 
@@ -668,13 +659,6 @@ public class FSMHGWIN {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     child.addEmbedding(g, new Embedding(to, em));
                     addedChildren.put(child.edge(), child);
-                    if (this.windowCount == 6) {
-                        String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
-                        // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
-                        if (testCode.equals(child.code().toString())) {
-                            System.out.println("frequency " + child.frequency());
-                        }
-                    }
                 }
             }
 
@@ -684,9 +668,6 @@ public class FSMHGWIN {
     private void joinCands(Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand) {
         DFSEdge e1 = p.edge();
         for (Pattern sib : p.rightSiblings()) {
-//            if (!isFrequent(sib)) {
-//                continue;
-//            }
             DFSEdge e2 = sib.edge();
             if (e1.compareTo(e2) > 0) {
                 continue;
@@ -714,22 +695,13 @@ public class FSMHGWIN {
         }
         DFSEdge firstEdge = p.code().get(0);
         for (Pattern ep : this.points.get(firstEdge.fromLabel()).children()) {
-//            if (!isFrequent(ep)) {
-//                continue;
-//            }
             DFSEdge e = ep.edge();
             if (e.toLabel() == lastEdge.toLabel() && e.edgeLabel() >= firstEdge.edgeLabel()) {
                 extendCands.add(e);
             }
         }
         for (PointPattern pp : this.points.tailMap(firstEdge.fromLabel(), false).headMap(lastEdge.toLabel()).values()) {
-//            if (!isFrequent(pp)) {
-//                continue;
-//            }
             for (Pattern ep : pp.children()) {
-//                if (!isFrequent(ep)) {
-//                    continue;
-//                }
                 DFSEdge e = ep.edge();
                 if (e.toLabel() == lastEdge.toLabel()) {
                     extendCands.add(e);
@@ -737,11 +709,8 @@ public class FSMHGWIN {
             }
         }
         PointPattern rmPoint = this.points.get(lastEdge.toLabel());
-        if (rmPoint != null && isFrequent(rmPoint)) {
+        if (rmPoint != null) {
             for (Pattern ep : rmPoint.children()) {
-//                if (!isFrequent(ep)) {
-//                    continue;
-//                }
                 extendCands.add(ep.edge());
             }
         }
@@ -805,15 +774,6 @@ public class FSMHGWIN {
         bw.newLine();
 
         for (Pattern child : p.children()) {
-            if (this.windowCount == 6) {
-                String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
-                // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
-                if (testCode.equals(child.code().toString())) {
-                    System.out.println(testCode);
-                    System.out.println("support when output = " + child.frequency());
-                    Test.outputGraphIds(child.graphs(), new File("out/graphids-fsmhgwin"));
-                }
-            }
             if (!isFrequent(child) || !child.checkMin()) {
                 continue;
             }

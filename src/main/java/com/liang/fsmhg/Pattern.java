@@ -1,13 +1,16 @@
 package com.liang.fsmhg;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
-import com.liang.fsmhg.graph.Graph;
 import com.liang.fsmhg.graph.LabeledGraph;
-import com.liang.fsmhg.graph.Snapshot;
-
-import java.util.*;
-import java.util.function.Function;
 
 public class Pattern {
 
@@ -22,6 +25,9 @@ public class Pattern {
 
     private boolean isMinChecked;
     private boolean minCheckResult;
+
+    private Cluster clusterDelimiter;
+    private LabeledGraph graphDelimiter;
 
     public Pattern(DFSEdge edge, Pattern parent) {
         this.edge = edge;
@@ -77,7 +83,10 @@ public class Pattern {
         return new ArrayList<>(graphs);
     }
 
-    public List<LabeledGraph> unClusteredGraphs(LabeledGraph graphDelimiter) {
+    public List<LabeledGraph> unClusteredGraphsAfterDelimiter() {
+        if (graphDelimiter == null) {
+            return unClusteredGraphs();
+        }
         HashSet<LabeledGraph> graphs = new HashSet<>(embeddingMap.keySet());
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
         clusters.addAll(borderEmbeddings.keySet());
@@ -85,7 +94,7 @@ public class Pattern {
             graphs.removeAll(c.snapshots());
         }
 
-        return new ArrayList<>(new TreeSet<>(graphs).tailSet(graphDelimiter));
+        return new ArrayList<>(new TreeSet<>(graphs).tailSet(graphDelimiter, false));
     }
 
     public List<Cluster> clusters() {
@@ -94,13 +103,16 @@ public class Pattern {
         return new ArrayList<>(clusters);
     }
 
-    public List<Cluster> clusters(Cluster clusterDelimiter) {
+    public List<Cluster> clustersAfterDelimiter() {
+        // if (clusterDelimiter == null) {
+        // return new ArrayList<>();
+        // }
         if (clusterDelimiter == null) {
-            return new ArrayList<>();
+            return clusters();
         }
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
         clusters.addAll(borderEmbeddings.keySet());
-        return new ArrayList<>(new TreeSet<>(clusters).tailSet(clusterDelimiter));
+        return new ArrayList<>(new TreeSet<>(clusters).tailSet(clusterDelimiter, false));
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
@@ -243,6 +255,14 @@ public class Pattern {
             ids[index++] = i;
         }
         return ids;
+    }
+
+    public void setClusterDelimiter(Cluster c) {
+        this.clusterDelimiter = c;
+    }
+
+    public void setGraphDelimiter(LabeledGraph g) {
+        this.graphDelimiter = g;
     }
 
 }

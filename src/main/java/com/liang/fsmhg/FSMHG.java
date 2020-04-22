@@ -1,11 +1,18 @@
 package com.liang.fsmhg;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
-import com.liang.fsmhg.graph.*;
-
-import java.io.*;
-import java.util.*;
+import com.liang.fsmhg.graph.LabeledEdge;
+import com.liang.fsmhg.graph.LabeledGraph;
+import com.liang.fsmhg.graph.LabeledVertex;
 
 public class FSMHG {
 
@@ -32,7 +39,6 @@ public class FSMHG {
         this.pw = new PatternWriter(out);
     }
 
-    // TODO: 2020/3/31 enumeration
     public void enumerate(List<LabeledGraph> trans) {
         long startTime = System.currentTimeMillis();
         this.trans = trans;
@@ -70,7 +76,6 @@ public class FSMHG {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
-        // reset();
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -145,7 +150,6 @@ public class FSMHG {
                     }
                     Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
                     child.addBorderEmbedding(c, new Embedding(e.to(), em));
-//                    edges.put(child.edge(), child);
                 }
             }
 
@@ -156,7 +160,6 @@ public class FSMHG {
                     }
                     Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
                     child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
-//                    edges.put(child.edge(), child);
                 }
             }
         }
@@ -173,7 +176,6 @@ public class FSMHG {
                         }
                         Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
                         child.addEmbedding(g, new Embedding(e.to(), em));
-//                        edges.put(child.edge(), child);
                     }
                 }
 
@@ -187,7 +189,6 @@ public class FSMHG {
                         }
                         Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
                         child.addEmbedding(g, new Embedding(e.to(), em));
-//                        edges.put(child.edge(), child);
                     }
                 }
             }
@@ -234,7 +235,6 @@ public class FSMHG {
                         }
                         Pattern child = pp.child(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                         child.addEmbedding(g, new Embedding(to, em));
-//                        eMap.put(child.edge(), child);
                     }
                 }
             }
@@ -248,20 +248,11 @@ public class FSMHG {
             return;
         }
         pw.save(parent, this.patternCount++);
-        if (this.winid == 6) {
-            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)";
-            // String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)(5,6,2,5,2)(6,7,2,5,2)";
-            if (testCode.equals(parent.code().toString())) {
-                System.out.println(testCode);
-                System.out.println("support when output = " + parent.frequency());
-                Test.outputGraphIds(parent.graphs(), new File("out/graphids-fsmhg"));
-            }
-        }
         if (parent.code().edgeSize() >= maxEdgeSize) {
             return;
         }
 
-        List<Pattern> children = enumerateChildren(parent);
+        enumerateChildren(parent);
         if (!parent.hasChild()) {
             return;
         }
@@ -276,12 +267,6 @@ public class FSMHG {
     }
 
     private List<Pattern> enumerateChildren(Pattern p) {
-        if (this.winid == 6) {
-            String testCode = "(0,1,2,2,3)(0,2,2,5,2)(2,3,2,5,2)(3,4,2,2,3)(3,5,2,5,2)";
-            if (testCode.equals(p.code().toString())) {
-                System.out.println();
-            }
-        }
         TreeMap<DFSEdge, Pattern> children = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -613,7 +598,6 @@ public class FSMHG {
                     child.addEmbedding(g, new Embedding(to, em));
                 }
             }
-
         }
     }
 
@@ -686,22 +670,5 @@ public class FSMHG {
     private boolean isFrequent(Pattern p) {
         return p.frequency() >= this.absSup;
     }
-
-    // private void reset() {
-    //     this.patternCount = 0;
-    //     this.pointCount = 0;
-    //     this.maxVid = 0;
-    // }
-
-    // @Override
-    // public void setOutput(File out) {
-    //     this.pw = new PatternWriter(out);
-    // }
-
-    private int winid;
-    public void setWinId(int winid) {
-        this.winid = winid;
-    }
-
 
 }
