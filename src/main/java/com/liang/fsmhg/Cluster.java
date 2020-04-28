@@ -86,19 +86,21 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private boolean similarityCheck(LabeledGraph s) {
         Map<Integer, LabeledVertex> vCommon = commonVertices(s);
         Map<Integer, AdjEdges> eCommon = commonEdges(vCommon, s);
-        int edgeNum = 0;
+        int commonEdgeNum = 0;
         for (AdjEdges adjEdges : eCommon.values()) {
-            edgeNum += adjEdges.size();
+            commonEdgeNum += adjEdges.size();
         }
-        edgeNum /= edgeNum / 2;
+        commonEdgeNum = commonEdgeNum / 2;
 
 
-        int denominator = 0;
+        // int denominator = s.vSize() + s.eSize();
+        int totalEdgeNum = s.eSize();
         for (LabeledGraph snapshot : snapshots) {
-            denominator += (snapshot.vSize() + snapshot.eSize());
+            // denominator += (snapshot.vSize() + snapshot.eSize());
+            totalEdgeNum += (snapshot.eSize());
         }
-        denominator += (s.vSize() + s.eSize());
-        double sim = (double)(snapshots.size() + 1) * (vCommon.size() + edgeNum) / denominator;
+        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() + edgeNum) / denominator;
+        double sim = (double)(snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
         if (sim >= similarity) {
             commonVertices = vCommon;
             commonEdges = eCommon;
@@ -251,10 +253,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             cluster.setIndex(startIndex++);
             cluster.add(s);
         }
-        if (cluster.size() > 0) {
-            cluster.computeDeltas();
-            clusters.add(cluster);
-        }
+        cluster.computeDeltas();
+        clusters.add(cluster);
         return clusters;
     }
 

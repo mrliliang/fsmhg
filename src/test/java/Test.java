@@ -1,7 +1,12 @@
+import com.liang.fsmhg.Cluster;
+import com.liang.fsmhg.TransLoader;
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
+import com.liang.fsmhg.graph.LabeledGraph;
 
+import java.io.File;
 import java.util.Formatter;
+import java.util.List;
 
 
 public class Test {
@@ -30,6 +35,12 @@ public class Test {
         System.out.println(dfsCode);
         System.out.println(dfsCode.minCode());
 //        System.out.println(dfsCode.toGraph());
+
+        TransLoader loader = new TransLoader(new File("synthetic"));
+        List<LabeledGraph> graphs =  loader.loadTrans();
+        List<Cluster> clusters = Cluster.partition(graphs, 0.3, 0);
+        System.out.println(clusters.size() + " clusters");
+
     }
 
 

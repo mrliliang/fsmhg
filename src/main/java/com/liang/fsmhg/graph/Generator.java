@@ -100,7 +100,6 @@ public class Generator {
             StaticVertex to = vMap.get(selectAttachPoint());
             while (eMap.get(from.id()).edgeTo(to.id()) != null) {
                 to = vMap.get(selectAttachPoint());
-                System.out.println("loop in insertEdges");
             }
             vGroup.get(eMap.get(to.id()).size()).remove(to.id());
             int eLabel = eLabel();
@@ -126,7 +125,6 @@ public class Generator {
         while (from == to || eMap.get(from).edgeTo(to) == null) {
             from = random.nextInt(vMap.size());
             to = random.nextInt(vMap.size());
-            System.out.println("loop in removeEdge");
         }
         eMap.get(from).remove(to);
         eMap.get(to).remove(from);
@@ -172,7 +170,6 @@ public class Generator {
                     if (e == null) {
                         continue;
                     }
-                    System.out.println("from " + from.id() + " to " + to.id() + " " + e.label());
                     bw.newLine();
                     bw.write("e " + from.id() + " " + to.id() + " " + e.label());
                 }
@@ -224,11 +221,11 @@ public class Generator {
 
     public static void main(String[] args) {
         File dir = new File("synthetic");
-        int initialEntity = 20;
+        int initialEntity = 300;
         int averageDegree = 4;
-        int snapshotNum = 300;
-        double insertRate = 0.1;
-        double insertDelRate = 2;
+        int snapshotNum = 2000;
+        double insertRate = 0.005;
+        double insertDelRate = 10;
 
         int vLabelNum = 100;
         int eLabelNum = 100;
