@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 import com.liang.fsmhg.Utils;
 
-public class Transform {
+public class EnronTransform {
     private DateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss Z (z)", Locale.ENGLISH);
 
     private TreeMap<Date, List<Mail>> mailMap = new TreeMap<>(new Comparator<Date>() {
@@ -62,8 +62,8 @@ public class Transform {
 
     private List<Mail> readMail(File file) {
         if (!file.isDirectory()) {
-            Transform.this.emailCount++;
-            System.out.format("Reading email %d\r", Transform.this.emailCount);
+            EnronTransform.this.emailCount++;
+            System.out.format("Reading email %d\r", EnronTransform.this.emailCount);
             ArrayList<Mail> mails = new ArrayList<>();
             Mail m = new Mail(file);
             mails.add(m);
@@ -83,6 +83,11 @@ public class Transform {
 
         for (Mail m : mails) {
             if (m.from == null || m.toList.isEmpty()) {
+                continue;
+            }
+            Calendar c = Calendar.getInstance();
+            c.setTime(m.date);
+            if (c.get(Calendar.YEAR) < 1998) {
                 continue;
             }
     
@@ -115,6 +120,7 @@ public class Transform {
                 }
             }
         }
+        saveUsers();
         
         int count = 0;
         for (Entry<Date, List<Mail>> entry : mailMap.entrySet()) {
@@ -133,6 +139,23 @@ public class Transform {
         System.out.format("%d address\n", address.size());
     }
 
+    private void saveUsers() {
+        File userFile = new File("/home/liliang/data/users");
+        try {
+            FileWriter fw = new FileWriter(userFile);
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (Entry<String, Integer> entry : userIds.entrySet()) {
+                bw.write(entry.getKey() + ", " + entry.getValue());
+                bw.newLine();
+            }
+            bw.close();
+            fw.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     private void snapshot(List<Mail> mails, HashMap<Integer, Integer> sendCount, HashMap<Interaction, Integer> interactionCount) {
         for (Mail m : mails) {
             int fromId = userIds.getOrDefault(m.from, -1);
@@ -143,6 +166,9 @@ public class Transform {
                 }
                 if (fromId >= 0) {
                     sendCount.put(fromId, sendCount.getOrDefault(fromId, 0) + 1);
+                }
+                if (toId >= 0) {
+                    sendCount.put(toId, sendCount.getOrDefault(toId, -1) + 1);
                 }
                 if (fromId < 0 || toId < 0) {
                     continue;
@@ -184,7 +210,7 @@ public class Transform {
         Calendar c = Calendar.getInstance();
         c.setTime(d);
         int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
+        int month = c.get(Calendar.MONTH) + 1;
         int day = c.get(Calendar.DAY_OF_MONTH);
         String name = String.format("%04d-%d%02d%02d", count, year, month, day);
         return new File(dir, name);
@@ -210,6 +236,16 @@ public class Transform {
                 if (line.startsWith("Date")) {
                     String d = line.substring("Date: ".length());
                     date = format.parse(d);
+
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(date);
+                    int year = c.get(Calendar.YEAR);
+                    if (year == 1) {
+                        System.out.println("year = 1, " + mail.getAbsolutePath());
+                    }
+                    if (year == 2) {
+                        System.out.println("year = 2, " + mail.getAbsolutePath());
+                    }
                 }
 
                 line = br.readLine();
@@ -295,7 +331,7 @@ public class Transform {
         File outdir = new File("/home/liliang/data/enron_snapshots");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
-        new Transform().transform(maildir, outdir);
+        new EnronTransform().transform(maildir, outdir);
     }
 
 }

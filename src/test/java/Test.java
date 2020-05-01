@@ -34,11 +34,10 @@ public class Test {
         System.out.println("min = " + dfsCode.isMin());
         System.out.println(dfsCode);
         System.out.println(dfsCode.minCode());
-//        System.out.println(dfsCode.toGraph());
 
-        TransLoader loader = new TransLoader(new File("synthetic"));
+        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots"));
         List<LabeledGraph> graphs =  loader.loadTrans();
-        List<Cluster> clusters = Cluster.partition(graphs, 0.3, 0);
+        List<Cluster> clusters = Cluster.partition(graphs, 0.5, 0);
         System.out.println(clusters.size() + " clusters");
 
     }
@@ -67,5 +66,6 @@ public class Test {
 
         return new DFSEdge(from, to, fromLabel, toLabel, eLabel);
     }
+
 
 }

@@ -99,7 +99,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             // denominator += (snapshot.vSize() + snapshot.eSize());
             totalEdgeNum += (snapshot.eSize());
         }
-        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() + edgeNum) / denominator;
+        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() + commonEdgeNum) / denominator;
         double sim = (double)(snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
         if (sim >= similarity) {
             commonVertices = vCommon;
@@ -113,7 +113,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
         for (LabeledVertex v : commonVertices.values()) {
-            if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
+            // if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
+            if (s.vertex(v.id()) != null) {
                 vCommon.put(v.id(), v);
             }
         }
@@ -131,11 +132,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                 if (e1 == null) {
                     continue;
                 }
-                if (last.vLabel(e.from()) == s.vLabel(e1.from())
-                        && last.vLabel(e.to()) == s.vLabel(e1.to())
-                        && last.eLabel(e) == s.eLabel(e1)) {
-                    edges.add(e);
-                }
+                // if (last.vLabel(e.from()) == s.vLabel(e1.from())
+                //         && last.vLabel(e.to()) == s.vLabel(e1.to())
+                //         && last.eLabel(e) == s.eLabel(e1)) {
+                //     edges.add(e);
+                // }
+                edges.add(e);
             }
             eCommon.put(v.id(), edges);
         }
