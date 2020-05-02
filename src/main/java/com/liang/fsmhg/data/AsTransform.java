@@ -7,22 +7,29 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.KeyStore.Entry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
 import com.liang.fsmhg.Utils;
 import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
+import com.liang.fsmhg.graph.LabeledVertex;
 import com.liang.fsmhg.graph.StaticEdge;
 import com.liang.fsmhg.graph.StaticVertex;
 
 public class AsTransform {
     HashMap<Integer, StaticVertex> allVertices = new HashMap<>();
+    HashMap<Integer, AdjEdges> allEdges = new HashMap<>();
 
-    private static final int LARGE_DEGREE = 20;
+    private static final int LARGE_DEGREE = 10;
+    private static final int VERTEX_LABEL_NUM = 100;
+    private static final int EDGE_LABEL_NUM = 100;
 
     public static void main(String[] args) {
         File data = new File("/home/liliang/data/as-733");
@@ -40,6 +47,7 @@ public class AsTransform {
             HashMap<Integer, StaticVertex> vMap = new HashMap<>();
             HashMap<Integer, AdjEdges> adjLists = new HashMap<>();
             snapshot(file, vMap, adjLists);
+            removeHighDegreeVertices(vMap, adjLists);
             int vSize = vMap.size();
             int eSize = 0;
             int minDegree = vMap.size() - 1;
@@ -47,7 +55,7 @@ public class AsTransform {
             int largeDegreeCount = 0;
             for (AdjEdges adj : adjLists.values()) {
                 eSize += adj.size();
-                if (adj.size() > 50) {
+                if (adj.size() > 5) {
                     largeDegreeCount++;
                 }
                 if (adj.size() > maxDegree) {
@@ -86,7 +94,7 @@ public class AsTransform {
                 StaticVertex from = allVertices.computeIfAbsent(fromId, new Function<Integer, StaticVertex>() {
                     @Override
                     public StaticVertex apply(Integer vId) {
-                        return new StaticVertex(vId, 1);
+                        return new StaticVertex(vId, vLabel());
                     }
                 });
                 vMap.putIfAbsent(from.id(), from);
@@ -94,12 +102,12 @@ public class AsTransform {
                 StaticVertex to = allVertices.computeIfAbsent(toId, new Function<Integer, StaticVertex>() {
                     @Override
                     public StaticVertex apply(Integer vId) {
-                        return new StaticVertex(vId, 1);
+                        return new StaticVertex(vId, vLabel());
                     }
                 });
                 vMap.putIfAbsent(to.id(), to);
 
-                AdjEdges edges = adjLists.computeIfAbsent(fromId, new Function<Integer, AdjEdges>() {
+                AdjEdges edges = allEdges.computeIfAbsent(fromId, new Function<Integer, AdjEdges>() {
                     @Override
                     public AdjEdges apply(Integer fromId) {
                         return new AdjEdges();
@@ -107,11 +115,17 @@ public class AsTransform {
                 });
                 LabeledEdge e = edges.edgeTo(toId);
                 if (e == null) {
-                    e = new StaticEdge(from, to, 1);
+                    e = new StaticEdge(from, to, eLabel());
                     edges.add(e);;
                 }
+                adjLists.computeIfAbsent(fromId, new Function<Integer, AdjEdges>() {
+                    @Override
+                    public AdjEdges apply(Integer fromId) {
+                        return new AdjEdges();
+                    }
+                }).add(e);
                 
-                edges = adjLists.computeIfAbsent(toId, new Function<Integer, AdjEdges>() {
+                edges = allEdges.computeIfAbsent(toId, new Function<Integer, AdjEdges>() {
                     @Override
                     public AdjEdges apply(Integer toId) {
                         return new AdjEdges();
@@ -119,9 +133,15 @@ public class AsTransform {
                 });
                 e = edges.edgeTo(fromId);
                 if (e == null) {
-                    e = new StaticEdge(to, from, 1);
+                    e = new StaticEdge(to, from, eLabel());
                     edges.add(e);;
                 }
+                adjLists.computeIfAbsent(toId, new Function<Integer, AdjEdges>() {
+                    @Override
+                    public AdjEdges apply(Integer toId) {
+                        return new AdjEdges();
+                    }
+                }).add(e);
             }
             br.close();
             fr.close();
@@ -134,15 +154,40 @@ public class AsTransform {
         }
     }
 
+    private int vLabel() {
+        Random r = new Random();
+        return r.nextInt(VERTEX_LABEL_NUM);
+    }
+
+    private int eLabel() {
+        Random r = new Random();
+        return r.nextInt(EDGE_LABEL_NUM);
+    }
+
 
     private void removeHighDegreeVertices(HashMap<Integer, StaticVertex> vMap, HashMap<Integer, AdjEdges> adjLists) {
-        // Iterator<Integer, StaticVertex> it = vMap.entrySet().iterator();
-        // for (StaticVertex v : vMap.values()) {
-        //     AdjEdges adj = adjLists.get(v.id());
-        //     if (adj.size() > LARGE_DEGREE) {
-
-        //     }
-        // }
+        Iterator<Entry<Integer, StaticVertex>> it = vMap.entrySet().iterator();
+        List<LabeledVertex> isolatedVertices = new ArrayList<>();
+        while (it.hasNext()) {
+            Entry<Integer, StaticVertex> entry = it.next();
+            AdjEdges adj = adjLists.get(entry.getKey());
+            if (adj.size() <= LARGE_DEGREE) {
+                continue;
+            }
+            it.remove();
+            adjLists.remove(entry.getKey());
+            for (LabeledEdge e : adj) {
+                AdjEdges edges = adjLists.get(e.to().id());
+                edges.remove(e.from().id());
+                if (edges.size() == 0) {
+                    isolatedVertices.add(e.to());
+                }
+            }
+        }
+        for (LabeledVertex v : isolatedVertices) {
+            vMap.remove(v.id());
+            adjLists.remove(v.id());
+        }
     }
 
     private void output(File out, HashMap<Integer, StaticVertex> vMap, HashMap<Integer, AdjEdges> adjLists, int transId) {
