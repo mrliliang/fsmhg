@@ -1,5 +1,5 @@
-echo "Test support 5000"
-java -jar target/fsmhg.jar -d /home/liliang/data/as-733-snapshots -s 0.8 -o out/as_test_result -m 1 -p -sim 0.9
+echo "Test support 0.8"
+java -jar target/fsmhg.jar -d /home/liliang/data/as-733-snapshots -s 0.8 -o out/as_test_result_80 -m 10 -p -sim 0.4
 
 # echo "Test support 3000"
 # java -jar target/fsmhg.jar -d test -s 0.3 -o out/test_result_3000
@@ -14,4 +14,3 @@ java -jar target/fsmhg.jar -d /home/liliang/data/as-733-snapshots -s 0.8 -o out/
 # java -jar target/fsmhg.jar -d test -s 0.04 -o out/test_result_400
 
 echo "Done!"
-

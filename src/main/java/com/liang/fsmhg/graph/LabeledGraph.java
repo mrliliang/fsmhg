@@ -63,7 +63,11 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     }
 
     public LabeledEdge edge(int from, int to) {
-        return adjLists.get(from).edgeTo(to);
+        AdjEdges adj = adjLists.get(from);
+        if (adj == null) {
+            return null;
+        }
+        return adj.edgeTo(to);
     }
 
     public AdjEdges adjEdges(int vertexId) {

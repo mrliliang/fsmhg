@@ -104,6 +104,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         if (sim >= similarity) {
             commonVertices = vCommon;
             commonEdges = eCommon;
+            this.snapshots.add(s);
             return true;
         }
         return false;
@@ -113,8 +114,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
         for (LabeledVertex v : commonVertices.values()) {
-            // if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
-            if (s.vertex(v.id()) != null) {
+            if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
+            // if (s.vertex(v.id()) != null) {
                 vCommon.put(v.id(), v);
             }
         }
@@ -132,12 +133,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                 if (e1 == null) {
                     continue;
                 }
-                // if (last.vLabel(e.from()) == s.vLabel(e1.from())
-                //         && last.vLabel(e.to()) == s.vLabel(e1.to())
-                //         && last.eLabel(e) == s.eLabel(e1)) {
-                //     edges.add(e);
-                // }
-                edges.add(e);
+                if (last.vLabel(e.from()) == s.vLabel(e1.from())
+                        && last.vLabel(e.to()) == s.vLabel(e1.to())
+                        && last.eLabel(e) == s.eLabel(e1)) {
+                    edges.add(e);
+                }
+                // edges.add(e);
             }
             eCommon.put(v.id(), edges);
         }
@@ -157,60 +158,89 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         Map<Integer, LabeledVertex> vDelta = new HashMap<>();
         Map<Integer, AdjEdges> eDelta = new HashMap<>();
         Map<Integer, LabeledVertex> vBorder = new HashMap<>();
+        //vertices not in common vertices
+        // for (LabeledVertex v : s.vertices()) {
+        //     if (!commonVertices.containsKey(v.id())) {
+        //         vDelta.put(v.id(), v);
+        //         eDelta.put(v.id(), s.adjEdges(v.id()));
+        //     }
+        // }
+
+        // // TODO: 2020/4/2 delta graph may not be correct
+        // for (AdjEdges adjEdges : eDelta.values()) {
+        //     for (LabeledEdge e : adjEdges) {
+        //         LabeledVertex to = e.to();
+        //         if (commonVertices.containsKey(to.id())) {
+        //             vBorder.put(to.id(), to);
+        //             vDelta.put(to.id(), to);
+        //             eDelta.put(to.id(), new AdjEdges());
+        //         }
+        //     }
+        // }
+
+        // Map<Integer, LabeledVertex> tempBorder = new HashMap<>();
+        // for (LabeledVertex v : vBorder.values()) {
+        //     for (LabeledEdge e : s.adjEdges(v.id())) {
+        //         LabeledVertex from = e.from();
+        //         LabeledVertex to = e.to();
+        //         if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
+        //             continue;
+        //         }
+        //         eDelta.get(from.id()).add(e);
+        //         if (commonVertices.containsKey(to.id()) && !vDelta.containsKey(to.id())) {
+        //             tempBorder.put(to.id(), to);
+        //             vDelta.put(to.id(), to);
+        //             eDelta.put(to.id(), new AdjEdges());
+        //         }
+        //     }
+        // }
+        // vBorder.putAll(tempBorder);
+
+        // for (LabeledVertex v : tempBorder.values()) {
+        //     for (LabeledEdge e : s.adjEdges(v.id())) {
+        //         LabeledVertex from = e.from();
+        //         LabeledVertex to = e.to();
+        //         if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
+        //             continue;
+        //         }
+        //         eDelta.get(from.id()).add(e);
+        //     }
+        // }
+
+        // List<LabeledEdge> edges = new ArrayList<>();
+        // for (AdjEdges adjEdges : eDelta.values()) {
+        //     edges.addAll(adjEdges.edges());
+        // }
+
         for (LabeledVertex v : s.vertices()) {
             if (!commonVertices.containsKey(v.id())) {
                 vDelta.put(v.id(), v);
-                eDelta.put(v.id(), s.adjEdges(v.id()));
             }
-        }
-
-        // TODO: 2020/4/2 delta graph may not be correct
-        for (AdjEdges adjEdges : new ArrayList<>(eDelta.values())) {
-            for (LabeledEdge e : adjEdges) {
-                LabeledVertex to = e.to();
-                if (commonVertices.containsKey(to.id())) {
-                    vBorder.put(to.id(), to);
-                    vDelta.put(to.id(), to);
-                    eDelta.put(to.id(), new AdjEdges());
-                }
-            }
-        }
-
-        Map<Integer, LabeledVertex> tempBorder = new HashMap<>();
-        for (LabeledVertex v : vBorder.values()) {
             for (LabeledEdge e : s.adjEdges(v.id())) {
                 LabeledVertex from = e.from();
                 LabeledVertex to = e.to();
-                if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
-                    continue;
-                }
-                eDelta.get(from.id()).add(e);
-                if (commonVertices.containsKey(to.id()) && !vDelta.containsKey(to.id())) {
-                    tempBorder.put(to.id(), to);
-                    vDelta.put(to.id(), to);
-                    eDelta.put(to.id(), new AdjEdges());
+                AdjEdges adjInCommon = this.commonEdges.get(from.id());
+                if (adjInCommon == null || adjInCommon.edgeTo(to.id()) == null) {
+                    vDelta.putIfAbsent(from.id(), from);
+                    eDelta.putIfAbsent(from.id(), new AdjEdges());
+                    vDelta.putIfAbsent(to.id(), to);
+                    eDelta.putIfAbsent(to.id(), new AdjEdges());
+                    if (commonVertices.containsKey(from.id())) {
+                        vBorder.put(from.id(), from);
+                    }
+                    if (commonVertices.containsKey(to.id())) {
+                        vBorder.put(from.id(), from);
+                    }
+                    eDelta.get(from.id()).add(e);
                 }
             }
         }
-        vBorder.putAll(tempBorder);
-
-        for (LabeledVertex v : tempBorder.values()) {
-            for (LabeledEdge e : s.adjEdges(v.id())) {
-                LabeledVertex from = e.from();
-                LabeledVertex to = e.to();
-                if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
-                    continue;
-                }
-                eDelta.get(from.id()).add(e);
-            }
-        }
-
         List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : eDelta.values()) {
             edges.addAll(adjEdges.edges());
         }
 
-        return new DeltaGraph(s.graphId(), new ArrayList<>(vDelta.values()), new ArrayList<>(edges), vBorder);
+        return new DeltaGraph(s.graphId(), new ArrayList<>(vDelta.values()), edges, vBorder);
     }
 
     private void computeDeltas() {
