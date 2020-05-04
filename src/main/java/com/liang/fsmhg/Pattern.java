@@ -99,7 +99,7 @@ public class Pattern {
 
     public List<Cluster> clusters() {
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
+        // clusters.addAll(borderEmbeddings.keySet());
         return new ArrayList<>(clusters);
     }
 

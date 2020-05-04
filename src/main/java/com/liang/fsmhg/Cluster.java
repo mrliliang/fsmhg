@@ -13,6 +13,7 @@ import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
+import com.liang.fsmhg.graph.StaticGraph;
 
 public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private int index;
@@ -24,12 +25,15 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private Map<Integer, AdjEdges> commonEdges;
 
     private Map<Long, DeltaGraph> deltaGraphs;
+    private LabeledGraph intersection;
+    private Map<Integer, LabeledVertex> border;
 
     public Cluster(double similarity) {
         this.similarity = similarity;
         snapshots = new ArrayList<>();
         commonVertices = new HashMap<>();
         commonEdges = new HashMap<>();
+        border = new HashMap<>();
     }
 
     public List<LabeledGraph> snapshots() {
@@ -145,72 +149,24 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         return eCommon;
     }
 
-    public Intersection intersection() {
+    public LabeledGraph intersection() {
+        return this.intersection;
+    }
+
+    private void computeIntersection() {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        this.intersection = new StaticGraph(last.graphId());
         List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : commonEdges.values()) {
             edges.addAll(adjEdges.edges());
         }
-        return new Intersection(last.graphId(), new ArrayList<>(commonVertices.values()), edges);
+        this.intersection = new Intersection(last.graphId(), commonVertices.values(), edges);
     }
 
     private DeltaGraph computeDelta(LabeledGraph s) {
         Map<Integer, LabeledVertex> vDelta = new HashMap<>();
         Map<Integer, AdjEdges> eDelta = new HashMap<>();
         Map<Integer, LabeledVertex> vBorder = new HashMap<>();
-        //vertices not in common vertices
-        // for (LabeledVertex v : s.vertices()) {
-        //     if (!commonVertices.containsKey(v.id())) {
-        //         vDelta.put(v.id(), v);
-        //         eDelta.put(v.id(), s.adjEdges(v.id()));
-        //     }
-        // }
-
-        // // TODO: 2020/4/2 delta graph may not be correct
-        // for (AdjEdges adjEdges : eDelta.values()) {
-        //     for (LabeledEdge e : adjEdges) {
-        //         LabeledVertex to = e.to();
-        //         if (commonVertices.containsKey(to.id())) {
-        //             vBorder.put(to.id(), to);
-        //             vDelta.put(to.id(), to);
-        //             eDelta.put(to.id(), new AdjEdges());
-        //         }
-        //     }
-        // }
-
-        // Map<Integer, LabeledVertex> tempBorder = new HashMap<>();
-        // for (LabeledVertex v : vBorder.values()) {
-        //     for (LabeledEdge e : s.adjEdges(v.id())) {
-        //         LabeledVertex from = e.from();
-        //         LabeledVertex to = e.to();
-        //         if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
-        //             continue;
-        //         }
-        //         eDelta.get(from.id()).add(e);
-        //         if (commonVertices.containsKey(to.id()) && !vDelta.containsKey(to.id())) {
-        //             tempBorder.put(to.id(), to);
-        //             vDelta.put(to.id(), to);
-        //             eDelta.put(to.id(), new AdjEdges());
-        //         }
-        //     }
-        // }
-        // vBorder.putAll(tempBorder);
-
-        // for (LabeledVertex v : tempBorder.values()) {
-        //     for (LabeledEdge e : s.adjEdges(v.id())) {
-        //         LabeledVertex from = e.from();
-        //         LabeledVertex to = e.to();
-        //         if (commonEdges.get(from.id()).edgeTo(to.id()) != null) {
-        //             continue;
-        //         }
-        //         eDelta.get(from.id()).add(e);
-        //     }
-        // }
-
-        // List<LabeledEdge> edges = new ArrayList<>();
-        // for (AdjEdges adjEdges : eDelta.values()) {
-        //     edges.addAll(adjEdges.edges());
-        // }
 
         for (LabeledVertex v : s.vertices()) {
             if (!commonVertices.containsKey(v.id())) {
@@ -240,11 +196,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             edges.addAll(adjEdges.edges());
         }
 
-        return new DeltaGraph(s.graphId(), new ArrayList<>(vDelta.values()), edges, vBorder);
+        this.border.putAll(vBorder);
+        return new DeltaGraph(s.graphId(), vDelta.values(), edges, vBorder);
     }
 
     private void computeDeltas() {
-        this.deltaGraphs = new TreeMap<>();
+        this.deltaGraphs = new HashMap<>();
         for (LabeledGraph s : snapshots) {
             deltaGraphs.put(s.graphId(), computeDelta(s));
         }
@@ -259,11 +216,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     }
 
     public Map<Integer, LabeledVertex> border() {
-        Map<Integer, LabeledVertex> map = new HashMap<>();
-        for (DeltaGraph delta : deltaGraphs.values()) {
-            map.putAll(delta.border());
-        }
-        return map;
+        // Map<Integer, LabeledVertex> map = new HashMap<>();
+        // for (DeltaGraph delta : deltaGraphs.values()) {
+        //     map.putAll(delta.border());
+        // }
+        // return map;
+        return this.border;
     }
 
     @Override
@@ -279,14 +237,17 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
             if (cluster.add(s)) {
                 continue;
             }
+            cluster.computeIntersection();
             cluster.computeDeltas();
             clusters.add(cluster);
             cluster = new Cluster(similarity);
             cluster.setIndex(startIndex++);
             cluster.add(s);
         }
+        cluster.computeIntersection();
         cluster.computeDeltas();
         clusters.add(cluster);
+
         return clusters;
     }
 
@@ -297,7 +258,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
 
     public class Intersection extends LabeledGraph {
 
-        private Intersection(long id, List<? extends LabeledVertex> vertices, List<? extends LabeledEdge> edges) {
+        private Intersection(long id, Collection<? extends LabeledVertex> vertices, Collection<? extends LabeledEdge> edges) {
             super(id, vertices, edges);
         }
 
@@ -325,13 +286,17 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     public class DeltaGraph extends LabeledGraph {
         private Map<Integer, LabeledVertex> border;
 
-        private DeltaGraph(long id, List<? extends LabeledVertex> vertices, List<? extends LabeledEdge> edges, Map<Integer, LabeledVertex> border) {
+        private DeltaGraph(long id, Collection<? extends LabeledVertex> vertices, Collection<? extends LabeledEdge> edges, Map<Integer, LabeledVertex> border) {
             super(id, vertices, edges);
             this.border = border;
         }
 
         public Map<Integer, LabeledVertex> border() {
             return border;
+        }
+
+        public boolean isBorder(int vId) {
+            return border.containsKey(vId);
         }
 
         @Override

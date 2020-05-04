@@ -135,7 +135,7 @@ public class FSMHGWIN {
     }
 
     private void intersectionPoints(Cluster c, Map<Integer, PointPattern> addedPoints) {
-        Cluster.Intersection inter = c.intersection();
+        LabeledGraph inter = c.intersection();
         Map<Integer, LabeledVertex> border = c.border();
         for (LabeledVertex v : inter.vertices()) {
             PointPattern pattern = this.points.get(inter.vLabel(v));
@@ -189,7 +189,7 @@ public class FSMHGWIN {
     }
 
     private void intersectionEdges(Cluster c, Map<Integer, PointPattern> addedPoints, Map<DFSEdge, Pattern> addedEdges) {
-        Cluster.Intersection inter = c.intersection();
+        LabeledGraph inter = c.intersection();
 
         for (PointPattern p : addedPoints.values()) {
             for (Embedding em : p.borderEmbeddings(c)) {

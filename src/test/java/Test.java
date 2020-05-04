@@ -37,7 +37,10 @@ public class Test {
 
         TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots"));
         List<LabeledGraph> graphs =  loader.loadTrans();
+        long begin = System.currentTimeMillis();
         List<Cluster> clusters = Cluster.partition(graphs, 0.4, 0);
+        long end = System.currentTimeMillis();
+        System.out.println("partition time " + (end - begin));
         System.out.println(clusters.size() + " clusters");
     }
 

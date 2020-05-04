@@ -1,6 +1,7 @@
 package com.liang.fsmhg.graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         this(id, null, null);
     }
 
-    public LabeledGraph(long id, List<? extends LabeledVertex> vertices, List<? extends LabeledEdge> edges) {
+    public LabeledGraph(long id, Collection<? extends LabeledVertex> vertices, Collection<? extends LabeledEdge> edges) {
         this.graphId = id;
         this.vertices = new HashMap<>();
         this.adjLists = new HashMap<>();
@@ -45,12 +46,12 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
 
     public abstract LabeledEdge addEdge(int from, int to, int eLabel);
 
-    protected void addVertex(LabeledVertex v) {
+    public void addVertex(LabeledVertex v) {
         vertices.put(v.id(), v);
         adjLists.put(v.id(), new AdjEdges());
     }
 
-    protected void addEdge(LabeledEdge e) {
+    public void addEdge(LabeledEdge e) {
         adjLists.get(e.from().id()).add(e);
     }
 
