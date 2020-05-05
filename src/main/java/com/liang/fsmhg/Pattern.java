@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
@@ -99,7 +100,7 @@ public class Pattern {
 
     public List<Cluster> clusters() {
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        // clusters.addAll(borderEmbeddings.keySet());
+        clusters.addAll(borderEmbeddings.keySet());
         return new ArrayList<>(clusters);
     }
 
@@ -265,4 +266,17 @@ public class Pattern {
         this.graphDelimiter = g;
     }
 
+    public int numberOfEmbeddings() {
+        int num = 0;
+        for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
+            num += entry.getValue() .size() * entry.getKey().size();
+        }
+        for (Entry<Cluster, List<Embedding>> entry : borderEmbeddings.entrySet()) {
+            num += entry.getValue() .size() * entry.getKey().size();
+        }
+        for (List<Embedding> embeddings : embeddingMap.values()) {
+            num += embeddings.size();
+        }
+        return num;
+    }
 }

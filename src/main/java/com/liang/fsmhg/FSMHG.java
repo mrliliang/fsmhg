@@ -33,6 +33,7 @@ public class FSMHG {
 
     private long interTime = 0;
     private long borderCheckTime = 0;
+    private long getClusterTime = 0;
 
     public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
@@ -53,6 +54,7 @@ public class FSMHG {
         Map<DFSEdge, Pattern> edges;
         if (partition) {
             clusters = Cluster.partition(trans, similarity, 0);
+            startTime = System.currentTimeMillis();
             int gCount = 0;
             for (Cluster c : clusters) {
                 gCount += c.size();
@@ -64,6 +66,18 @@ public class FSMHG {
             this.points = points(this.trans);
             edges = edges(points);
         }
+        // System.out.println(this.points.size() + " points");
+        // int num = 0;
+        // for (PointPattern pp : this.points.values()) {
+        //     num += pp.numberOfEmbeddings();
+        // }
+        // System.out.println(num + " point embeddings");
+        // System.out.println(edges.size() + " edges");
+        // num = 0;
+        // for (Pattern p : edges.values()) {
+        //     num += p.numberOfEmbeddings();
+        // }
+        // System.out.println(num + " edge embeddings");
 
         for (PointPattern pp : this.points.values()) {
             if (!isFrequent(pp)) {
@@ -86,6 +100,7 @@ public class FSMHG {
         System.out.println("Duration = " + (endTime - startTime));
         System.out.println("Intersection time = " + interTime);
         System.out.println("Border check time = " + borderCheckTime);
+        System.out.println("Get cluster time = " + getClusterTime);
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -93,17 +108,19 @@ public class FSMHG {
         for (Cluster c : clusters) {
             // intersectionPoints(c, points);
             // otherPoints(c, points);
-            long interBegin = System.currentTimeMillis();
             LabeledGraph inter = c.intersection();
-            long interEnd = System.currentTimeMillis();
-            interTime += (interEnd - interBegin);
+            Map<Integer, LabeledVertex> border = c.border();
             for (LabeledVertex v : inter.vertices()) {
                 PointPattern pattern = points.get(inter.vLabel(v));
                 if (pattern == null) {
                     pattern = new PointPattern(inter.vLabel(v));
                 }
                 Embedding em = new Embedding(v, null);
-                pattern.addIntersectionEmbedding(c, em);
+                if (border.containsKey(v.id())) {
+                    pattern.addBorderEmbedding(c, em);
+                } else {
+                    pattern.addIntersectionEmbedding(c, em);
+                }
                 points.putIfAbsent(pattern.label(), pattern);
                 if (v.id() > maxVid) {
                     maxVid = v.id();
@@ -113,8 +130,14 @@ public class FSMHG {
             for (LabeledGraph g : c) {
                 DeltaGraph dg = c.deltaGraph(g);
                 for (LabeledVertex v : dg.vertices()) {
+                    long borderCheckBegin = System.currentTimeMillis();
                     if (inter.vertex(v.id()) != null) {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                         continue;
+                    } else {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                     }
                     PointPattern pattern = points.get(g.vLabel(v));
                     if (pattern == null) {
@@ -132,79 +155,11 @@ public class FSMHG {
         return points;
     }
 
-    // private void intersectionPoints(Cluster c, Map<Integer, PointPattern> points) {
-    //     LabeledGraph inter = c.intersection();
-    //     Map<Integer, LabeledVertex> border = c.border();
-    //     for (LabeledVertex v : inter.vertices()) {
-    //         PointPattern pattern = points.get(inter.vLabel(v));
-    //         if (pattern == null) {
-    //             pattern = new PointPattern(inter.vLabel(v));
-    //         }
-    //         Embedding em = new Embedding(v, null);
-    //         // if (border.containsKey(v.id())) {
-    //         //     pattern.addBorderEmbedding(c, em);
-    //         // } else {
-    //         //     pattern.addIntersectionEmbedding(c, em);
-    //         // }
-    //         pattern.addIntersectionEmbedding(c, em);
-    //         points.putIfAbsent(pattern.label(), pattern);
-    //         if (v.id() > maxVid) {
-    //             maxVid = v.id();
-    //         }
-    //     }
-
-    //     for (LabeledGraph g : c) {
-    //         DeltaGraph dg = c.deltaGraph(g);
-    //         for (LabeledVertex v : dg.vertices()) {
-    //             if (inter.vertex(v.id()) != null) {
-    //                 continue;
-    //             }
-    //             PointPattern pattern = points.get(g.vLabel(v));
-    //             if (pattern == null) {
-    //                 pattern = new PointPattern(g.vLabel(v));
-    //             }
-    //             Embedding em = new Embedding(v, null);
-    //             pattern.addEmbedding(g, em);
-    //             points.putIfAbsent(pattern.label(), pattern);
-    //             if (v.id() > maxVid) {
-    //                 maxVid = v.id();
-    //             }
-    //         }
-    //     }
-    // }
-
-    // private void otherPoints(Cluster c, Map<Integer, PointPattern> points) {
-    //     for (LabeledGraph g : c.snapshots()) {
-    //         Cluster.DeltaGraph dg = c.deltaGraph(g);
-    //         Map<Integer, LabeledVertex> border = dg.border();
-    //         for (LabeledVertex v : dg.vertices()) {
-    //             if (border.containsKey(v.id())) {
-    //                 continue;
-    //             }
-    //             PointPattern pattern = points.get(g.vLabel(v));
-    //             if (pattern == null) {
-    //                 pattern = new PointPattern(g.vLabel(v));
-    //             }
-    //             Embedding em = new Embedding(v, null);
-    //             pattern.addEmbedding(g, em);
-    //             points.putIfAbsent(pattern.label(), pattern);
-    //             if (v.id() > maxVid) {
-    //                 maxVid = v.id();
-    //             }
-    //         }
-    //     }
-    // }
-
     public Map<DFSEdge, Pattern> edges(Map<Integer, PointPattern> points, List<Cluster> clusters) {
         Map<DFSEdge, Pattern> edges = new TreeMap<>();
         for (Cluster c : clusters) {
-            // intersectionEdges(c, points, edges);
-            // otherEdges(c, points, edges);
-
-            long interBegin = System.currentTimeMillis();
             LabeledGraph inter = c.intersection();
-            long interEnd = System.currentTimeMillis();
-            interTime += (interEnd - interBegin);
+            Map<Integer, LabeledVertex> border = c.border();
             for (PointPattern pp : points.values()) {
                 List<Embedding> embeddings = pp.intersectionEmbeddings(c);
                 if (embeddings != null) {
@@ -214,10 +169,28 @@ public class FSMHG {
                                 continue;
                             }
                             Pattern child = pp.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
-                            child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                            if (border.containsKey(e.to().id())) {
+                                child.addBorderEmbedding(c, new Embedding(e.to(), em));
+                            } else {
+                                child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                            }
                             edges.putIfAbsent(child.edge(), child);
                         }
-    
+                    }
+                }
+
+                embeddings = pp.borderEmbeddings(c);
+                if (embeddings != null) {
+                    for (Embedding em : embeddings) {
+                        for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
+                            if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
+                                continue;
+                            }
+                            Pattern child = pp.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
+                            child.addBorderEmbedding(c, new Embedding(e.to(), em));
+                            edges.putIfAbsent(child.edge(), child);
+                        }
+
                         for (LabeledGraph g : c) {
                             DeltaGraph dg = c.deltaGraph(g);
                             long borderCheckBegin = System.currentTimeMillis();
@@ -246,7 +219,7 @@ public class FSMHG {
                     if (embeddings == null) {
                         continue;
                     }
-                    for (Embedding em : pp.embeddings(g)) {
+                    for (Embedding em : embeddings) {
                         for (LabeledEdge e : g.adjEdges(em.vertex().id())) {
                             if (g.vLabel(e.from()) > g.vLabel(e.to())) {
                                 continue;
@@ -260,80 +233,6 @@ public class FSMHG {
             }
         }
         return edges;
-    }
-
-    // private void intersectionEdges(Cluster c, Map<Integer, PointPattern> points, Map<DFSEdge, Pattern> edges) {
-    //     LabeledGraph inter = c.intersection();
-    //     Map<Integer, LabeledVertex> border = c.border();
-
-    //     for (PointPattern p : points.values()) {
-    //         for (Embedding em : p.borderEmbeddings(c)) {
-    //             for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
-    //                 if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
-    //                     continue;
-    //                 }
-    //                 Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
-    //                 child.addBorderEmbedding(c, new Embedding(e.to(), em));
-    //                 edges.putIfAbsent(child.edge(), child);
-    //             }
-    //         }
-
-    //         for (Embedding em : p.intersectionEmbeddings(c)) {
-    //             for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
-    //                 if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
-    //                     continue;
-    //                 }
-    //                 Pattern child = p.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
-    //                 if (border.containsKey(e.to().id())) {
-    //                     child.addBorderEmbedding(c, new Embedding(e.to(), em));
-    //                 } else {
-    //                     child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
-    //                 }
-    //                 edges.putIfAbsent(child.edge(), child);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // private void otherEdges (Cluster c, Map<Integer, PointPattern> points, Map<DFSEdge, Pattern> edges) {
-    //     for (LabeledGraph g : c) {
-    //         Cluster.DeltaGraph delta = c.deltaGraph(g);
-    //         for (PointPattern p : points.values()) {
-    //             for (Embedding em : p.embeddings(g)) {
-    //                 for (LabeledEdge e : delta.adjEdges(em.vertex().id())) {
-    //                     if (g.vLabel(e.from()) > g.vLabel(e.to())) {
-    //                         continue;
-    //                     }
-    //                     Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
-    //                     child.addEmbedding(g, new Embedding(e.to(), em));
-    //                     edges.putIfAbsent(child.edge(), child);
-    //                 }
-    //             }
-
-    //             for (Embedding em : p.borderEmbeddings(c)) {
-    //                 if (!delta.border().containsKey(em.vertex().id())) {
-    //                     continue;
-    //                 }
-    //                 for (LabeledEdge e : delta.adjEdges(em.vertex().id())) {
-    //                     if (g.vLabel(e.from()) > g.vLabel(e.to())) {
-    //                         continue;
-    //                     }
-    //                     Pattern child = p.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
-    //                     child.addEmbedding(g, new Embedding(e.to(), em));
-    //                     edges.putIfAbsent(child.edge(), child);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    private boolean isBorderEmbedding(Embedding em, Map<Integer, LabeledVertex> border) {
-        for (LabeledVertex v : em.vertices()) {
-            if (border.containsKey(v.id())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public TreeMap<Integer, PointPattern> points(List<LabeledGraph> trans) {
@@ -367,6 +266,7 @@ public class FSMHG {
                         }
                         Pattern child = pp.child(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                         child.addEmbedding(g, new Embedding(to, em));
+                        eMap.putIfAbsent(child.edge(), child);
                     }
                 }
             }
@@ -408,7 +308,11 @@ public class FSMHG {
         TreeSet<DFSEdge> extendCands = new TreeSet<>();
         extendCands(p, extendCands);
 
-        for (Cluster c : p.clusters()) {
+        long clusterBegin = System.currentTimeMillis();
+        List<Cluster> clusters = p.clusters();
+        long clusterEnd = System.currentTimeMillis();
+        this.getClusterTime += (clusterEnd - clusterBegin);
+        for (Cluster c : clusters) {
             joinExtendInter(c, p, joinBackCands, joinForCands, extendCands);
             joinExtendDelta(c, p, joinBackCands, joinForCands, extendCands);
         }
@@ -421,10 +325,7 @@ public class FSMHG {
     }
 
     private void joinExtendInter(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
-        long interBegin = System.currentTimeMillis();
         LabeledGraph inter = c.intersection();
-        long interEnd = System.currentTimeMillis();
-        interTime += (interEnd - interBegin);
         List<Embedding> interEmbeddings = p.intersectionEmbeddings(c);
         // List<Embedding> borderEmbeddings = p.borderEmbeddings(c);
         Map<Integer, LabeledVertex> border = c.border();
@@ -434,12 +335,6 @@ public class FSMHG {
 
         // for (int interEmCount = 0, borderEmCount = 0 - interEmbeddings.size(); interEmCount < interEmbeddings.size() || borderEmCount < borderEmbeddings.size(); interEmCount++, borderEmCount++) {
         for (int interEmCount = 0; interEmCount < interEmbeddings.size(); interEmCount++) {
-            // Embedding em;
-            // if (borderEmCount < 0) {
-            //     em = interEmbeddings.get(interEmCount);
-            // } else {
-            //     em = borderEmbeddings.get(borderEmCount);
-            // }
             Embedding em = interEmbeddings.get(interEmCount);
             List<LabeledVertex> emVertices = em.vertices();
             //join backward edges
@@ -452,25 +347,14 @@ public class FSMHG {
                     DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
-                        // if (borderEmCount < 0) {
-                        //     child.addIntersectionEmbedding(c, em);
-                        // } else {
-                        //     child.addBorderEmbedding(c, em);
-                        // }
                         child.addIntersectionEmbedding(c, em);
                     }
                 }
 
                 // for (LabeledGraph g : c) {
                 //     DeltaGraph dg = c.deltaGraph(g);
-                //     long borderCheckBegin = System.currentTimeMillis();
                 //     if (dg.vertex(from.id()) == null || dg.vertex(to.id()) == null) {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //         continue;
-                //     } else {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //     }
                 //     back = dg.edge(from.id(), to.id());
                 //     if (back == null) {
@@ -501,34 +385,18 @@ public class FSMHG {
                     DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), inter.vLabel(from), inter.vLabel(e.to()), inter.eLabel(e));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
-                        // if (borderEmCount < 0) {
-                        //     if (border.containsKey(e.to().id())) {
-                        //         child.addBorderEmbedding(c, new Embedding(e.to(), em));
-                        //     } else {
-                        //         child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
-                        //     }
-                        // } else {
-                        //     child.addBorderEmbedding(c, new Embedding(e.to(), em));
-                        // }
                         if (border.containsKey(e.to().id())) {
                             child.addBorderEmbedding(c, new Embedding(e.to(), em));
                         } else {
                             child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
                         }
-                        // child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
                     }
                 }
 
                 // for (LabeledGraph g : c) {
                 //     DeltaGraph dg = c.deltaGraph(g);
-                //     long borderCheckBegin = System.currentTimeMillis();
                 //     if (dg.vertex(from.id()) == null) {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //         continue;
-                //     } else {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //     }
                 //     for (LabeledEdge e : dg.adjEdges(from.id())) {
                 //         if (emBits.get(e.to().id())) {
@@ -564,25 +432,14 @@ public class FSMHG {
                     }
                     if (extendCands.contains(dfsEdge)) {
                         Pattern child = p.child(rmDfsId, toId, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
-                        // if (borderEmCount < 0) {
-                        //     child.addIntersectionEmbedding(c, em);
-                        // } else {
-                        //     child.addBorderEmbedding(c, em);
-                        // }
                         child.addIntersectionEmbedding(c, em);
                     }
                 }
 
                 // for (LabeledGraph g : c) {
                 //     DeltaGraph dg = c.deltaGraph(g);
-                //     long borderCheckBegin = System.currentTimeMillis();
                 //     if (dg.vertex(from.id()) == null || dg.vertex(to.id()) == null) {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //         continue;
-                //     } else {
-                //         long borderCheckEnd = System.currentTimeMillis();
-                //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                 //     }
                 //     back = dg.edge(from.id(), to.id());
                 //     if (back == null) {
@@ -618,17 +475,7 @@ public class FSMHG {
                     dfsEdge = new DFSEdge(0, 1, inter.vLabel(to), inter.vLabel(from), inter.eLabel(e));
                 }
                 if (extendCands.contains(dfsEdge)) {
-                    Pattern child = p.child(rmDfsId, emVertices.size(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));;
-                    // if (borderEmCount < 0) {
-                    //     if (border.containsKey(to.id())) {
-                    //         child.addBorderEmbedding(c, new Embedding(e.to(), em));
-                    //     } else {
-                    //         child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
-                    //     }
-                    // } else {
-                    //     child.addBorderEmbedding(c, new Embedding(e.to(), em));
-                    // }
-                    // child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                    Pattern child = p.child(rmDfsId, emVertices.size(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));
                     if (border.containsKey(to.id())) {
                         child.addBorderEmbedding(c, new Embedding(e.to(), em));
                     } else {
@@ -639,14 +486,8 @@ public class FSMHG {
 
             // for (LabeledGraph g : c) {
             //     DeltaGraph dg = c.deltaGraph(g);
-            //     long borderCheckBegin = System.currentTimeMillis();
             //     if (dg.vertex(from.id()) == null) {
-            //         long borderCheckEnd = System.currentTimeMillis();
-            //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
             //         continue;
-            //     } else {
-            //         long borderCheckEnd = System.currentTimeMillis();
-            //         this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
             //     }
             //     for (LabeledEdge e : dg.adjEdges(from.id())) {
             //         LabeledVertex to = e.to();
@@ -669,106 +510,199 @@ public class FSMHG {
     }
 
     private void joinExtendDelta(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
+        List<Embedding> embeddings = p.borderEmbeddings(c);
+        if (embeddings == null) {
+            return;
+        }
+        LabeledGraph inter = c.intersection();
         DFSCode code = p.code();
         List<Integer> rmPathIds = code.rightMostPath();
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
-
         
-
-        for (LabeledGraph g : c) {
-            Cluster.DeltaGraph dg = c.deltaGraph(g);
-
-            for (Embedding em : p.borderEmbeddings(c)) {
-                if (!isBorderEmbedding(em, dg.border())) {
-                    continue;
+        for (Embedding em : embeddings) {
+            List<LabeledVertex> emVertices = em.vertices();
+            //join backward edges
+            for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
+                LabeledVertex from = emVertices.get(emVertices.size() - 1);
+                LabeledVertex to = emVertices.get(entry.getKey());
+                TreeSet<DFSEdge> cands = entry.getValue();
+                LabeledEdge back = inter.edge(from.id(), to.id());
+                if (back != null) {
+                    DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
+                    if (cands.contains(dfsEdge)) {
+                        Pattern child = p.child(dfsEdge);
+                        child.addBorderEmbedding(c, em);
+                    }
                 }
-                List<LabeledVertex> emVertices = em.vertices();
-                //join backward edges
-                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
-                    LabeledVertex from = emVertices.get(emVertices.size() - 1);
-                    LabeledVertex to = emVertices.get(entry.getKey());
-                    LabeledEdge back = dg.edge(from.id(), to.id());
+
+                for (LabeledGraph g : c) {
+                    DeltaGraph dg = c.deltaGraph(g);
+                    long borderCheckBegin = System.currentTimeMillis();
+                    if (dg.vertex(from.id()) == null || dg.vertex(to.id()) == null) {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                        continue;
+                    } else {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                    }
+                    back = dg.edge(from.id(), to.id());
                     if (back == null) {
                         continue;
                     }
-                    TreeSet<DFSEdge> cands = entry.getValue();
-                    DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), dg.vLabel(from), dg.vLabel(to), dg.eLabel(back));
+                    DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
                         child.addEmbedding(g, em);
                     }
                 }
+            }
 
-                //join forward edge
-                BitSet emBits = new BitSet(maxVid + 1);
-                for (LabeledVertex v : emVertices) {
-                    emBits.set(v.id());
+
+            //join forward edge
+            BitSet emBits = new BitSet(maxVid + 1);
+            for (LabeledVertex v : emVertices) {
+                emBits.set(v.id());
+            }
+
+            for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
+                LabeledVertex from = emVertices.get(entry.getKey());
+                TreeSet<DFSEdge> cands = entry.getValue();
+                for (LabeledEdge e : inter.adjEdges(from.id())) {
+                    if (emBits.get(e.to().id())) {
+                        continue;
+                    }
+                    DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), inter.vLabel(from), inter.vLabel(e.to()), inter.eLabel(e));
+                    if (cands.contains(dfsEdge)) {
+                        Pattern child = p.child(dfsEdge);
+                        child.addBorderEmbedding(c, new Embedding(e.to(), em));
+                    }
                 }
 
-                for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
-                    LabeledVertex from = emVertices.get(entry.getKey());
+                for (LabeledGraph g : c) {
+                    DeltaGraph dg = c.deltaGraph(g);
+                    long borderCheckBegin = System.currentTimeMillis();
                     if (dg.vertex(from.id()) == null) {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                         continue;
+                    } else {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
                     }
                     for (LabeledEdge e : dg.adjEdges(from.id())) {
                         if (emBits.get(e.to().id())) {
                             continue;
                         }
-                        DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), dg.vLabel(from), dg.vLabel(e.to()), dg.eLabel(e));
-                        TreeSet<DFSEdge> cands = entry.getValue();
+                        DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         if (cands.contains(dfsEdge)) {
                             Pattern child = p.child(dfsEdge);
                             child.addEmbedding(g, new Embedding(e.to(), em));
                         }
                     }
                 }
+            }
 
-                //extend
-                //extend backward edges
-                LabeledVertex from = emVertices.get(rmDfsId);
-                if (dg.vertex(from.id()) == null) {
-                    continue;
-                }
-                for (int j = 0; j < rmPathIds.size() - 2; j++) {
-                    int toId = rmPathIds.get(j);
-                    LabeledVertex to = emVertices.get(toId);
-                    LabeledEdge back = dg.edge(from.id(), to.id());
-                    if (back == null) {
-                        continue;
-                    }
-                    LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
-                    LabeledEdge pathEdge = g.edge(to.id(), nextTo.id());
-                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+            //extend backward edges
+            LabeledVertex from = emVertices.get(rmDfsId);
+            for (int j = 0; j < rmPathIds.size() - 2; j++) {
+                int toId = rmPathIds.get(j);
+                LabeledVertex to = emVertices.get(toId);
+                LabeledEdge back = inter.edge(from.id(), to.id());
+                LabeledVertex nextTo = emVertices.get(rmPathIds.get(j + 1));
+                LabeledEdge pathEdge = inter.edge(to.id(), nextTo.id());
+                if (back != null) {
+                    if (inter.eLabel(pathEdge) > inter.eLabel(back) || (inter.eLabel(pathEdge) == inter.eLabel(back) && inter.vLabel(nextTo) > inter.vLabel(back.from()))) {
                         continue;
                     }
 
                     DFSEdge dfsEdge;
-                    if (dg.vLabel(from) <= dg.vLabel(to)) {
-                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(from), dg.vLabel(to), dg.eLabel(back));
+                    if (inter.vLabel(from) <= inter.vLabel(to)) {
+                        dfsEdge = new DFSEdge(0, 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
                     } else {
-                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(to), dg.vLabel(from), dg.eLabel(back));
+                        dfsEdge = new DFSEdge(0, 1, inter.vLabel(to), inter.vLabel(from), inter.eLabel(back));
                     }
                     if (extendCands.contains(dfsEdge)) {
-                        Pattern child = p.child(rmDfsId, toId, dg.vLabel(from), dg.vLabel(to), dg.eLabel(back));
-                        child.addEmbedding(g, em);
+                        Pattern child = p.child(rmDfsId, toId, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
+                        child.addBorderEmbedding(c, em);
                     }
                 }
 
-                //extend forward edges
+                for (LabeledGraph g : c) {
+                    DeltaGraph dg = c.deltaGraph(g);
+                    long borderCheckBegin = System.currentTimeMillis();
+                    if (dg.vertex(from.id()) == null || dg.vertex(to.id()) == null) {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                        continue;
+                    } else {
+                        long borderCheckEnd = System.currentTimeMillis();
+                        this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                    }
+                    back = dg.edge(from.id(), to.id());
+                    if (back == null) {
+                        continue;
+                    }
+                    if (g.eLabel(pathEdge) > g.eLabel(back) || (g.eLabel(pathEdge) == g.eLabel(back) && g.vLabel(nextTo) > g.vLabel(back.from()))) {
+                        continue;
+                    }
+    
+                    DFSEdge dfsEdge;
+                    if (g.vLabel(from) <= g.vLabel(to)) {
+                        dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                    } else {
+                        dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(back));
+                    }
+                    if (extendCands.contains(dfsEdge)) {
+                        Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
+                        child.addEmbedding(g, em);
+                    }
+                }
+            }
+
+            //extend forward edges
+            for (LabeledEdge e : inter.adjEdges(from.id())) {
+                LabeledVertex to = e.to();
+                if (emBits.get(to.id())) {
+                    continue;
+                }
+                DFSEdge dfsEdge;
+                if (inter.vLabel(from) <= inter.vLabel(to)) {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));
+                } else {
+                    dfsEdge = new DFSEdge(0, 1, inter.vLabel(to), inter.vLabel(from), inter.eLabel(e));
+                }
+                if (extendCands.contains(dfsEdge)) {
+                    Pattern child = p.child(rmDfsId, emVertices.size(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));;
+                    child.addBorderEmbedding(c, new Embedding(e.to(), em));
+                }
+            }
+
+            for (LabeledGraph g : c) {
+                DeltaGraph dg = c.deltaGraph(g);
+                long borderCheckBegin = System.currentTimeMillis();
+                if (dg.vertex(from.id()) == null) {
+                    long borderCheckEnd = System.currentTimeMillis();
+                    this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                    continue;
+                } else {
+                    long borderCheckEnd = System.currentTimeMillis();
+                    this.borderCheckTime += (borderCheckEnd - borderCheckBegin);
+                }
                 for (LabeledEdge e : dg.adjEdges(from.id())) {
                     LabeledVertex to = e.to();
                     if (emBits.get(to.id())) {
                         continue;
                     }
                     DFSEdge dfsEdge;
-                    if (dg.vLabel(from) <= dg.vLabel(to)) {
-                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(from), dg.vLabel(to), dg.eLabel(e));
+                    if (g.vLabel(from) <= g.vLabel(to)) {
+                        dfsEdge = new DFSEdge(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     } else {
-                        dfsEdge = new DFSEdge(0, 1, dg.vLabel(to), dg.vLabel(from), dg.eLabel(e));
+                        dfsEdge = new DFSEdge(0, 1, g.vLabel(to), g.vLabel(from), g.eLabel(e));
                     }
                     if (extendCands.contains(dfsEdge)) {
-                        Pattern child = p.child(rmDfsId, emVertices.size(), dg.vLabel(from), dg.vLabel(to), dg.eLabel(e));
-                        child.addEmbedding(g, new Embedding(to, em));
+                        Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
+                        child.addEmbedding(g, new Embedding(e.to(), em));
                     }
                 }
             }

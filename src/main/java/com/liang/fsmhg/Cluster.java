@@ -155,7 +155,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
 
     private void computeIntersection() {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
-        this.intersection = new StaticGraph(last.graphId());
         List<LabeledEdge> edges = new ArrayList<>();
         for (AdjEdges adjEdges : commonEdges.values()) {
             edges.addAll(adjEdges.edges());
@@ -185,7 +184,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                         vBorder.put(from.id(), from);
                     }
                     if (commonVertices.containsKey(to.id())) {
-                        vBorder.put(from.id(), from);
+                        vBorder.put(to.id(), to);
                     }
                     eDelta.get(from.id()).add(e);
                 }
@@ -249,6 +248,15 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         clusters.add(cluster);
 
         return clusters;
+    }
+
+    public boolean isBorder(int vId) {
+        for (DeltaGraph dg : deltaGraphs.values()) {
+            if (dg.vertex(vId) != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
