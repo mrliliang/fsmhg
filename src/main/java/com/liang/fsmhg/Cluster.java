@@ -1,6 +1,5 @@
 package com.liang.fsmhg;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
@@ -15,7 +15,7 @@ import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
 import com.liang.fsmhg.graph.StaticGraph;
 
-public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
+public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private int index;
 
     private double similarity;
@@ -27,6 +27,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     private Map<Long, DeltaGraph> deltaGraphs;
     private LabeledGraph intersection;
     private Map<Integer, LabeledVertex> border;
+    private Map<Integer, Map<LabeledGraph, AdjEdges>> borderAdjEdges;
+    private static final Map<LabeledGraph, AdjEdges> EMPTY_BORDER_ADJ = new HashMap<>();
 
     public Cluster(double similarity) {
         this.similarity = similarity;
@@ -34,6 +36,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         commonVertices = new HashMap<>();
         commonEdges = new HashMap<>();
         border = new HashMap<>();
+        borderAdjEdges = new HashMap<>();
     }
 
     public List<LabeledGraph> snapshots() {
@@ -96,15 +99,15 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         }
         commonEdgeNum = commonEdgeNum / 2;
 
-
         // int denominator = s.vSize() + s.eSize();
         int totalEdgeNum = s.eSize();
         for (LabeledGraph snapshot : snapshots) {
             // denominator += (snapshot.vSize() + snapshot.eSize());
             totalEdgeNum += (snapshot.eSize());
         }
-        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() + commonEdgeNum) / denominator;
-        double sim = (double)(snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
+        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() +
+        // commonEdgeNum) / denominator;
+        double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
         if (sim >= similarity) {
             commonVertices = vCommon;
             commonEdges = eCommon;
@@ -119,7 +122,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
         for (LabeledVertex v : commonVertices.values()) {
             if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
-            // if (s.vertex(v.id()) != null) {
+                // if (s.vertex(v.id()) != null) {
                 vCommon.put(v.id(), v);
             }
         }
@@ -137,8 +140,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                 if (e1 == null) {
                     continue;
                 }
-                if (last.vLabel(e.from()) == s.vLabel(e1.from())
-                        && last.vLabel(e.to()) == s.vLabel(e1.to())
+                if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to())
                         && last.eLabel(e) == s.eLabel(e1)) {
                     edges.add(e);
                 }
@@ -182,9 +184,25 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
                     eDelta.putIfAbsent(to.id(), new AdjEdges());
                     if (commonVertices.containsKey(from.id())) {
                         vBorder.put(from.id(), from);
+                        Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(from.id(),
+                                new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                                    @Override
+                                    public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                                        return new HashMap<>();
+                                    }
+                                });
+                        borderAdj.putIfAbsent(s, eDelta.get(from.id()));
                     }
                     if (commonVertices.containsKey(to.id())) {
                         vBorder.put(to.id(), to);
+                        Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(to.id(),
+                                new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                                    @Override
+                                    public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                                        return new HashMap<>();
+                                    }
+                                });
+                        borderAdj.putIfAbsent(s, eDelta.get(to.id()));
                     }
                     eDelta.get(from.id()).add(e);
                 }
@@ -217,10 +235,14 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     public Map<Integer, LabeledVertex> border() {
         // Map<Integer, LabeledVertex> map = new HashMap<>();
         // for (DeltaGraph delta : deltaGraphs.values()) {
-        //     map.putAll(delta.border());
+        // map.putAll(delta.border());
         // }
         // return map;
         return this.border;
+    }
+
+    public Map<LabeledGraph, AdjEdges> borderAdj(int vId) {
+        return this.borderAdjEdges.getOrDefault(vId, EMPTY_BORDER_ADJ);
     }
 
     @Override
@@ -266,7 +288,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
 
     public class Intersection extends LabeledGraph {
 
-        private Intersection(long id, Collection<? extends LabeledVertex> vertices, Collection<? extends LabeledEdge> edges) {
+        private Intersection(long id, Collection<? extends LabeledVertex> vertices,
+                Collection<? extends LabeledEdge> edges) {
             super(id, vertices, edges);
         }
 
@@ -294,7 +317,8 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
     public class DeltaGraph extends LabeledGraph {
         private Map<Integer, LabeledVertex> border;
 
-        private DeltaGraph(long id, Collection<? extends LabeledVertex> vertices, Collection<? extends LabeledEdge> edges, Map<Integer, LabeledVertex> border) {
+        private DeltaGraph(long id, Collection<? extends LabeledVertex> vertices,
+                Collection<? extends LabeledEdge> edges, Map<Integer, LabeledVertex> border) {
             super(id, vertices, edges);
             this.border = border;
         }
@@ -326,5 +350,10 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster>{
         public LabeledEdge addEdge(int from, int to, int eLabel) {
             throw new RuntimeException("Not allowed to add edge to delta graph.");
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(index);
     }
 }
