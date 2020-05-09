@@ -66,19 +66,28 @@ public class Test {
             System.exit(1);
         }
 
-        File dir1 = new File(args[0]);
-        if (!dir1.isDirectory()) {
+        File file1 = new File(args[0]);
+        File file2 = new File(args[1]);
+        if (!file1.isDirectory() && !file1.isDirectory()) {
+            int diff = compareContent(file1, file2);
+            if (diff != 0) {
+                System.out.println(file1.getAbsolutePath() + " is different with " + file2.getAbsolutePath() + " in line " + diff);
+                return;
+            }
+            System.out.println("Two results are the same.");
+            return;
+        }
+        if (!file1.isDirectory()) {
             System.out.println(args[0] + " is not a directory");
             return;
         }
-        File dir2 = new File(args[1]);
-        if (!dir2.isDirectory()) {
+        if (!file2.isDirectory()) {
             System.out.println(args[1] + " is not a directory");
             return;
         }
 
-        File[] ret1 = dir1.listFiles();
-        File[] ret2 = dir2.listFiles();
+        File[] ret1 = file1.listFiles();
+        File[] ret2 = file2.listFiles();
         if (ret1.length != ret2.length) {
             System.out.println("The number of files is not equal.");
             return;

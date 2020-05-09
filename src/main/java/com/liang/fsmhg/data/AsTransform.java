@@ -33,10 +33,10 @@ public class AsTransform {
 
     public static void main(String[] args) {
         File data = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots");
+        File outdir = new File("/home/liliang/data/as-733-snapshots-repeat");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
-        new AsTransform().transform(data, outdir);
+        new AsTransform().transform1(data, outdir);
     }
 
     private void transform(File data, File outdir) {
@@ -67,6 +67,40 @@ public class AsTransform {
             eSize = eSize / 2;
 
             File out = new File(outdir, file.getName() + "V" + vSize + "E" + eSize + "m" + minDegree + "M" + maxDegree + "L" + largeDegreeCount);
+            output(out, vMap, adjLists, count);
+        }
+        System.out.println();
+        System.out.println("Done!");
+    }
+
+    private void transform1(File data, File outdir) {
+        File f = data.listFiles()[0];
+        HashMap<Integer, StaticVertex> vMap = new HashMap<>();
+        HashMap<Integer, AdjEdges> adjLists = new HashMap<>();
+        snapshot(f, vMap, adjLists);
+        removeHighDegreeVertices(vMap, adjLists);
+        int vSize = vMap.size();
+        int eSize = 0;
+        int minDegree = vMap.size() - 1;
+        int maxDegree = 0;
+        int largeDegreeCount = 0;
+        for (AdjEdges adj : adjLists.values()) {
+            eSize += adj.size();
+            if (adj.size() > 5) {
+                largeDegreeCount++;
+            }
+            if (adj.size() > maxDegree) {
+                maxDegree = adj.size();
+            } else {
+                minDegree = adj.size();
+            }
+        }
+        eSize = eSize / 2;
+
+        for (int count = 1; count <= 200; count++) {
+            System.out.format("transform snapshot %d\r", count);
+            String name = String.format("T%04dV%dE%dm%dM%dL%d", count, vSize, eSize, minDegree, maxDegree, largeDegreeCount);
+            File out = new File(outdir, name);
             output(out, vMap, adjLists, count);
         }
         System.out.println();

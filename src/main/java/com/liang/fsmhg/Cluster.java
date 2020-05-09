@@ -39,6 +39,13 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         borderAdjEdges = new HashMap<>();
     }
 
+    public Cluster(List<LabeledGraph> trans) {
+        this.index = 0;
+        this.intersection = trans.get(0);
+        snapshots = new ArrayList<>();
+        snapshots.addAll(trans);
+    }
+
     public List<LabeledGraph> snapshots() {
         return snapshots;
     }
@@ -157,11 +164,14 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
 
     private void computeIntersection() {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
-        List<LabeledEdge> edges = new ArrayList<>();
-        for (AdjEdges adjEdges : commonEdges.values()) {
-            edges.addAll(adjEdges.edges());
-        }
-        this.intersection = new Intersection(last.graphId(), commonVertices.values(), edges);
+        // List<LabeledEdge> edges = new ArrayList<>();
+        // for (AdjEdges adjEdges : commonEdges.values()) {
+        //     edges.addAll(adjEdges.edges());
+        // }
+        // this.intersection = new Intersection(last.graphId(), commonVertices.values(), edges);
+        this.intersection = new StaticGraph(last.graphId());
+        this.intersection.setVertices(commonVertices);
+        this.intersection.setEdges(commonEdges);
     }
 
     private DeltaGraph computeDelta(LabeledGraph s) {
@@ -291,6 +301,12 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         private Intersection(long id, Collection<? extends LabeledVertex> vertices,
                 Collection<? extends LabeledEdge> edges) {
             super(id, vertices, edges);
+        }
+
+        private Intersection(long id, Map<Integer, LabeledVertex> vertices, Map<Integer, AdjEdges> adjLists) {
+            super(id);
+            setVertices(vertices);
+            setEdges(adjLists);
         }
 
         @Override

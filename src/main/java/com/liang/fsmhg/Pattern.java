@@ -30,6 +30,7 @@ public class Pattern {
     private Cluster clusterDelimiter;
     private LabeledGraph graphDelimiter;
 
+
     public Pattern(DFSEdge edge, Pattern parent) {
         this.edge = edge;
         this.parent = parent;
@@ -141,16 +142,16 @@ public class Pattern {
     }
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
-        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> new ArrayList<>());
+        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
+            return new ArrayList<>();
+        });
         embeddings.add(em);
     }
 
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
             for (LabeledGraph g : key.snapshots()) {
-                if (!embeddingMap.containsKey(g)) {
-                    embeddingMap.put(g, new ArrayList<>());
-                }
+                embeddingMap.putIfAbsent(g, new ArrayList<>());
             }
             return new ArrayList<>();
         });
@@ -160,9 +161,7 @@ public class Pattern {
     public void addBorderEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, key -> {
             for (LabeledGraph g : key.snapshots()) {
-                if (!embeddingMap.containsKey(g)) {
-                    embeddingMap.put(g, new ArrayList<>());
-                }
+                embeddingMap.putIfAbsent(g, new ArrayList<>());
             }
             return new ArrayList<>();
         });

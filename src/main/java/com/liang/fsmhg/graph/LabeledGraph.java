@@ -34,6 +34,20 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         }
     }
 
+    // public LabeledGraph(long id, Map<Integer, LabeledVertex> vertices, Map<Integer, AdjEdges> adjLists) {
+    //     this.graphId = id;
+    //     this.vertices = vertices;
+    //     this.adjLists = adjLists;
+    // }
+
+    public void setVertices(Map<Integer, LabeledVertex> vertices) {
+        this.vertices = vertices;
+    }
+
+    public void setEdges(Map<Integer, AdjEdges> adjLists) {
+        this.adjLists = adjLists;
+    }
+
     public long graphId() {
         return this.graphId;
     }
