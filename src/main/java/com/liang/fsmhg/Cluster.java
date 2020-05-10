@@ -87,6 +87,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     public boolean add(LabeledGraph s) {
         if (this.snapshots.size() == 0) {
             this.snapshots.add(s);
+            s.setClusterIndex(this.index);
             for (LabeledVertex v : s.vertices()) {
                 commonVertices.put(v.id(), v);
                 commonEdges.put(v.id(), s.adjEdges(v.id()));
@@ -119,6 +120,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
             commonVertices = vCommon;
             commonEdges = eCommon;
             this.snapshots.add(s);
+            s.setClusterIndex(this.index);
             return true;
         }
         return false;

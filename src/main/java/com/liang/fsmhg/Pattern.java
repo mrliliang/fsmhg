@@ -30,6 +30,8 @@ public class Pattern {
     private Cluster clusterDelimiter;
     private LabeledGraph graphDelimiter;
 
+    private int support = 0;
+
 
     public Pattern(DFSEdge edge, Pattern parent) {
         this.edge = edge;
@@ -50,8 +52,9 @@ public class Pattern {
         return parent;
     }
 
-    public int frequency() {
+    public int support() {
         return embeddingMap.size();
+        // return this.support;
     }
 
     public DFSCode code() {
@@ -143,6 +146,17 @@ public class Pattern {
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
         List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
+            // this.support++;
+            return new ArrayList<>();
+        });
+        embeddings.add(em);
+    }
+
+    public void addEmbedding(LabeledGraph g, Cluster c, Embedding em) {
+        List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
+            // if (!intersectionEmbeddings.containsKey(c)) {
+            //     this.support++;
+            // }
             return new ArrayList<>();
         });
         embeddings.add(em);
@@ -153,6 +167,7 @@ public class Pattern {
             for (LabeledGraph g : key.snapshots()) {
                 embeddingMap.putIfAbsent(g, new ArrayList<>());
             }
+            // this.support += c.size();
             return new ArrayList<>();
         });
         embeddings.add(em);

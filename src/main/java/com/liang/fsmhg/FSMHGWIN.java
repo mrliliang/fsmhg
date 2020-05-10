@@ -717,7 +717,7 @@ public class FSMHGWIN {
     }
 
     private boolean isFrequent(Pattern p) {
-        return p.frequency() >= this.absSup;
+        return p.support() >= this.absSup;
     }
 
     private void saveResult() {
@@ -731,7 +731,7 @@ public class FSMHGWIN {
                     continue;
                 }
                 pointCount++;
-                bw.write("t # " + (this.patternCount++) + " * " + pp.frequency());
+                bw.write("t # " + (this.patternCount++) + " * " + pp.support());
                 bw.newLine();
                 bw.write("v 0 " + pp.label());
                 bw.newLine();
@@ -758,7 +758,7 @@ public class FSMHGWIN {
     }
 
     private void save(Pattern p, BufferedWriter bw) throws IOException {
-        bw.write("t # " + (this.patternCount++) + " * " + p.frequency());
+        bw.write("t # " + (this.patternCount++) + " * " + p.support());
         bw.newLine();
         DFSCode code = p.code();
         LabeledGraph g = code.toGraph();

@@ -25,7 +25,7 @@ public class PatternWriter {
 
     public void save(PointPattern p, int count) {
         try {
-            bw.write("t # " + count + " * " + p.frequency());
+            bw.write("t # " + count + " * " + p.support());
             bw.newLine();
             bw.write("v 0 " + p.label());
             bw.newLine();
@@ -37,7 +37,7 @@ public class PatternWriter {
 
     public void save(Pattern p, int count) {
         try {
-            bw.write("t # " + count + " * " + p.frequency());
+            bw.write("t # " + count + " * " + p.support());
             bw.newLine();
             DFSCode code = p.code();
             LabeledGraph g = code.toGraph();

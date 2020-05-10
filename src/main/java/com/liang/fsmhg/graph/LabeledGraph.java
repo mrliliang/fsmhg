@@ -8,6 +8,7 @@ import java.util.Map;
 
 public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     private long graphId;
+    private int clusterIndex;
 
     private Map<Integer, LabeledVertex> vertices;
     private Map<Integer, AdjEdges> adjLists;
@@ -39,6 +40,14 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     //     this.vertices = vertices;
     //     this.adjLists = adjLists;
     // }
+
+    public void setClusterIndex(int index) {
+        this.clusterIndex = index;
+    }
+
+    public int clusterIndex() {
+        return this.clusterIndex;
+    }
 
     public void setVertices(Map<Integer, LabeledVertex> vertices) {
         this.vertices = vertices;
