@@ -1,6 +1,7 @@
 package com.liang.fsmhg.graph;
 
 
+import java.util.Collection;
 import java.util.List;
 
 public class Snapshot extends LabeledGraph {
@@ -42,7 +43,7 @@ public class Snapshot extends LabeledGraph {
     }
 
     @Override
-    public List<LabeledVertex> vertices() {
+    public Collection<LabeledVertex> vertices() {
         return super.vertices();
     }
 

@@ -30,20 +30,13 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private Map<Integer, Map<LabeledGraph, AdjEdges>> borderAdjEdges;
     private static final Map<LabeledGraph, AdjEdges> EMPTY_BORDER_ADJ = new HashMap<>();
 
-    public Cluster(double similarity) {
+    private Cluster(double similarity) {
         this.similarity = similarity;
         snapshots = new ArrayList<>();
         commonVertices = new HashMap<>();
         commonEdges = new HashMap<>();
         border = new HashMap<>();
         borderAdjEdges = new HashMap<>();
-    }
-
-    public Cluster(List<LabeledGraph> trans) {
-        this.index = 0;
-        this.intersection = trans.get(0);
-        snapshots = new ArrayList<>();
-        snapshots.addAll(trans);
     }
 
     public List<LabeledGraph> snapshots() {
@@ -92,15 +85,24 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
                 commonVertices.put(v.id(), v);
                 commonEdges.put(v.id(), s.adjEdges(v.id()));
             }
+            updateIntersection(s.graphId(), commonVertices, commonEdges);
             return true;
         }
 
-        return similarityCheck(s);
-    }
-
-    private boolean similarityCheck(LabeledGraph s) {
         Map<Integer, LabeledVertex> vCommon = commonVertices(s);
         Map<Integer, AdjEdges> eCommon = commonEdges(vCommon, s);
+        if (checkSimilarity(s, vCommon, eCommon)) {
+            commonVertices = vCommon;
+            commonEdges = eCommon;
+            this.snapshots.add(s);
+            s.setClusterIndex(this.index);
+            updateIntersection(s.graphId(), vCommon, eCommon);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkSimilarity(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
         int commonEdgeNum = 0;
         for (AdjEdges adjEdges : eCommon.values()) {
             commonEdgeNum += adjEdges.size();
@@ -116,23 +118,24 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         // double sim = (double)(snapshots.size() + 1) * (vCommon.size() +
         // commonEdgeNum) / denominator;
         double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
-        if (sim >= similarity) {
-            commonVertices = vCommon;
-            commonEdges = eCommon;
-            this.snapshots.add(s);
-            s.setClusterIndex(this.index);
-            return true;
-        }
-        return false;
+        return sim >= similarity;
     }
 
     private Map<Integer, LabeledVertex> commonVertices(LabeledGraph s) {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
-        for (LabeledVertex v : commonVertices.values()) {
-            if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
-                // if (s.vertex(v.id()) != null) {
-                vCommon.put(v.id(), v);
+        if (commonVertices.size() <= s.vSize()) {
+            for (LabeledVertex v : commonVertices.values()) {
+                LabeledVertex v1 = s.vertex(v.id());
+                if (v1 != null && last.vLabel(v) == s.vLabel(v)) {
+                    vCommon.put(v1.id(), v1);
+                }
+            }
+        } else {
+            for (LabeledVertex v : s.vertices()) {
+                if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
+                    vCommon.put(v.id(), v);
+                }
             }
         }
         return vCommon;
@@ -141,21 +144,39 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private Map<Integer, AdjEdges> commonEdges(Map<Integer, LabeledVertex> vCommon, LabeledGraph s) {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         Map<Integer, AdjEdges> eCommon = new HashMap<>();
-        for (LabeledVertex v : vCommon.values()) {
-            AdjEdges edges = new AdjEdges();
-            AdjEdges edges1 = s.adjEdges(v.id());
-            for (LabeledEdge e : commonEdges.get(v.id())) {
-                LabeledEdge e1 = edges1.edgeTo(e.to().id());
-                if (e1 == null) {
-                    continue;
+        //todo the number of common edge is error
+        if (commonEdges.size() <= s.eSize()) {
+            for (LabeledVertex v : vCommon.values()) {
+                AdjEdges edges = new AdjEdges();
+                AdjEdges edges1 = s.adjEdges(v.id());
+                for (LabeledEdge e : commonEdges.get(v.id())) {
+                    LabeledEdge e1 = edges1.edgeTo(e.to().id());
+                    if (e1 == null) {
+                        continue;
+                    }
+                    if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to())
+                            && last.eLabel(e) == s.eLabel(e1)) {
+                        edges.add(e1);
+                    }
                 }
-                if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to())
-                        && last.eLabel(e) == s.eLabel(e1)) {
-                    edges.add(e);
-                }
-                // edges.add(e);
+                eCommon.put(v.id(), edges);
             }
-            eCommon.put(v.id(), edges);
+        } else {
+            for (LabeledVertex v : s.vertices()) {
+                AdjEdges edges = new AdjEdges();
+                AdjEdges edges1 = commonEdges.get(v.id());
+                for (LabeledEdge e : s.adjEdges(v.id())) {
+                    LabeledEdge e1 = edges1.edgeTo(e.to().id());
+                    if (e1 == null) {
+                        continue;
+                    }
+                    if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to()) 
+                            && last.eLabel(e) == s.eLabel(e1)) {
+                        edges.add(e);
+                    }
+                }
+                eCommon.put(v.id(), edges);
+            }
         }
         return eCommon;
     }
@@ -164,14 +185,33 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return this.intersection;
     }
 
-    private void computeIntersection() {
+    private void updateIntersection(long graphId, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        if (this.intersection == null) {
+            this.intersection = new StaticGraph(last.graphId());
+        } else {
+            this.intersection.setId(last.graphId());
+        }
+        this.intersection.setVertices(vCommon);
+        this.intersection.setEdges(eCommon);
+    }
+
+    private void updateDeltaGraphs() {
+
+    }
+
+    private void updateIntersection() {
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
         // List<LabeledEdge> edges = new ArrayList<>();
         // for (AdjEdges adjEdges : commonEdges.values()) {
         //     edges.addAll(adjEdges.edges());
         // }
         // this.intersection = new Intersection(last.graphId(), commonVertices.values(), edges);
-        this.intersection = new StaticGraph(last.graphId());
+        if (this.intersection == null) {
+            this.intersection = new StaticGraph(last.graphId());
+        } else {
+            this.intersection.setId(last.graphId());
+        }
         this.intersection.setVertices(commonVertices);
         this.intersection.setEdges(commonEdges);
     }
@@ -270,14 +310,14 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
             if (cluster.add(s)) {
                 continue;
             }
-            cluster.computeIntersection();
+            cluster.updateIntersection();
             cluster.computeDeltas();
             clusters.add(cluster);
             cluster = new Cluster(similarity);
             cluster.setIndex(startIndex++);
             cluster.add(s);
         }
-        cluster.computeIntersection();
+        cluster.updateIntersection();
         cluster.computeDeltas();
         clusters.add(cluster);
 

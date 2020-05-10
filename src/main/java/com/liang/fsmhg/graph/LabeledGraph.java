@@ -41,6 +41,10 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     //     this.adjLists = adjLists;
     // }
 
+    public void setId(long graphId) {
+        this.graphId = graphId;
+    }
+
     public void setClusterIndex(int index) {
         this.clusterIndex = index;
     }
@@ -78,8 +82,8 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         adjLists.get(e.from().id()).add(e);
     }
 
-    public List<LabeledVertex> vertices() {
-        return new ArrayList<>(vertices.values());
+    public Collection<LabeledVertex> vertices() {
+        return vertices.values();
     }
 
     public LabeledVertex vertex(int id) {
@@ -113,7 +117,7 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        List<LabeledVertex> vList = vertices();
+        Collection<LabeledVertex> vList = vertices();
         for (LabeledVertex v : vList) {
             builder.append(v.id()).append('\n');
         }
