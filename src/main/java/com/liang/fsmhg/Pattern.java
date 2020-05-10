@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
@@ -31,6 +32,10 @@ public class Pattern {
     private LabeledGraph graphDelimiter;
 
     private int support = 0;
+    private HashMap<Cluster, DeltaCounter> deltaSupportCount;
+    private class DeltaCounter {
+        int delta = 0;
+    }
 
 
     public Pattern(DFSEdge edge, Pattern parent) {
@@ -42,6 +47,7 @@ public class Pattern {
         borderEmbeddings = new HashMap<>();
 
         children = new TreeMap<>();
+        deltaSupportCount = new HashMap<>();
     }
 
     public DFSEdge edge() {
@@ -53,8 +59,7 @@ public class Pattern {
     }
 
     public int support() {
-        return embeddingMap.size();
-        // return this.support;
+        return this.support;
     }
 
     public DFSCode code() {
@@ -146,7 +151,7 @@ public class Pattern {
 
     public void addEmbedding(LabeledGraph g, Embedding em) {
         List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
-            // this.support++;
+            this.support++;
             return new ArrayList<>();
         });
         embeddings.add(em);
@@ -154,9 +159,16 @@ public class Pattern {
 
     public void addEmbedding(LabeledGraph g, Cluster c, Embedding em) {
         List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
-            // if (!intersectionEmbeddings.containsKey(c)) {
-            //     this.support++;
-            // }
+            if (!intersectionEmbeddings.containsKey(c)) {
+                this.support++;
+                DeltaCounter counter = deltaSupportCount.computeIfAbsent(c, new Function<Cluster, DeltaCounter>() {
+                    @Override
+                    public DeltaCounter apply(Cluster t) {
+                        return new DeltaCounter();
+                    }
+                });
+                counter.delta++;
+            }
             return new ArrayList<>();
         });
         embeddings.add(em);
@@ -164,10 +176,8 @@ public class Pattern {
 
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
-            for (LabeledGraph g : key.snapshots()) {
-                embeddingMap.putIfAbsent(g, new ArrayList<>());
-            }
-            // this.support += c.size();
+            DeltaCounter counter = deltaSupportCount.getOrDefault(c, new DeltaCounter());
+            this.support += (c.size() - counter.delta);
             return new ArrayList<>();
         });
         embeddings.add(em);
