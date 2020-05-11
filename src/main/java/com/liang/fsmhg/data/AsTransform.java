@@ -97,7 +97,7 @@ public class AsTransform {
         }
         eSize = eSize / 2;
 
-        for (int count = 1; count <= 200; count++) {
+        for (int count = 1; count <= 2000; count++) {
             System.out.format("transform snapshot %d\r", count);
             String name = String.format("T%04dV%dE%dm%dM%dL%d", count, vSize, eSize, minDegree, maxDegree, largeDegreeCount);
             File out = new File(outdir, name);

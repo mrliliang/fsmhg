@@ -33,6 +33,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private Map<Integer, LabeledVertex> border;
     private Map<Integer, Map<LabeledGraph, AdjEdges>> borderAdjEdges;
     private static final Map<LabeledGraph, AdjEdges> EMPTY_BORDER_ADJ = new HashMap<>();
+    private int totalEdgeNum = 0;
 
     private Cluster(double similarity) {
         this.similarity = similarity;
@@ -82,34 +83,50 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return this.snapshots.removeAll(snapshots);
     }
 
+    static long commonVerticesTime = 0;
+    static long commonEdgesTime = 0;
+    static long updateInterTime = 0;
+    static long updateDeltaTime = 0;
+    static long getDeltaTime = 0;
+    static long similarityTime = 0;
+    static int count = 1;
     public boolean add(LabeledGraph s) {
-        // if (this.snapshots.size() == 0) {
-        //     this.snapshots.add(s);
-        //     s.setClusterIndex(this.index);
-        //     for (LabeledVertex v : s.vertices()) {
-        //         this.commonVertices.put(v.id(), v);
-        //         this.commonEdges.put(v.id(), s.adjEdges(v.id()));
-        //     }
-        //     updateIntersection(s.graphId(), commonVertices, commonEdges);
-        //     return true;
-        // }
-
-        this.deltaGraphList.add(this.getDeltaGraph(s));
-
         Map<Integer, LabeledVertex> vDeltaInc = new HashMap<>();
         Map<Integer, AdjEdges> eDeltaInc = new HashMap<>();
+        long vCommonBegin = System.currentTimeMillis();
         Map<Integer, LabeledVertex> vCommon = commonVertices(s, vDeltaInc);
+        long vCommonEnd = System.currentTimeMillis();
+        commonVerticesTime += (vCommonEnd - vCommonBegin);
+        long eCommonBegin = System.currentTimeMillis();
         Map<Integer, AdjEdges> eCommon = commonEdges(s, vCommon, vDeltaInc, eDeltaInc);
-        if (checkSimilarity(s, vCommon, eCommon)) {
+        long eCommonEnd = System.currentTimeMillis();
+        commonEdgesTime += (eCommonEnd - eCommonBegin);
+
+        long similarityBegin = System.currentTimeMillis();
+        boolean isSim = checkSimilarity(s, vCommon, eCommon);
+        long similarityEnd = System.currentTimeMillis();
+        similarityTime += (similarityEnd - similarityBegin);
+        if (isSim) {
+            // System.out.println(count++);
             s.setClusterIndex(this.index);
             this.commonVertices = vCommon;
             this.commonEdges = eCommon;
-            this.snapshots.add(s);
+            long updateInterBegin = System.currentTimeMillis();
             updateIntersection(s, vCommon, eCommon);
+            long updateInterEnd = System.currentTimeMillis();
+            updateInterTime += (updateInterEnd - updateInterBegin);
+            long updateDeltaBegin = System.currentTimeMillis();
             updateDeltaGraphs(vDeltaInc, eDeltaInc);
+            long updateDeltaEnd = System.currentTimeMillis();
+            updateDeltaTime += (updateDeltaEnd - updateDeltaBegin);
+            this.snapshots.add(s);
+            long getDeltaBegin = System.currentTimeMillis();
+            this.totalEdgeNum += s.eSize();
+            this.deltaGraphList.add(this.getDeltaGraph(s));
+            long getDeltaEnd = System.currentTimeMillis();
+            getDeltaTime += (getDeltaEnd - getDeltaBegin);
             return true;
         }
-        this.deltaGraphList.remove(this.deltaGraphList.size() - 1);
         return false;
     }
 
@@ -123,23 +140,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         }
 
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
-        // if (commonVertices.size() <= s.vSize()) {
-        //     for (LabeledVertex v : commonVertices.values()) {
-        //         LabeledVertex v1 = s.vertex(v.id());
-        //         if (v1 == null) {
-        //             vDelta.putIfAbsent(v.id(), v);
-        //         } else if (last.vLabel(v) == s.vLabel(v)) {
-        //             vCommon.put(v1.id(), v1);
-        //         }
-        //     }
-        // } else {
-        //     for (LabeledVertex v : s.vertices()) {
-        //         if (s.vertex(v.id()) != null && last.vLabel(v) == s.vLabel(v)) {
-        //             vCommon.put(v.id(), v);
-        //         }
-        //     }
-        // }
-
         for (LabeledVertex v : this.commonVertices.values()) {
             LabeledVertex v1 = s.vertex(v.id());
             if (v1 == null) {
@@ -161,62 +161,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         }
 
         LabeledGraph last = snapshots.get(snapshots.size() - 1);
-        // int commonEdgeSize = 0;
-        // for (AdjEdges adj : commonEdges.values()) {
-        //     commonEdgeSize += adj.size();
-        // }
-        // commonEdgeSize /= 2;
-        // if (commonEdgeSize <= s.eSize()) {
-        //     for (LabeledVertex v : vCommon.values()) {
-        //         AdjEdges edges = new AdjEdges();
-        //         AdjEdges edges1 = s.adjEdges(v.id());
-        //         for (LabeledEdge e : commonEdges.get(v.id())) {
-        //             LabeledEdge e1 = edges1.edgeTo(e.to().id());
-        //             if (e1 == null) {
-        //                 continue;
-        //             }
-        //             if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to())
-        //                     && last.eLabel(e) == s.eLabel(e1)) {
-        //                 edges.add(e1);
-        //             }
-        //         }
-        //         eCommon.put(v.id(), edges);
-        //     }
-        // } else {
-        //     for (LabeledVertex v : s.vertices()) {
-        //         AdjEdges edges = new AdjEdges();
-        //         AdjEdges edges1 = commonEdges.get(v.id());
-        //         for (LabeledEdge e : s.adjEdges(v.id())) {
-        //             LabeledEdge e1 = edges1.edgeTo(e.to().id());
-        //             if (e1 == null) {
-        //                 continue;
-        //             }
-        //             if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to()) 
-        //                     && last.eLabel(e) == s.eLabel(e1)) {
-        //                 edges.add(e);
-        //             }
-        //         }
-        //         eCommon.put(v.id(), edges);
-        //     }
-        // }
-        
-        // for (LabeledVertex v : this.commonVertices.values()) {
-        //     AdjEdges edges = new AdjEdges();
-        //     AdjEdges edges1 = s.adjEdges(v.id());
-        //     for (LabeledEdge e : this.commonEdges.get(v.id())) {
-        //         LabeledEdge e1 = edges1.edgeTo(e.to().id());
-        //         if (e1 == null) {
-        //             if ()
-        //             continue;
-        //         }
-        //         if (last.vLabel(e.from()) == s.vLabel(e1.from()) && last.vLabel(e.to()) == s.vLabel(e1.to())
-        //                 && last.eLabel(e) == s.eLabel(e1)) {
-        //             edges.add(e1);
-        //         }
-        //     }
-        //     eCommon.put(v.id(), edges);
-        // }
-
         for (Entry<Integer, AdjEdges> entry : this.commonEdges.entrySet()) {
             AdjEdges edges = new AdjEdges();
             for (LabeledEdge e : entry.getValue()) {
@@ -245,31 +189,41 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return eCommon;
     }
 
-    public LabeledGraph intersection() {
-        return this.intersection;
-    }
-
+    static long edgeSizeTime = 0;
     private boolean checkSimilarity(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
         if (this.snapshots.size() == 0) {
             return true;
         }
 
         int commonEdgeNum = 0;
+        HashMap<Integer, AdjEdges> map = new HashMap<>();
+        map.values();
         for (AdjEdges adjEdges : eCommon.values()) {
             commonEdgeNum += adjEdges.size();
         }
         commonEdgeNum = commonEdgeNum / 2;
 
         // int denominator = s.vSize() + s.eSize();
-        int totalEdgeNum = s.eSize();
-        for (LabeledGraph snapshot : snapshots) {
-            // denominator += (snapshot.vSize() + snapshot.eSize());
-            totalEdgeNum += (snapshot.eSize());
-        }
+        long sizeBegin = System.currentTimeMillis();
+        // int totalEdgeNum = s.eSize();
+        long sizeEnd = System.currentTimeMillis();
+        edgeSizeTime += (sizeEnd - sizeBegin);
+        // for (LabeledGraph snapshot : snapshots) {
+        //     // denominator += (snapshot.vSize() + snapshot.eSize());
+        //     sizeBegin = System.currentTimeMillis();
+        //     int eSize = snapshot.eSize();
+        //     sizeEnd = System.currentTimeMillis();
+        //     edgeSizeTime += (sizeEnd - sizeBegin);
+        //     totalEdgeNum += (eSize);
+        // }
         // double sim = (double)(snapshots.size() + 1) * (vCommon.size() +
         // commonEdgeNum) / denominator;
-        double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
+        double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / (this.totalEdgeNum + s.eSize());
         return sim >= similarity;
+    }
+
+    public LabeledGraph intersection() {
+        return this.intersection;
     }
 
     private void updateIntersection(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
@@ -293,50 +247,28 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         }
 
         for (LabeledVertex v : vDelta.values()) {
-            for (LabeledGraph g : deltaGraphList) {
-                g.addVertexIfAbsent(v);
+            for (LabeledGraph dg : deltaGraphList) {
+                dg.addVertexIfAbsent(v);
             }
         }
 
         for (Entry<Integer, AdjEdges> entry : eDelta.entrySet()) {
-            for (LabeledGraph g : deltaGraphList) {
-                AdjEdges adj = g.adjEdges(entry.getKey());
+            boolean contains = this.commonVertices.containsKey(entry.getKey());
+            for (int i = 0; i < this.snapshots.size(); i++) {
+                LabeledGraph g = this.snapshots.get(i);
+                LabeledGraph dg = this.deltaGraphList.get(i);
+                AdjEdges adj = dg.adjEdges(entry.getKey());
                 for (LabeledEdge e : entry.getValue()) {
                     adj.add(e);
-                    LabeledVertex from = e.from();
-                    LabeledVertex to = e.to();
-
-                    if (this.commonVertices.containsKey(from.id())) {
-                        Map<LabeledGraph, AdjEdges> map =  this.borderAdjEdges.computeIfAbsent(from.id(), new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
-                            @Override
-                            public Map<LabeledGraph, AdjEdges> apply(Integer t) {
-                                return new HashMap<>();
-                            }
-                        });
-                        AdjEdges deltAdj = entry.getValue();
-                        AdjEdges edges = map.putIfAbsent(g, deltAdj);
-                        if (deltAdj != null && edges != null) {
-                            for (LabeledEdge e1 : deltAdj) {
-                                edges.add(e1);
-                            }
+                }
+                if (adj.size() > 0 && contains) {
+                    Map<LabeledGraph, AdjEdges> map =  this.borderAdjEdges.computeIfAbsent(entry.getKey(), new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                        @Override
+                        public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                            return new HashMap<>();
                         }
-                    }
-
-                    if (this.commonVertices.containsKey(to.id())) {
-                        Map<LabeledGraph, AdjEdges> map = this.borderAdjEdges.computeIfAbsent(to.id(), new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
-                            @Override
-                            public Map<LabeledGraph, AdjEdges> apply(Integer t) {
-                                return new HashMap<>();
-                            }
-                        });
-                        AdjEdges deltAdj = entry.getValue();
-                        AdjEdges edges = map.putIfAbsent(g, eDelta.get(to.id()));
-                        if (deltAdj != null && edges != null) {
-                            for (LabeledEdge e1 : deltAdj) {
-                                edges.add(e1);
-                            }
-                        }
-                    }
+                    });
+                    map.put(g, adj);
                 }
             }
         }
@@ -420,8 +352,10 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         Map<Integer, AdjEdges> eDelta = new HashMap<>();
 
         for (LabeledVertex v : s.vertices()) {
-            if (!commonVertices.containsKey(v.id())) {
+            boolean contains = commonVertices.containsKey(v.id());
+            if (!contains) {
                 vDelta.put(v.id(), v);
+                eDelta.put(v.id(), new AdjEdges());
             }
             for (LabeledEdge e : s.adjEdges(v.id())) {
                 LabeledVertex from = e.from();
@@ -429,31 +363,26 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
                 AdjEdges adjInCommon = this.commonEdges.get(from.id());
                 if (adjInCommon == null || adjInCommon.edgeTo(to.id()) == null) {
                     vDelta.putIfAbsent(from.id(), from);
-                    eDelta.putIfAbsent(from.id(), new AdjEdges());
+                    AdjEdges adj = eDelta.computeIfAbsent(from.id(), new Function<Integer, AdjEdges>() {
+                        @Override
+                        public AdjEdges apply(Integer t) {
+                            return new AdjEdges();
+                        }
+                    });
+                    adj.add(e);
                     vDelta.putIfAbsent(to.id(), to);
                     eDelta.putIfAbsent(to.id(), new AdjEdges());
-                    // if (commonVertices.containsKey(from.id())) {
-                    //     Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(from.id(),
-                    //             new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
-                    //                 @Override
-                    //                 public Map<LabeledGraph, AdjEdges> apply(Integer t) {
-                    //                     return new HashMap<>();
-                    //                 }
-                    //             });
-                    //     borderAdj.putIfAbsent(s, eDelta.get(from.id()));
-                    // }
-                    // if (commonVertices.containsKey(to.id())) {
-                    //     Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(to.id(),
-                    //             new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
-                    //                 @Override
-                    //                 public Map<LabeledGraph, AdjEdges> apply(Integer t) {
-                    //                     return new HashMap<>();
-                    //                 }
-                    //             });
-                    //     borderAdj.putIfAbsent(s, eDelta.get(to.id()));
-                    // }
-                    eDelta.get(from.id()).add(e);
                 }
+            }
+            if (contains) {
+                Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(v.id(),
+                        new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                            @Override
+                            public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                                return new HashMap<>();
+                            }
+                        });
+                borderAdj.putIfAbsent(s, eDelta.get(v.id()));
             }
         }
 
@@ -515,7 +444,28 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         // cluster.computeDeltas();
         clusters.add(cluster);
 
+        // long commonVerticesTime = 0;
+        // long commonEdgesTime = 0;
+        // long updateInterTime = 0;
+        // long updateDeltaTime = 0;
+        // long getDeltaTime = 0;
+        // System.out.println("Common vertices time = " + commonVerticesTime);
+        // System.out.println("Common edges time = " + commonEdgesTime);
+        // System.out.println("Update inter time = " + updateInterTime);
+        // System.out.println("Update delta time = " + updateDeltaTime);
+        // System.out.println("Get delta time = " + getDeltaTime);
+        cluster.printTime();
         return clusters;
+    }
+
+    private void printTime() {
+        System.out.println("Common vertices time = " + commonVerticesTime);
+        System.out.println("Common edges time = " + commonEdgesTime);
+        System.out.println("Update inter time = " + updateInterTime);
+        System.out.println("Update delta time = " + updateDeltaTime);
+        System.out.println("Get delta time = " + getDeltaTime);
+        System.out.println("Similarity time = " + similarityTime);
+        System.out.println("Edge size time = " + edgeSizeTime);
     }
 
     public boolean isBorder(int vId) {

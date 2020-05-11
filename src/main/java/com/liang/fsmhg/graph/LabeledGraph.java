@@ -15,6 +15,7 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     private Map<Integer, LabeledVertex> vertices;
     private Map<Integer, AdjEdges> adjLists;
 
+
     public LabeledGraph(long id) {
         this(id, null, null);
     }

@@ -39,20 +39,14 @@ public class Test {
 //         System.out.println(dfsCode);
 //         System.out.println(dfsCode.minCode());
 
-        // TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-repeat"));
-        // List<LabeledGraph> graphs =  loader.loadTrans();
-        // long begin = System.currentTimeMillis();
-        // List<Cluster> clusters = Cluster.partition(graphs, 0.4, 0);
-        // long end = System.currentTimeMillis();
-        // System.out.println("partition time " + (end - begin));
-        // System.out.println(clusters.size() + " clusters");
-
-        HashMap<Integer, Integer> map = new HashMap<>();
-        Integer i = map.putIfAbsent(1, 1);
-        System.out.println(i);
-        i = map.putIfAbsent(1, 2);
-        System.out.println(i);
-        System.out.println(map.get(1));
+        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots"));
+        List<LabeledGraph> graphs =  loader.loadTrans();
+        System.out.println("Number of trans: " + graphs.size());
+        long begin = System.currentTimeMillis();
+        List<Cluster> clusters = Cluster.partition(graphs, 0.4, 0);
+        long end = System.currentTimeMillis();
+        System.out.println("partition time " + (end - begin));
+        System.out.println(clusters.size() + " clusters");
     }
 
 
