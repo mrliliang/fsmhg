@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 
@@ -38,13 +39,20 @@ public class Test {
 //         System.out.println(dfsCode);
 //         System.out.println(dfsCode.minCode());
 
-        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-repeat"));
-        List<LabeledGraph> graphs =  loader.loadTrans();
-        long begin = System.currentTimeMillis();
-        List<Cluster> clusters = Cluster.partition(graphs, 0.4, 0);
-        long end = System.currentTimeMillis();
-        System.out.println("partition time " + (end - begin));
-        System.out.println(clusters.size() + " clusters");
+        // TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-repeat"));
+        // List<LabeledGraph> graphs =  loader.loadTrans();
+        // long begin = System.currentTimeMillis();
+        // List<Cluster> clusters = Cluster.partition(graphs, 0.4, 0);
+        // long end = System.currentTimeMillis();
+        // System.out.println("partition time " + (end - begin));
+        // System.out.println(clusters.size() + " clusters");
+
+        HashMap<Integer, Integer> map = new HashMap<>();
+        Integer i = map.putIfAbsent(1, 1);
+        System.out.println(i);
+        i = map.putIfAbsent(1, 2);
+        System.out.println(i);
+        System.out.println(map.get(1));
     }
 
 
