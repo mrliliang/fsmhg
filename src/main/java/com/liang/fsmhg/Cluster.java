@@ -7,7 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.function.Function;
+
+import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
@@ -24,6 +27,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private Map<Integer, LabeledVertex> commonVertices;
     private Map<Integer, AdjEdges> commonEdges;
 
+    private ArrayList<LabeledGraph> deltaGraphList;
     private Map<Long, DeltaGraph> deltaGraphs;
     private LabeledGraph intersection;
     private Map<Integer, LabeledVertex> border;
@@ -37,6 +41,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         commonEdges = new HashMap<>();
         border = new HashMap<>();
         borderAdjEdges = new HashMap<>();
+        deltaGraphList = new ArrayList<>();
     }
 
     public List<LabeledGraph> snapshots() {
@@ -78,52 +83,46 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     }
 
     public boolean add(LabeledGraph s) {
-        if (this.snapshots.size() == 0) {
-            this.snapshots.add(s);
-            s.setClusterIndex(this.index);
-            for (LabeledVertex v : s.vertices()) {
-                commonVertices.put(v.id(), v);
-                commonEdges.put(v.id(), s.adjEdges(v.id()));
-            }
-            updateIntersection(s.graphId(), commonVertices, commonEdges);
-            return true;
-        }
+        // if (this.snapshots.size() == 0) {
+        //     this.snapshots.add(s);
+        //     s.setClusterIndex(this.index);
+        //     for (LabeledVertex v : s.vertices()) {
+        //         this.commonVertices.put(v.id(), v);
+        //         this.commonEdges.put(v.id(), s.adjEdges(v.id()));
+        //     }
+        //     updateIntersection(s.graphId(), commonVertices, commonEdges);
+        //     return true;
+        // }
 
-        Map<Integer, LabeledVertex> vCommon = commonVertices(s);
-        Map<Integer, AdjEdges> eCommon = commonEdges(vCommon, s);
+        this.deltaGraphList.add(this.getDeltaGraph(s));
+
+        Map<Integer, LabeledVertex> vDelta = new HashMap<>();
+        Map<Integer, AdjEdges> eDelta = new HashMap<>();
+        Map<Integer, LabeledVertex> vCommon = commonVertices(s, vDelta);
+        Map<Integer, AdjEdges> eCommon = commonEdges(s, vCommon, eDelta);
         if (checkSimilarity(s, vCommon, eCommon)) {
-            commonVertices = vCommon;
-            commonEdges = eCommon;
-            this.snapshots.add(s);
             s.setClusterIndex(this.index);
-            updateIntersection(s.graphId(), vCommon, eCommon);
+            this.commonVertices = vCommon;
+            this.commonEdges = eCommon;
+            this.snapshots.add(s);
+            updateIntersection(s, vCommon, eCommon);
+            updateDeltaGraphs(vDelta, eDelta);
             return true;
         }
+        this.deltaGraphList.remove(this.deltaGraphList.size() - 1);
         return false;
     }
 
-    private boolean checkSimilarity(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
-        int commonEdgeNum = 0;
-        for (AdjEdges adjEdges : eCommon.values()) {
-            commonEdgeNum += adjEdges.size();
-        }
-        commonEdgeNum = commonEdgeNum / 2;
-
-        // int denominator = s.vSize() + s.eSize();
-        int totalEdgeNum = s.eSize();
-        for (LabeledGraph snapshot : snapshots) {
-            // denominator += (snapshot.vSize() + snapshot.eSize());
-            totalEdgeNum += (snapshot.eSize());
-        }
-        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() +
-        // commonEdgeNum) / denominator;
-        double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
-        return sim >= similarity;
-    }
-
-    private Map<Integer, LabeledVertex> commonVertices(LabeledGraph s) {
-        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+    private Map<Integer, LabeledVertex> commonVertices(LabeledGraph s, Map<Integer, LabeledVertex> vDelta) {
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
+        if (this.snapshots.size() == 0) {
+            for (LabeledVertex v : s.vertices()) {
+                vCommon.put(v.id(), v);
+            }
+            return vCommon;
+        }
+
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
         if (commonVertices.size() <= s.vSize()) {
             for (LabeledVertex v : commonVertices.values()) {
                 LabeledVertex v1 = s.vertex(v.id());
@@ -141,11 +140,22 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return vCommon;
     }
 
-    private Map<Integer, AdjEdges> commonEdges(Map<Integer, LabeledVertex> vCommon, LabeledGraph s) {
-        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+    private Map<Integer, AdjEdges> commonEdges(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eDelta) {
         Map<Integer, AdjEdges> eCommon = new HashMap<>();
-        //todo the number of common edge is error
-        if (commonEdges.size() <= s.eSize()) {
+        if (this.snapshots.size() == 0) {
+            for (int vId : vCommon.keySet()) {
+                this.commonEdges.put(vId, s.adjEdges(vId));
+            }
+            return eCommon;
+        }
+
+        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+        int commonEdgeSize = 0;
+        for (AdjEdges adj : commonEdges.values()) {
+            commonEdgeSize += adj.size();
+        }
+        commonEdgeSize /= 2;
+        if (commonEdgeSize <= s.eSize()) {
             for (LabeledVertex v : vCommon.values()) {
                 AdjEdges edges = new AdjEdges();
                 AdjEdges edges1 = s.adjEdges(v.id());
@@ -185,19 +195,71 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return this.intersection;
     }
 
-    private void updateIntersection(long graphId, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
-        LabeledGraph last = snapshots.get(snapshots.size() - 1);
+    private boolean checkSimilarity(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
+        if (this.snapshots.size() == 0) {
+            return true;
+        }
+
+        int commonEdgeNum = 0;
+        for (AdjEdges adjEdges : eCommon.values()) {
+            commonEdgeNum += adjEdges.size();
+        }
+        commonEdgeNum = commonEdgeNum / 2;
+
+        // int denominator = s.vSize() + s.eSize();
+        int totalEdgeNum = s.eSize();
+        for (LabeledGraph snapshot : snapshots) {
+            // denominator += (snapshot.vSize() + snapshot.eSize());
+            totalEdgeNum += (snapshot.eSize());
+        }
+        // double sim = (double)(snapshots.size() + 1) * (vCommon.size() +
+        // commonEdgeNum) / denominator;
+        double sim = (double) (snapshots.size() + 1) * (commonEdgeNum) / totalEdgeNum;
+        return sim >= similarity;
+    }
+
+    private void updateIntersection(LabeledGraph s, Map<Integer, LabeledVertex> vCommon, Map<Integer, AdjEdges> eCommon) {
         if (this.intersection == null) {
-            this.intersection = new StaticGraph(last.graphId());
+            this.intersection = new StaticGraph(s.graphId());
         } else {
-            this.intersection.setId(last.graphId());
+            this.intersection.setId(s.graphId());
         }
         this.intersection.setVertices(vCommon);
         this.intersection.setEdges(eCommon);
     }
 
-    private void updateDeltaGraphs() {
+    private void updateDeltaGraphs(Map<Integer, LabeledVertex> vDelta, Map<Integer, AdjEdges> eDelta) {
+        for (LabeledVertex v : vDelta.values()) {
+            for (LabeledGraph g : deltaGraphList) {
+                g.addVertexIfAbsent(v);
+            }
+        }
 
+        for (Entry<Integer, AdjEdges> entry : eDelta.entrySet()) {
+            for (LabeledGraph g : deltaGraphList) {
+                AdjEdges adj = g.adjEdges(entry.getKey());
+                for (LabeledEdge e : entry.getValue()) {
+                    adj.add(e);
+                    LabeledVertex from = e.from();
+                    LabeledVertex to = e.to();
+                    Map<LabeledGraph, AdjEdges> map =  this.borderAdjEdges.computeIfAbsent(from.id(), new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                        @Override
+                        public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                            return new HashMap<>();
+                        }
+                    });
+                    map.putIfAbsent(g, eDelta.get(from.id()));
+                    
+                    map = this.borderAdjEdges.computeIfAbsent(to.id(), new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                        @Override
+                        public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                            return new HashMap<>();
+                        }
+                    });
+                    map.putIfAbsent(g, eDelta.get(to.id()));
+                }
+            }
+        }
     }
 
     private void updateIntersection() {
@@ -267,6 +329,54 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
 
         this.border.putAll(vBorder);
         return new DeltaGraph(s.graphId(), vDelta.values(), edges, vBorder);
+    }
+
+    private LabeledGraph getDeltaGraph(LabeledGraph s) {
+        Map<Integer, LabeledVertex> vDelta = new HashMap<>();
+        Map<Integer, AdjEdges> eDelta = new HashMap<>();
+
+        for (LabeledVertex v : s.vertices()) {
+            if (!commonVertices.containsKey(v.id())) {
+                vDelta.put(v.id(), v);
+            }
+            for (LabeledEdge e : s.adjEdges(v.id())) {
+                LabeledVertex from = e.from();
+                LabeledVertex to = e.to();
+                AdjEdges adjInCommon = this.commonEdges.get(from.id());
+                if (adjInCommon == null || adjInCommon.edgeTo(to.id()) == null) {
+                    vDelta.putIfAbsent(from.id(), from);
+                    eDelta.putIfAbsent(from.id(), new AdjEdges());
+                    vDelta.putIfAbsent(to.id(), to);
+                    eDelta.putIfAbsent(to.id(), new AdjEdges());
+                    // if (commonVertices.containsKey(from.id())) {
+                    //     Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(from.id(),
+                    //             new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                    //                 @Override
+                    //                 public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                    //                     return new HashMap<>();
+                    //                 }
+                    //             });
+                    //     borderAdj.putIfAbsent(s, eDelta.get(from.id()));
+                    // }
+                    // if (commonVertices.containsKey(to.id())) {
+                    //     Map<LabeledGraph, AdjEdges> borderAdj = this.borderAdjEdges.computeIfAbsent(to.id(),
+                    //             new Function<Integer, Map<LabeledGraph, AdjEdges>>() {
+                    //                 @Override
+                    //                 public Map<LabeledGraph, AdjEdges> apply(Integer t) {
+                    //                     return new HashMap<>();
+                    //                 }
+                    //             });
+                    //     borderAdj.putIfAbsent(s, eDelta.get(to.id()));
+                    // }
+                    eDelta.get(from.id()).add(e);
+                }
+            }
+        }
+
+        LabeledGraph dg = new StaticGraph(s.graphId());
+        dg.setVertices(vDelta);
+        dg.setEdges(eDelta);
+        return dg;
     }
 
     private void computeDeltas() {

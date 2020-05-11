@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
 
 public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     private long graphId;
@@ -76,6 +78,16 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     public void addVertex(LabeledVertex v) {
         vertices.put(v.id(), v);
         adjLists.put(v.id(), new AdjEdges());
+    }
+
+    public void addVertexIfAbsent(LabeledVertex v) {
+        vertices.computeIfAbsent(v.id(), new Function<Integer, LabeledVertex>() {
+            @Override
+            public LabeledVertex apply(Integer vId) {
+                adjLists.put(vId, new AdjEdges());
+                return v;
+            }
+        });
     }
 
     public void addEdge(LabeledEdge e) {
