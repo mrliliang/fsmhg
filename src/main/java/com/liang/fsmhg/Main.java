@@ -16,6 +16,7 @@ public class Main {
         TransLoader loader = new TransLoader(data);
         if (arguments.window <= 0) {
             FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
+            
             fsmhg.enumerate(loader.loadTrans());
             return;
         }

@@ -103,7 +103,6 @@ public class FSMHG {
             }
 
             for (LabeledGraph g : c) {
-                // DeltaGraph dg = c.deltaGraph(g);
                 LabeledGraph dg = c.deltaGraph1(g);
                 for (LabeledVertex v : dg.vertices()) {
                     if (inter.vertex(v.id()) != null) {
@@ -603,6 +602,16 @@ public class FSMHG {
                 }
                 extendCands.add(ep.edge());
             }
+        }
+    }
+
+    class Candidate implements Comparable<Candidate> {
+        DFSEdge dfsEdge;
+        boolean isMin;
+
+        @Override
+        public int compareTo(Candidate o) {
+            return this.dfsEdge.compareTo(o.dfsEdge);
         }
     }
 
