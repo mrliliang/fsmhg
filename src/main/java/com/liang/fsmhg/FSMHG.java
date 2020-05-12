@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.liang.fsmhg.Cluster.DeltaGraph;
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.AdjEdges;
@@ -104,7 +103,8 @@ public class FSMHG {
             }
 
             for (LabeledGraph g : c) {
-                DeltaGraph dg = c.deltaGraph(g);
+                // DeltaGraph dg = c.deltaGraph(g);
+                LabeledGraph dg = c.deltaGraph1(g);
                 for (LabeledVertex v : dg.vertices()) {
                     if (inter.vertex(v.id()) != null) {
                         continue;

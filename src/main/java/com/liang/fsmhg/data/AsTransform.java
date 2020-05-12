@@ -8,6 +8,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,16 +35,23 @@ public class AsTransform {
     private static final int EDGE_LABEL_NUM = 100;
 
     public static void main(String[] args) {
-        File data = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots-repeat");
+        File indir = new File("/home/liliang/data/as-733");
+        File outdir = new File("/home/liliang/data/as-733-snapshots");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
-        new AsTransform().transform1(data, outdir);
+        List<File> data = Arrays.asList(indir.listFiles());
+        Collections.sort(data, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                return f1.getName().compareTo(f2.getName());
+            }
+        });
+        new AsTransform().transform(data, outdir);
     }
 
-    private void transform(File data, File outdir) {
+    private void transform(List<File> data, File outdir) {
         int count = 0;
-        for (File file : data.listFiles()) {
+        for (File file : data) {
             count++;
             System.out.format("transform snapshot %d\r", count);
             HashMap<Integer, StaticVertex> vMap = new HashMap<>();
@@ -73,8 +83,8 @@ public class AsTransform {
         System.out.println("Done!");
     }
 
-    private void transform1(File data, File outdir) {
-        File f = data.listFiles()[0];
+    private void transform1(List<File> data, File outdir) {
+        File f = data.get(0);
         HashMap<Integer, StaticVertex> vMap = new HashMap<>();
         HashMap<Integer, AdjEdges> adjLists = new HashMap<>();
         snapshot(f, vMap, adjLists);
@@ -97,7 +107,7 @@ public class AsTransform {
         }
         eSize = eSize / 2;
 
-        for (int count = 1; count <= 2000; count++) {
+        for (int count = 1; count <= 10000; count++) {
             System.out.format("transform snapshot %d\r", count);
             String name = String.format("T%04dV%dE%dm%dM%dL%d", count, vSize, eSize, minDegree, maxDegree, largeDegreeCount);
             File out = new File(outdir, name);

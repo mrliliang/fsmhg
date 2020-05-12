@@ -6,6 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.liang.fsmhg.graph.LabeledGraph;
@@ -35,7 +38,14 @@ public class TransLoader {
         if (!this.data.isDirectory()) {
             trans.addAll(readTrans(this.data));
         } else {
-            for (File f : this.data.listFiles()) {
+            List<File> files = Arrays.asList(this.data.listFiles());
+            Collections.sort(files, new Comparator<File>() {
+                @Override
+                public int compare(File f1, File f2) {
+                    return f1.getName().compareTo(f2.getName());
+                }
+            });
+            for (File f : files) {
                 trans.addAll(readTrans(f));
             }
         }
