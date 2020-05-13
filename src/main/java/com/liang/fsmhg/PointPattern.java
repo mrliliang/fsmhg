@@ -19,4 +19,11 @@ public class PointPattern extends Pattern {
         return null;
     }
 
+    @Override
+    public boolean checkMin() {
+        return true;
+    }
+
+    
+
 }

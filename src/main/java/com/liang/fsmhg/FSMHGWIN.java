@@ -27,6 +27,7 @@ public class FSMHGWIN {
     private int maxEdgeSize = Integer.MAX_VALUE;
     private boolean partition;
     private double similarity;
+    private boolean optimize = true;
     private ArrayList<Cluster> clusters;
     private int clusterCounter;
     private int maxVid = 0;
@@ -44,6 +45,10 @@ public class FSMHGWIN {
         this.points = new TreeMap<>();
         this.clusters = new ArrayList<>();
         this.trans = new ArrayList<>();
+    }
+
+    public void optimize(boolean opt) {
+        this.optimize = opt;
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {

@@ -82,6 +82,11 @@ public class Pattern {
         return minCheckResult;
     }
 
+    public void setMin(boolean isMin) {
+        isMinChecked = true;
+        minCheckResult = isMin;
+    }
+
     public List<LabeledGraph> unClusteredGraphs() {
         HashSet<LabeledGraph> graphs = new HashSet<>(embeddingMap.keySet());
         HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
