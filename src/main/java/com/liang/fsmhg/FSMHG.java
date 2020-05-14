@@ -230,8 +230,8 @@ public class FSMHG {
         if (parent.code().edgeSize() >= maxEdgeSize) {
             return;
         }
-
         enumerateChildren(parent);
+        checkChildrenMinCode(parent.children(), parent.edge());
         if (!parent.hasChild()) {
             return;
         }
@@ -246,7 +246,10 @@ public class FSMHG {
         }
     }
 
-    private void checkMinCode(List<Pattern> children, int parentRmNode) {
+    private void checkChildrenMinCode(List<Pattern> children, DFSEdge parentLastEdge) {
+        if (!parentLastEdge.isForward()) {
+            return;
+        }
         HashMap<Integer, List<Pattern>> backwardGroups = new HashMap<>();
         List<Pattern> forwardGroup = new ArrayList<>();
         for (Pattern p : children) {
@@ -254,7 +257,7 @@ public class FSMHG {
                 continue;
             }
             DFSEdge dfsEdge = p.edge();
-            if (dfsEdge.from() != parentRmNode) {
+            if (dfsEdge.from() != parentLastEdge.to()) {
                 continue;
             }
             if (dfsEdge.isForward()) {
@@ -276,6 +279,9 @@ public class FSMHG {
     }
 
     private void binaryCheck(List<Pattern> patterns) {
+        if (patterns.size() == 0) {
+            return;
+        }
         if (patterns.size() == 1) {
             patterns.get(0).checkMin();
             return;
@@ -284,17 +290,22 @@ public class FSMHG {
         int right = patterns.size() - 1;
         int nonMinBound = left + (right - left) / 2;
         int minBound = nonMinBound + 1;
+        boolean noMin = patterns.get(nonMinBound).checkMin();;
+        boolean min= patterns.get(minBound).checkMin();
         while (left < right) {
-            boolean noMin = patterns.get(nonMinBound).checkMin();
-            boolean min = patterns.get(minBound).checkMin();
             if (noMin && min) {
-                left = nonMinBound - 1;
+                right = nonMinBound;
             } else if (!noMin && !min) {
-                right = minBound + 1;
+                left = minBound;
+            } else if (!noMin && min) {
+                break;
             }
             nonMinBound = left + (right - left) / 2;
             minBound = nonMinBound + 1;
+            noMin = patterns.get(nonMinBound).checkMin();
+            min = patterns.get(minBound).checkMin();
         }
+
         for (int i = 0; i < nonMinBound; i++) {
             patterns.get(i).setMin(false);
         }
