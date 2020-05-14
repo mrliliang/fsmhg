@@ -3,9 +3,11 @@ package com.liang.fsmhg;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -84,6 +86,7 @@ public class FSMHG {
         pw.close();
         System.out.println(this.pointCount + " point patterns");
         System.out.println((this.patternCount - this.pointCount) + " connected patterns.");
+        System.out.println(Pattern.minCheckCount + " times of min code checking");
 
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
@@ -141,6 +144,7 @@ public class FSMHG {
                                 continue;
                             }
                             Pattern child = pp.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
+                            child.setMin(true);
                             child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
                         }
 
@@ -231,6 +235,7 @@ public class FSMHG {
         if (!parent.hasChild()) {
             return;
         }
+        parent.code().nodeCount();
         for (Pattern child : parent.children()) {
             if (!isFrequent(child)) {
                 parent.removeChild(child);
@@ -238,6 +243,63 @@ public class FSMHG {
             }
             subgraphMining(trans, child);
             parent.removeChild(child);
+        }
+    }
+
+    private void checkMinCode(List<Pattern> children, int parentRmNode) {
+        HashMap<Integer, List<Pattern>> backwardGroups = new HashMap<>();
+        List<Pattern> forwardGroup = new ArrayList<>();
+        for (Pattern p : children) {
+            if (!isFrequent(p)) {
+                continue;
+            }
+            DFSEdge dfsEdge = p.edge();
+            if (dfsEdge.from() != parentRmNode) {
+                continue;
+            }
+            if (dfsEdge.isForward()) {
+                forwardGroup.add(p);
+            } else {
+                List<Pattern> group = backwardGroups.computeIfAbsent(dfsEdge.to(), new Function<Integer, List<Pattern>>() {
+                    @Override
+                    public List<Pattern> apply(Integer t) {
+                        return new ArrayList<>();
+                    }
+                });
+                group.add(p);
+            }
+        }
+        for (List<Pattern> group : backwardGroups.values()) {
+            binaryCheck(group);
+        }
+        binaryCheck(forwardGroup);
+    }
+
+    private void binaryCheck(List<Pattern> patterns) {
+        if (patterns.size() == 1) {
+            patterns.get(0).checkMin();
+            return;
+        }
+        int left = 0;
+        int right = patterns.size() - 1;
+        int nonMinBound = left + (right - left) / 2;
+        int minBound = nonMinBound + 1;
+        while (left < right) {
+            boolean noMin = patterns.get(nonMinBound).checkMin();
+            boolean min = patterns.get(minBound).checkMin();
+            if (noMin && min) {
+                left = nonMinBound - 1;
+            } else if (!noMin && !min) {
+                right = minBound + 1;
+            }
+            nonMinBound = left + (right - left) / 2;
+            minBound = nonMinBound + 1;
+        }
+        for (int i = 0; i < nonMinBound; i++) {
+            patterns.get(i).setMin(false);
+        }
+        for (int i = minBound + 1; i < patterns.size(); i++) {
+            patterns.get(i).setMin(true);
         }
     }
 

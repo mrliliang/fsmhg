@@ -16,6 +16,8 @@ import com.liang.fsmhg.graph.LabeledGraph;
 
 public class Pattern {
 
+    public static int minCheckCount = 0;
+
     private DFSEdge edge;
     private Pattern parent;
 
@@ -76,6 +78,7 @@ public class Pattern {
 
     public boolean checkMin() {
         if (!isMinChecked) {
+            Pattern.minCheckCount++;
             minCheckResult = code().isMin();
             isMinChecked = true;
         }
