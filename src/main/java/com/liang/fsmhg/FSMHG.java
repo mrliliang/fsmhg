@@ -1052,4 +1052,7 @@ public class FSMHG {
         return p.support() >= this.absSup;
     }
 
+    private void searchEmbeddings(Pattern p) {
+        
+    }
 }
