@@ -30,13 +30,19 @@ public class AsTransform {
     HashMap<Integer, StaticVertex> allVertices = new HashMap<>();
     HashMap<Integer, AdjEdges> allEdges = new HashMap<>();
 
-    private static final int LARGE_DEGREE = 10;
+    private static final int LARGE_DEGREE = 20;
     private static final int VERTEX_LABEL_NUM = 100;
     private static final int EDGE_LABEL_NUM = 100;
 
+    int unconnectedCount = 0;
+    private int maxV = 0;
+    private int maxE = 0;
+    private int minV = Integer.MAX_VALUE;
+    private int minE = Integer.MAX_VALUE;
+
     public static void main(String[] args) {
         File indir = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots");
+        File outdir = new File("/home/liliang/data/as-733-snapshots-connected");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
         List<File> data = Arrays.asList(indir.listFiles());
@@ -78,9 +84,24 @@ public class AsTransform {
 
             File out = new File(outdir, file.getName() + "V" + vSize + "E" + eSize + "m" + minDegree + "M" + maxDegree + "L" + largeDegreeCount);
             output(out, vMap, adjLists, count);
+            
+            if (eSize < vSize - 1) {
+                unconnectedCount++;
+            }
+            if (vSize > maxV) {
+                maxV = vSize;
+                maxE = eSize;
+            }
+            if (vSize < minV) {
+                minV = vSize;
+                minE = eSize;
+            }
         }
         System.out.println();
         System.out.println("Done!");
+        System.out.println(unconnectedCount + " unconnected graphs");
+        System.out.format("Min graph %d vertices %d edges.\n", minV, minE);
+        System.out.format("Max graph %d vertices %d edges.\n", maxV, maxE);
     }
 
     private void transform1(List<File> data, File outdir) {

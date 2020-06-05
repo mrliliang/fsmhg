@@ -39,11 +39,11 @@ public class Test {
 //         System.out.println(dfsCode);
 //         System.out.println(dfsCode.minCode());
 
-        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots"));
+        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-connected"));
         List<LabeledGraph> graphs =  loader.loadTrans();
         System.out.println("Number of trans: " + graphs.size());
         long begin = System.currentTimeMillis();
-        List<Cluster> clusters = Cluster.partition(graphs, 1.0, 0);
+        List<Cluster> clusters = Cluster.partition(graphs, 0.9, 0);
         long end = System.currentTimeMillis();
         System.out.println("partition time " + (end - begin));
         System.out.println(clusters.size() + " clusters");

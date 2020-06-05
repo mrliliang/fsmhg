@@ -20,7 +20,7 @@ public class Main {
         TransLoader loader = new TransLoader(data);
         if (arguments.window <= 0) {
             FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
-            fsmhg.optimize(arguments.optimize);
+            // fsmhg.optimize(arguments.optimize);
             fsmhg.enumerate(loader.loadTrans());
             return;
         }
@@ -37,7 +37,7 @@ public class Main {
                 fsmhgwin.enumerate(trans);
             } else {
                 FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, false, 0);
-                fsmhg.optimize(arguments.optimize);
+                // fsmhg.optimize(arguments.optimize);
                 fsmhg.enumerate(trans);
             }
             trans = trans.subList(arguments.sliding, trans.size());
@@ -157,17 +157,17 @@ public class Main {
                 arguments.enumerator = e;
             }
 
-            if (cmd.hasOption("opt")) {
-                String opt = cmd.getOptionValue("opt");
-                if ("YES".equalsIgnoreCase(opt)) {
-                    arguments.optimize = true;
-                } else if ("NO".equalsIgnoreCase(opt)) {
-                    arguments.optimize = false;
-                } else {
-                    System.out.println("opt must be YES / NO");
-                    System.exit(1);
-                }
-            }
+            // if (cmd.hasOption("opt")) {
+            //     String opt = cmd.getOptionValue("opt");
+            //     if ("YES".equalsIgnoreCase(opt)) {
+            //         arguments.optimize = true;
+            //     } else if ("NO".equalsIgnoreCase(opt)) {
+            //         arguments.optimize = false;
+            //     } else {
+            //         System.out.println("opt must be YES / NO");
+            //         System.exit(1);
+            //     }
+            // }
 
             return arguments;
         }
