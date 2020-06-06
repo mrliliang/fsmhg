@@ -1,6 +1,5 @@
 echo "Test support 0.8 for min code optimization"
-# java -jar target/fsmhg.jar -d /home/liliang/data/as-733-snapshots-connected -s 0.8 -o out/as_test_p -p -sim 0.9 -m 10
-java -jar target/fsmhg.jar -d /home/liliang/fsmhg/test -s 0.04 -o out/as_test_p #-p -sim 0.9
+java -jar target/fsmhg.jar -d /home/liliang/data/as-733-snapshots-connected -s 0.5 -o out/as_test_p -m 10 -p -sim 0.9
 
 # echo
 

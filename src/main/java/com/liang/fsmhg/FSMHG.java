@@ -37,6 +37,8 @@ public class FSMHG {
     private PatternWriter pw;
 
     private long partitionTime = 0;
+    private int numOfEmbedding = 0;
+    private int numOfEmbeddingNoPartition = 0;
 
     public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
@@ -77,6 +79,8 @@ public class FSMHG {
             this.pointCount++;
             pw.save(pp, this.patternCount++);
             for (Pattern p : pp.children()) {
+                this.numOfEmbedding += p.numberOfEmbeddings();
+                this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
                 if (!isFrequent(p)) {
                     continue;
                 }
@@ -86,11 +90,17 @@ public class FSMHG {
         pw.close();
         System.out.println(this.pointCount + " point patterns");
         System.out.println((this.patternCount - this.pointCount) + " connected patterns.");
-        // System.out.println(Pattern.minCheckCount + " times of min code checking");
 
+        System.out.println("support = " + this.minSup);
+        if (this.partition) {
+            System.out.println("similarity = " + this.similarity);
+        }
         long endTime = System.currentTimeMillis();
         System.out.println("Duration = " + (endTime - startTime));
         System.out.println("Partition time = " + partitionTime);
+        System.out.println("Number of embeddings partition = " + this.numOfEmbedding);
+        System.out.println("Number of embeddings no partition = " + this.numOfEmbeddingNoPartition);
+
     }
 
     public TreeMap<Integer, PointPattern> pointsCluster(List<Cluster> clusters) {
@@ -235,8 +245,10 @@ public class FSMHG {
         if (!parent.hasChild()) {
             return;
         }
-        parent.code().nodeCount();
+        // parent.code().nodeCount();
         for (Pattern child : parent.children()) {
+            this.numOfEmbedding += child.numberOfEmbeddings();
+            this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
             if (!isFrequent(child)) {
                 parent.removeChild(child);
                 continue;

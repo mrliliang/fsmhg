@@ -301,10 +301,18 @@ public class Pattern {
     public int numberOfEmbeddings() {
         int num = 0;
         for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
-            num += entry.getValue() .size() * entry.getKey().size();
+            num += entry.getValue() .size();
         }
-        for (Entry<Cluster, List<Embedding>> entry : borderEmbeddings.entrySet()) {
-            num += entry.getValue() .size() * entry.getKey().size();
+        for (List<Embedding> embeddings : embeddingMap.values()) {
+            num += embeddings.size();
+        }
+        return num;
+    }
+
+    public int numberOfEmbeddingsNoPartition() {
+        int num = 0;
+        for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
+            num += entry.getValue().size() * entry.getKey().size();
         }
         for (List<Embedding> embeddings : embeddingMap.values()) {
             num += embeddings.size();

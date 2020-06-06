@@ -30,7 +30,7 @@ public class AsTransform {
     HashMap<Integer, StaticVertex> allVertices = new HashMap<>();
     HashMap<Integer, AdjEdges> allEdges = new HashMap<>();
 
-    private static final int LARGE_DEGREE = 20;
+    private static final int LARGE_DEGREE = 15;
     private static final int VERTEX_LABEL_NUM = 100;
     private static final int EDGE_LABEL_NUM = 100;
 
@@ -42,7 +42,7 @@ public class AsTransform {
 
     public static void main(String[] args) {
         File indir = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots-connected");
+        File outdir = new File("/home/liliang/data/as-733-snapshots-connected-md15");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
         List<File> data = Arrays.asList(indir.listFiles());
