@@ -37,8 +37,8 @@ public class FSMHG {
     private PatternWriter pw;
 
     private long partitionTime = 0;
-    private int numOfEmbedding = 0;
-    private int numOfEmbeddingNoPartition = 0;
+    private long numOfEmbedding = 0;
+    private long numOfEmbeddingNoPartition = 0;
 
     public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -298,8 +299,8 @@ public class Pattern {
         this.graphDelimiter = g;
     }
 
-    public int numberOfEmbeddings() {
-        int num = 0;
+    public long numberOfEmbeddings() {
+        long num = 0;
         for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
             num += entry.getValue() .size();
         }
@@ -309,8 +310,8 @@ public class Pattern {
         return num;
     }
 
-    public int numberOfEmbeddingsNoPartition() {
-        int num = 0;
+    public long numberOfEmbeddingsNoPartition() {
+        long num = 0;
         for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
             num += entry.getValue().size() * entry.getKey().size();
         }
