@@ -43,10 +43,11 @@ public class Test {
         List<LabeledGraph> graphs =  loader.loadTrans();
         System.out.println("Number of trans: " + graphs.size());
         long begin = System.currentTimeMillis();
-        List<Cluster> clusters = Cluster.partition(graphs, 0.99, 0);
+        List<Cluster> clusters = Cluster.partition(graphs, 0.0, 0);
         long end = System.currentTimeMillis();
         System.out.println("partition time " + (end - begin));
         System.out.println(clusters.size() + " clusters");
+        System.out.println("Total number of edges of intersection is " + clusters.get(0).intersection().eSize());
     }
 
 

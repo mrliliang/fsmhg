@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ public class AsTransform {
     HashMap<Integer, StaticVertex> allVertices = new HashMap<>();
     HashMap<Integer, AdjEdges> allEdges = new HashMap<>();
 
-    private static final int LARGE_DEGREE = 15;
+    private static final int LARGE_DEGREE = 20;
     private static final int VERTEX_LABEL_NUM = 100;
     private static final int EDGE_LABEL_NUM = 100;
 
@@ -42,7 +43,7 @@ public class AsTransform {
 
     public static void main(String[] args) {
         File indir = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots-connected-md15");
+        File outdir = new File("/home/liliang/data/as-733-snapshots-connected-md20-ver");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
         List<File> data = Arrays.asList(indir.listFiles());
@@ -85,9 +86,10 @@ public class AsTransform {
             File out = new File(outdir, file.getName() + "V" + vSize + "E" + eSize + "m" + minDegree + "M" + maxDegree + "L" + largeDegreeCount);
             output(out, vMap, adjLists, count);
             
-            if (eSize < vSize - 1) {
-                unconnectedCount++;
-            }
+            // if (eSize < vSize - 1) {
+            // if (!isConnected(vMap, adjLists)) {
+            //     unconnectedCount++;
+            // }
             if (vSize > maxV) {
                 maxV = vSize;
                 maxE = eSize;
@@ -99,7 +101,7 @@ public class AsTransform {
         }
         System.out.println();
         System.out.println("Done!");
-        System.out.println(unconnectedCount + " unconnected graphs");
+        // System.out.println(unconnectedCount + " unconnected graphs");
         System.out.format("Min graph %d vertices %d edges.\n", minV, minE);
         System.out.format("Max graph %d vertices %d edges.\n", maxV, maxE);
     }
@@ -278,6 +280,24 @@ public class AsTransform {
             fw.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private boolean isConnected(HashMap<Integer, StaticVertex> vMap, HashMap<Integer, AdjEdges> adjLists) {
+        BitSet vBit = new BitSet();
+        int vId = vMap.entrySet().iterator().next().getKey();
+        dfs(vId, adjLists, vBit);
+        return vBit.cardinality() == vMap.size();
+    }
+
+    private void dfs(Integer vId, HashMap<Integer, AdjEdges> adjLists, BitSet vBit) {
+        vBit.set(vId);
+        for (LabeledEdge e : adjLists.get(vId)) {
+            int toId = e.to().id();
+            if (!vBit.get(toId)) {
+                vBit.set(toId);
+                dfs(toId, adjLists, vBit);
+            }
         }
     }
 
