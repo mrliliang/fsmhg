@@ -92,46 +92,27 @@ public class Pattern {
     }
 
     public List<LabeledGraph> unClusteredGraphs() {
-        HashSet<LabeledGraph> graphs = new HashSet<>(embeddingMap.keySet());
-        HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
-        for (Cluster c : clusters) {
-            graphs.removeAll(c.snapshots());
-        }
-
-        return new ArrayList<>(graphs);
+        return new ArrayList<>(embeddingMap.keySet());
     }
 
-    public List<LabeledGraph> unClusteredGraphsAfterDelimiter() {
+    public List<LabeledGraph> graphsAfterDelimiter() {
         if (graphDelimiter == null) {
-            return unClusteredGraphs();
+            return graphs();
         }
-        HashSet<LabeledGraph> graphs = new HashSet<>(embeddingMap.keySet());
-        HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
-        for (Cluster c : clusters) {
-            graphs.removeAll(c.snapshots());
-        }
-
-        return new ArrayList<>(new TreeSet<>(graphs).tailSet(graphDelimiter, false));
+        TreeSet<LabeledGraph> graphs = new TreeSet<>(embeddingMap.keySet());
+        return new ArrayList<>(graphs.tailSet(graphDelimiter, false));
     }
 
     public List<Cluster> clusters() {
-        HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
-        return new ArrayList<>(clusters);
+        return new ArrayList<>(intersectionEmbeddings.keySet());
     }
 
     public List<Cluster> clustersAfterDelimiter() {
-        // if (clusterDelimiter == null) {
-        // return new ArrayList<>();
-        // }
         if (clusterDelimiter == null) {
             return clusters();
         }
-        HashSet<Cluster> clusters = new HashSet<>(intersectionEmbeddings.keySet());
-        clusters.addAll(borderEmbeddings.keySet());
-        return new ArrayList<>(new TreeSet<>(clusters).tailSet(clusterDelimiter, false));
+        TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
+        return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
@@ -245,15 +226,16 @@ public class Pattern {
                 removedGraphs.add(g);
             }
         }
-        if (removedGraphs.isEmpty()) {
-            return;
-        }
 
         List<Cluster> removedClusters = new ArrayList<>();
         for (Cluster c : clusters) {
-            if (intersectionEmbeddings.remove(c) != null || borderEmbeddings.remove(c) != null) {
+            if (intersectionEmbeddings.remove(c) != null) {
                 removedClusters.add(c);
             }
+        }
+
+        if (removedGraphs.isEmpty() && removedClusters.isEmpty()) {
+            return;
         }
 
         for (Pattern child : children()) {
