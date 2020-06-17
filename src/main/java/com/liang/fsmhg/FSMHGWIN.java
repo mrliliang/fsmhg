@@ -447,6 +447,7 @@ public class FSMHGWIN {
     public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
             //TODO need to clear embeddings when code is not min
+            parent.clearEmbeddings();
             return;
         }
         if (parent.code().edgeSize() >= maxEdgeSize) {
@@ -456,6 +457,9 @@ public class FSMHGWIN {
         List<Pattern> children = enumerateChildren(parent);
         for (Pattern child : children) {
             if (!isFrequent(child)) {
+                // child.removeChildren();
+                // child.setClusterDelimiter(null);
+                // child.setGraphDelimiter(null);
                 continue;
             }
             subgraphMining(trans, child);

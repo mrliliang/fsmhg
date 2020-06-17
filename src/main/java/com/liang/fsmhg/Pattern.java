@@ -157,6 +157,11 @@ public class Pattern {
         embeddings.add(em);
     }
 
+    public void clearEmbeddings() {
+        this.intersectionEmbeddings.clear();
+        this.embeddingMap.clear();
+    }
+
     public Pattern child(DFSEdge e) {
         Pattern child = children.get(e);
         if (child == null) {
@@ -240,6 +245,10 @@ public class Pattern {
 
     public void removeChild(Pattern child) {
         children.remove(child.edge);
+    }
+
+    public void removeChildren() {
+        children.clear();
     }
 
     public List<LabeledGraph> graphs() {
