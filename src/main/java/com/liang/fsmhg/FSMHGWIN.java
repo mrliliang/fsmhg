@@ -457,6 +457,8 @@ public class FSMHGWIN {
         List<Pattern> children = enumerateChildren(parent);
         for (Pattern child : children) {
             if (!isFrequent(child)) {
+                //TODO need to remove children when support = 0
+
                 // child.removeChildren();
                 // child.setClusterDelimiter(null);
                 // child.setGraphDelimiter(null);
