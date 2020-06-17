@@ -23,7 +23,6 @@ public class Pattern {
 
     private HashMap<LabeledGraph, List<Embedding>> embeddingMap;
     private HashMap<Cluster, List<Embedding>> intersectionEmbeddings;
-    private HashMap<Cluster, List<Embedding>> borderEmbeddings;
 
     private TreeMap<DFSEdge, Pattern> children;
 
@@ -46,7 +45,6 @@ public class Pattern {
 
         embeddingMap = new HashMap<>();
         intersectionEmbeddings = new HashMap<>();
-        borderEmbeddings = new HashMap<>();
 
         children = new TreeMap<>();
         deltaSupportCount = new HashMap<>();
@@ -83,11 +81,6 @@ public class Pattern {
             isMinChecked = true;
         }
         return minCheckResult;
-    }
-
-    public void setMin(boolean isMin) {
-        isMinChecked = true;
-        minCheckResult = isMin;
     }
 
     public List<LabeledGraph> unClusteredGraphs() {
@@ -130,14 +123,6 @@ public class Pattern {
         return embeddings;
     }
 
-    public List<Embedding> borderEmbeddings(Cluster c) {
-        List<Embedding> embeddings = borderEmbeddings.get(c);
-        if (embeddings == null) {
-            embeddings = new ArrayList<>(0);
-        }
-        return embeddings;
-    }
-
     public void addEmbedding(LabeledGraph g, Embedding em) {
         List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
             this.support++;
@@ -167,16 +152,6 @@ public class Pattern {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
             DeltaCounter counter = deltaSupportCount.getOrDefault(c, new DeltaCounter());
             this.support += (c.size() - counter.delta);
-            return new ArrayList<>();
-        });
-        embeddings.add(em);
-    }
-
-    public void addBorderEmbedding(Cluster c, Embedding em) {
-        List<Embedding> embeddings = borderEmbeddings.computeIfAbsent(c, key -> {
-            for (LabeledGraph g : key.snapshots()) {
-                embeddingMap.putIfAbsent(g, new ArrayList<>());
-            }
             return new ArrayList<>();
         });
         embeddings.add(em);
