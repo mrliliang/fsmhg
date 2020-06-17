@@ -6,19 +6,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
-
-import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 import com.liang.fsmhg.graph.AdjEdges;
 import com.liang.fsmhg.graph.LabeledEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
 import com.liang.fsmhg.graph.StaticGraph;
-
-import org.apache.commons.lang3.math.Fraction;
 
 public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private int index;
