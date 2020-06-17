@@ -208,6 +208,8 @@ public class Pattern {
             else {
                 Cluster c = g.getCluster();
                 if (c != null && intersectionEmbeddings.containsKey(c)) {
+                    //TODO remove graph error
+                    removedGraphs.add(g);
                     this.support--;
                 }
             }
