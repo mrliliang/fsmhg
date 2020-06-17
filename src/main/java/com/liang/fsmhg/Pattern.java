@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.function.Function;
 
 import com.liang.fsmhg.code.DFSCode;
@@ -224,6 +223,13 @@ public class Pattern {
         for (LabeledGraph g : graphs) {
             if (embeddingMap.remove(g) != null) {
                 removedGraphs.add(g);
+                this.support--;
+            } 
+            else {
+                Cluster c = g.getCluster();
+                if (c != null && intersectionEmbeddings.containsKey(c)) {
+                    this.support--;
+                }
             }
         }
 
@@ -233,6 +239,12 @@ public class Pattern {
                 removedClusters.add(c);
             }
         }
+
+        // HashSet<LabeledGraph> hSet = new HashSet<>(embeddingMap.keySet());
+        // for (Cluster c : intersectionEmbeddings.keySet()) {
+        //     hSet.addAll(c.snapshots());
+        // }
+        // this.support = hSet.size();
 
         if (removedGraphs.isEmpty() && removedClusters.isEmpty()) {
             return;

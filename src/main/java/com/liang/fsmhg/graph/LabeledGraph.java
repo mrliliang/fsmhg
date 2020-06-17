@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import com.liang.fsmhg.Cluster;
+
 public abstract class LabeledGraph implements Comparable<LabeledGraph> {
     private long graphId;
-    private int clusterIndex;
+    private Cluster cluster;
 
     private Map<Integer, LabeledVertex> vertices;
     private Map<Integer, AdjEdges> adjLists;
@@ -48,12 +50,12 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         this.graphId = graphId;
     }
 
-    public void setClusterIndex(int index) {
-        this.clusterIndex = index;
+    public void setCluster(Cluster c) {
+        this.cluster = c;
     }
 
-    public int clusterIndex() {
-        return this.clusterIndex;
+    public Cluster getCluster() {
+        return this.cluster;
     }
 
     public void setVertices(Map<Integer, LabeledVertex> vertices) {

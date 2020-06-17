@@ -214,7 +214,7 @@ public class FSMHG {
 
     public void edges(Map<Integer, PointPattern> points) {
         for (PointPattern pp : points.values()) {
-            for (LabeledGraph g : pp.unClusteredGraphs()) {
+            for (LabeledGraph g : pp.graphs()) {
                 List<Embedding> embeddings = pp.embeddings(g);
                 for (Embedding em : embeddings) {
                     LabeledVertex from = em.vertex();
@@ -559,7 +559,7 @@ public class FSMHG {
                 if (cands.contains(dfsEdge)) {
                     Pattern child = p.child(dfsEdge);
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex()), em);
+                        child.addEmbedding(g, g.getCluster(), em);
                     } else {
                         child.addEmbedding(g, em);
                     }
@@ -583,7 +583,7 @@ public class FSMHG {
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
                         if (this.partition) {
-                            child.addEmbedding(g, this.clusters.get(g.clusterIndex()), new Embedding(e.to(), em));
+                            child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
                         } else {
                             child.addEmbedding(g, new Embedding(e.to(), em));
                         }
@@ -616,7 +616,7 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex()), em);
+                        child.addEmbedding(g, g.getCluster(), em);
                     } else {
                         child.addEmbedding(g, em);
                     }
@@ -639,7 +639,7 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex()), new Embedding(to, em));
+                        child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
                     } else {
                         child.addEmbedding(g, new Embedding(to, em));
                     }

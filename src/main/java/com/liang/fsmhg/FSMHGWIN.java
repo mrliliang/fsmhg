@@ -94,10 +94,9 @@ public class FSMHGWIN {
             }
             if (c.size() == 0) {
                 emptyClusters.add(c);
-                //TODO remove empty clusters or not
-                it.remove();
             }
         }
+        this.clusters.removeAll(emptyClusters);
 
         for (PointPattern pp : this.points.values()) {
             pp.remove(graphs, emptyClusters);
@@ -690,7 +689,7 @@ public class FSMHGWIN {
                 if (cands.contains(dfsEdge)) {
                     Pattern child = p.child(dfsEdge);
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex() - this.clusters.get(0).index()), em);
+                        child.addEmbedding(g, g.getCluster(), em);
                     } else {
                         child.addEmbedding(g, em);
                     }
@@ -715,7 +714,7 @@ public class FSMHGWIN {
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
                         if (this.partition) {
-                            child.addEmbedding(g, this.clusters.get(g.clusterIndex() - this.clusters.get(0).index()), new Embedding(e.to(), em));
+                            child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
                         } else {
                             child.addEmbedding(g, new Embedding(e.to(), em));
                         }
@@ -749,7 +748,7 @@ public class FSMHGWIN {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex() - this.clusters.get(0).index()), em);
+                        child.addEmbedding(g, g.getCluster(), em);
                     } else {
                         child.addEmbedding(g, em);
                     }
@@ -773,7 +772,7 @@ public class FSMHGWIN {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     if (this.partition) {
-                        child.addEmbedding(g, this.clusters.get(g.clusterIndex() - this.clusters.get(0).index()), new Embedding(to, em));
+                        child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
                     } else {
                         child.addEmbedding(g, new Embedding(to, em));
                     }

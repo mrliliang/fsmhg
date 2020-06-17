@@ -89,7 +89,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
 
         boolean isSim = checkSimilarity(s, vCommon, eCommon);
         if (isSim) {
-            s.setClusterIndex(this.index);
+            s.setCluster(this);
             this.commonVertices = vCommon;
             this.commonEdges = eCommon;
             updateIntersection(s, vCommon, eCommon);
