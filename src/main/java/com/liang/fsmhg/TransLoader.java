@@ -21,12 +21,23 @@ public class TransLoader {
 
     private long currentTransId = -1;
 
+    private List<File> snapshots;
+    private int loadCounter = 0;
+
     public TransLoader(File data) {
         this.data = data;
         try {
             if (!data.isDirectory()) {
                 fr = new FileReader(data);
                 br = new BufferedReader(fr);
+            } else {
+                snapshots = Arrays.asList(this.data.listFiles());
+                Collections.sort(snapshots, new Comparator<File>() {
+                    @Override
+                    public int compare(File f1, File f2) {
+                        return f1.getName().compareTo(f2.getName());
+                    }
+                });
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -38,14 +49,14 @@ public class TransLoader {
         if (!this.data.isDirectory()) {
             trans.addAll(readTrans(this.data));
         } else {
-            List<File> files = Arrays.asList(this.data.listFiles());
-            Collections.sort(files, new Comparator<File>() {
-                @Override
-                public int compare(File f1, File f2) {
-                    return f1.getName().compareTo(f2.getName());
-                }
-            });
-            for (File f : files) {
+            // List<File> files = Arrays.asList(this.data.listFiles());
+            // Collections.sort(files, new Comparator<File>() {
+            //     @Override
+            //     public int compare(File f1, File f2) {
+            //         return f1.getName().compareTo(f2.getName());
+            //     }
+            // });
+            for (File f : snapshots) {
                 trans.addAll(readTrans(f));
             }
         }
@@ -97,12 +108,21 @@ public class TransLoader {
     public List<LabeledGraph> loadTrans(int num) {
         List<LabeledGraph> trans = new ArrayList<>(num);
         for (int i = 0; i < num; i++) {
-            LabeledGraph g = nextTrans();
-            if(g == null) {
-                close();
-                break;
+            if (!data.isDirectory()) {
+                LabeledGraph g = nextTrans();
+                if(g == null) {
+                    close();
+                    break;
+                }
+                trans.add(g);
+            } else {
+                if (this.currentTransId < this.snapshots.size()) {
+                    File f = this.snapshots.get(this.loadCounter++);
+                    trans.addAll(readTrans(f));
+                } else {
+                    break;
+                }
             }
-            trans.add(g);
         }
         return trans;
     }
