@@ -465,9 +465,6 @@ public class FSMHGWIN {
         List<Pattern> children = enumerateChildren(parent);
         for (Pattern child : children) {
             if (!isFrequent(child)) {
-                // child.removeChildren();
-                // child.setClusterDelimiter(null);
-                // child.setGraphDelimiter(null);
                 continue;
             }
             subgraphMining(trans, child);

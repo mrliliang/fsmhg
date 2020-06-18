@@ -79,12 +79,14 @@ public class FSMHG {
             this.pointCount++;
             pw.save(pp, this.patternCount++);
             for (Pattern p : pp.children()) {
-                this.numOfEmbedding += p.numberOfEmbeddings();
-                this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
+                // this.numOfEmbedding += p.numberOfEmbeddings();
+                // this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
                 if (!isFrequent(p)) {
+                    pp.removeChild(p);
                     continue;
                 }
                 subgraphMining(trans, p);
+                pp.removeChild(p);
             }
         }
         pw.close();
@@ -172,6 +174,7 @@ public class FSMHG {
                             }
                         }
                     }
+                    embeddings.clear();
                 }
 
                 for (LabeledGraph g : c) {
@@ -189,6 +192,7 @@ public class FSMHG {
                             child.addEmbedding(g, c, new Embedding(e.to(), em));
                         }
                     }
+                    embeddings.clear();
                 }
             }
         }
@@ -228,16 +232,19 @@ public class FSMHG {
                         child.addEmbedding(g, new Embedding(to, em));
                     }
                 }
+                embeddings.clear();
             }
         }
     }
 
     public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
+            parent.clearEmbeddings();
             return;
         }
         pw.save(parent, this.patternCount++);
         if (parent.code().edgeSize() >= maxEdgeSize) {
+            parent.clearEmbeddings();
             return;
         }
         enumerateChildren(parent);
@@ -247,8 +254,8 @@ public class FSMHG {
         }
         // parent.code().nodeCount();
         for (Pattern child : parent.children()) {
-            this.numOfEmbedding += child.numberOfEmbeddings();
-            this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
+            // this.numOfEmbedding += child.numberOfEmbeddings();
+            // this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
             if (!isFrequent(child)) {
                 parent.removeChild(child);
                 continue;
@@ -532,6 +539,7 @@ public class FSMHG {
                 }
             }
         }
+        embeddings.clear();
     }
 
     private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands) {
@@ -646,6 +654,7 @@ public class FSMHG {
                 }
             }
         }
+        embeddings.clear();
     }
 
     // private void joinExtendIntersection1(Cluster c, Pattern p, TreeMap<Integer, TreeMap<DFSEdge, Boolean>> backCand, TreeMap<Integer, TreeMap<DFSEdge, Boolean>> forCand, TreeSet<DFSEdge> extendCands) {

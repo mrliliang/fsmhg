@@ -214,14 +214,13 @@ public class Pattern {
             else {
                 Cluster c = g.getCluster();
                 if (c != null && intersectionEmbeddings.containsKey(c)) {
-                    //TODO remove graph error
                     removedGraphs.add(g);
                     this.support--;
                 }
             }
         }
 
-        if (this.support <= 0 || removedGraphs.isEmpty()) {
+        if (removedGraphs.isEmpty()) {
             return;
         }
 
@@ -232,19 +231,6 @@ public class Pattern {
             }
         }
 
-        // HashSet<LabeledGraph> hSet = new HashSet<>(embeddingMap.keySet());
-        // for (Cluster c : intersectionEmbeddings.keySet()) {
-        //     hSet.addAll(c.snapshots());
-        // }
-        // this.support = hSet.size();
-
-        // if (removedGraphs.isEmpty() && removedClusters.isEmpty()) {
-        //     return;
-        // }
-
-        // for (Pattern child : children()) {
-        //     child.remove(removedGraphs, removedClusters);
-        // }
         Iterator<Entry<DFSEdge, Pattern>> it = this.children.entrySet().iterator();
         while (it.hasNext()) {
             Pattern child = it.next().getValue();
