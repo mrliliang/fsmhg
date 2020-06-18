@@ -158,8 +158,13 @@ public class Pattern {
     }
 
     public void clearEmbeddings() {
-        this.intersectionEmbeddings.clear();
-        this.embeddingMap.clear();
+        //TODO clear embeddings
+        for (List<Embedding> embeddings : intersectionEmbeddings.values()) {
+            embeddings.clear();
+        }
+        for (List<Embedding> embeddings : embeddingMap.values()) {
+            embeddings.clear();
+        }
     }
 
     public Pattern child(DFSEdge e) {
@@ -215,6 +220,10 @@ public class Pattern {
             }
         }
 
+        if (removedGraphs.isEmpty()) {
+            return;
+        }
+
         List<Cluster> removedClusters = new ArrayList<>();
         for (Cluster c : clusters) {
             if (intersectionEmbeddings.remove(c) != null) {
@@ -228,9 +237,9 @@ public class Pattern {
         // }
         // this.support = hSet.size();
 
-        if (removedGraphs.isEmpty() && removedClusters.isEmpty()) {
-            return;
-        }
+        // if (removedGraphs.isEmpty() && removedClusters.isEmpty()) {
+        //     return;
+        // }
 
         for (Pattern child : children()) {
             child.remove(removedGraphs, removedClusters);

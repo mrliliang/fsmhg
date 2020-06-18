@@ -94,6 +94,7 @@ public class FSMHGWIN {
             }
             if (c.size() == 0) {
                 emptyClusters.add(c);
+                it.remove();
             }
         }
         this.clusters.removeAll(emptyClusters);
@@ -118,6 +119,25 @@ public class FSMHGWIN {
         } else {
             addedPoints = pointsNoPartition(addedTrans);
             addedEdges = edgesNoPartition(addedPoints, addedTrans);
+        }
+
+        Iterator<Entry<Integer, PointPattern>> ppIt = this.points.entrySet().iterator();
+        while (ppIt.hasNext()) {
+            PointPattern pp = ppIt.next().getValue();
+            if (pp.support() <= 0) {
+                ppIt.remove();
+                continue;
+            }
+            if (pp.hasChild()) {
+                pp.clearEmbeddings();
+                continue;
+            }
+            for (Pattern ep : pp.children()) {
+                if (ep.support() <= 0) {
+                    pp.removeChild(ep);
+                    continue;
+                }
+            }
         }
 
         for (Pattern p : addedEdges.values()) {
@@ -455,10 +475,15 @@ public class FSMHGWIN {
         }
 
         List<Pattern> children = enumerateChildren(parent);
+        if (!children.isEmpty()) {
+            parent.clearEmbeddings();
+        }
         for (Pattern child : children) {
             if (!isFrequent(child)) {
                 //TODO need to remove children when support = 0
-
+                if (child.support() <= 0) {
+                    parent.removeChild(child);
+                }
                 // child.removeChildren();
                 // child.setClusterDelimiter(null);
                 // child.setGraphDelimiter(null);
