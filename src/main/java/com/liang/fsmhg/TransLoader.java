@@ -116,7 +116,7 @@ public class TransLoader {
                 }
                 trans.add(g);
             } else {
-                if (this.currentTransId < this.snapshots.size()) {
+                if (this.loadCounter < this.snapshots.size()) {
                     File f = this.snapshots.get(this.loadCounter++);
                     trans.addAll(readTrans(f));
                 } else {

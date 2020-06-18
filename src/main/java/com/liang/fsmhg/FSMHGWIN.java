@@ -125,21 +125,6 @@ public class FSMHGWIN {
             addedEdges = edgesNoPartition(addedPoints, addedTrans);
         }
 
-        // Iterator<Entry<Integer, PointPattern>> ppIt = this.points.entrySet().iterator();
-        // while (ppIt.hasNext()) {
-        //     PointPattern pp = ppIt.next().getValue();
-        //     if (pp.support() <= 0) {
-        //         ppIt.remove();
-        //         continue;
-        //     }
-        //     for (Pattern ep : pp.children()) {
-        //         if (ep.support() <= 0) {
-        //             pp.removeChild(ep);
-        //             continue;
-        //         }
-        //     }
-        // }
-
         for (Pattern p : addedEdges.values()) {
             if (!isFrequent(p)) {
                 continue;
