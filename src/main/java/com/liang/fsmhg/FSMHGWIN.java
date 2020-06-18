@@ -94,13 +94,17 @@ public class FSMHGWIN {
             }
             if (c.size() == 0) {
                 emptyClusters.add(c);
-                it.remove();
             }
         }
         this.clusters.removeAll(emptyClusters);
 
-        for (PointPattern pp : this.points.values()) {
+        Iterator<Entry<Integer, PointPattern>> ppIt = this.points.entrySet().iterator();
+        while (ppIt.hasNext()) {
+            PointPattern pp = ppIt.next().getValue();
             pp.remove(graphs, emptyClusters);
+            if (pp.support() <= 0) {
+                ppIt.remove();
+            }
         }
     }
 
@@ -121,24 +125,20 @@ public class FSMHGWIN {
             addedEdges = edgesNoPartition(addedPoints, addedTrans);
         }
 
-        Iterator<Entry<Integer, PointPattern>> ppIt = this.points.entrySet().iterator();
-        while (ppIt.hasNext()) {
-            PointPattern pp = ppIt.next().getValue();
-            if (pp.support() <= 0) {
-                ppIt.remove();
-                continue;
-            }
-            if (pp.hasChild()) {
-                pp.clearEmbeddings();
-                continue;
-            }
-            for (Pattern ep : pp.children()) {
-                if (ep.support() <= 0) {
-                    pp.removeChild(ep);
-                    continue;
-                }
-            }
-        }
+        // Iterator<Entry<Integer, PointPattern>> ppIt = this.points.entrySet().iterator();
+        // while (ppIt.hasNext()) {
+        //     PointPattern pp = ppIt.next().getValue();
+        //     if (pp.support() <= 0) {
+        //         ppIt.remove();
+        //         continue;
+        //     }
+        //     for (Pattern ep : pp.children()) {
+        //         if (ep.support() <= 0) {
+        //             pp.removeChild(ep);
+        //             continue;
+        //         }
+        //     }
+        // }
 
         for (Pattern p : addedEdges.values()) {
             if (!isFrequent(p)) {
@@ -223,6 +223,7 @@ public class FSMHGWIN {
                             }
                         }
                     }
+                    embeddings.clear();
                 }
 
                 for (LabeledGraph g : c) {
@@ -240,6 +241,7 @@ public class FSMHGWIN {
                             addedEdges.put(child.edge(), child);
                         }
                     }
+                    embeddings.clear();
                 }
             }
         }
@@ -284,6 +286,7 @@ public class FSMHGWIN {
                         addedEdges.put(child.edge(), child);
                     }
                 }
+                embeddings.clear();
             }
         }
 
@@ -466,24 +469,17 @@ public class FSMHGWIN {
 
     public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
-            //TODO need to clear embeddings when code is not min
             parent.clearEmbeddings();
             return;
         }
         if (parent.code().edgeSize() >= maxEdgeSize) {
+            parent.clearEmbeddings();
             return;
         }
 
         List<Pattern> children = enumerateChildren(parent);
-        if (!children.isEmpty()) {
-            parent.clearEmbeddings();
-        }
         for (Pattern child : children) {
             if (!isFrequent(child)) {
-                //TODO need to remove children when support = 0
-                if (child.support() <= 0) {
-                    parent.removeChild(child);
-                }
                 // child.removeChildren();
                 // child.setClusterDelimiter(null);
                 // child.setGraphDelimiter(null);
@@ -693,6 +689,8 @@ public class FSMHGWIN {
                 }
             }
         }
+
+        embeddings.clear();
     }
 
     private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
@@ -811,6 +809,8 @@ public class FSMHGWIN {
                 }
             }
         }
+
+        embeddings.clear();
     }
 
     // private void joinExtendInter(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {

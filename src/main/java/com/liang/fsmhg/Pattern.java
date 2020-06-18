@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -220,7 +221,7 @@ public class Pattern {
             }
         }
 
-        if (removedGraphs.isEmpty()) {
+        if (this.support <= 0 || removedGraphs.isEmpty()) {
             return;
         }
 
@@ -241,8 +242,16 @@ public class Pattern {
         //     return;
         // }
 
-        for (Pattern child : children()) {
+        // for (Pattern child : children()) {
+        //     child.remove(removedGraphs, removedClusters);
+        // }
+        Iterator<Entry<DFSEdge, Pattern>> it = this.children.entrySet().iterator();
+        while (it.hasNext()) {
+            Pattern child = it.next().getValue();
             child.remove(removedGraphs, removedClusters);
+            if (child.support <= 0) {
+                it.remove();
+            }
         }
     }
 
