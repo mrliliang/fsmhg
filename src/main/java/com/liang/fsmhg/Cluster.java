@@ -27,7 +27,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     private ArrayList<LabeledGraph> deltaGraphList;
     private Map<Long, DeltaGraph> deltaGraphs;
     private LabeledGraph intersection;
-    private Map<Integer, LabeledVertex> border;
     private Map<Integer, Map<LabeledGraph, AdjEdges>> borderAdjEdges;
     private static final Map<LabeledGraph, AdjEdges> EMPTY_BORDER_ADJ = new HashMap<>();
     private int totalEdgeNum = 0;
@@ -37,7 +36,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         snapshots = new ArrayList<>();
         commonVertices = new HashMap<>();
         commonEdges = new HashMap<>();
-        border = new HashMap<>();
         borderAdjEdges = new HashMap<>();
         deltaGraphList = new ArrayList<>();
     }
@@ -77,7 +75,22 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     }
 
     public boolean remove(Collection<LabeledGraph> snapshots) {
-        return this.snapshots.removeAll(snapshots);
+        boolean changed = this.snapshots.removeAll(snapshots);
+        if (this.snapshots.isEmpty()) {
+            this.intersection.clear();;
+        }
+        Iterator<Entry<Integer, Map<LabeledGraph, AdjEdges>>> it = this.borderAdjEdges.entrySet().iterator();
+        while (it.hasNext()) {
+            Entry<Integer, Map<LabeledGraph, AdjEdges>> entry = it.next();
+            Map<LabeledGraph, AdjEdges> map = entry.getValue();
+            for (LabeledGraph g : snapshots) {
+                map.remove(g);
+            }
+            if (map.isEmpty()) {
+                it.remove();
+            }
+        }
+        return changed;
     }
 
     public boolean add(LabeledGraph s) {
@@ -300,15 +313,6 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
     public LabeledGraph deltaGraph1(LabeledGraph g) {
         int index = (int)(g.graphId() - this.snapshots.get(0).graphId());
         return this.deltaGraphList.get(index);
-    }
-
-    public Map<Integer, LabeledVertex> border() {
-        // Map<Integer, LabeledVertex> map = new HashMap<>();
-        // for (DeltaGraph delta : deltaGraphs.values()) {
-        // map.putAll(delta.border());
-        // }
-        // return map;
-        return this.border;
     }
 
     public Map<LabeledGraph, AdjEdges> borderAdj(int vId) {

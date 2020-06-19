@@ -7,6 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.liang.fsmhg.graph.LabeledGraph;
@@ -86,17 +90,28 @@ public class Test {
             return;
         }
 
-        File[] ret1 = file1.listFiles();
-        File[] ret2 = file2.listFiles();
-        if (ret1.length != ret2.length) {
+        List<File> ret1 = Arrays.asList(file1.listFiles());
+        List<File> ret2 = Arrays.asList(file2.listFiles());
+        if (ret1.size() != ret2.size()) {
             System.out.println("The number of files is not equal.");
             return;
         }
+        Comparator<File> c = new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        };
+        Collections.sort(ret1, c);
+        Collections.sort(ret2, c);
 
-        for (int i = 0; i < ret1.length; i++) {
-            int diff = compareContent(ret1[i], ret2[i]);
+        for (int i = 0; i < ret1.size(); i++) {
+            File f1 = ret1.get(i);
+            File f2 = ret2.get(i);
+            System.out.println("Comparing " + f1.getName() + " and " + f2.getName());
+            int diff = compareContent(f1, f2);
             if (diff != 0) {
-                System.out.println(ret1[i].getAbsolutePath() + " is different with " + ret2[i].getAbsolutePath() + " in line " + diff);
+                System.out.println(f1.getAbsolutePath() + " is different with " + f2.getAbsolutePath() + " in line " + diff);
                 return;
             }
         }

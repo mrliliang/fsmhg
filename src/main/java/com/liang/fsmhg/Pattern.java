@@ -3,7 +3,6 @@ package com.liang.fsmhg;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -16,8 +15,6 @@ import com.liang.fsmhg.code.DFSEdge;
 import com.liang.fsmhg.graph.LabeledGraph;
 
 public class Pattern {
-
-    public static int minCheckCount = 0;
 
     private DFSEdge edge;
     private Pattern parent;
@@ -61,6 +58,12 @@ public class Pattern {
 
     public int support() {
         return this.support;
+
+        // HashSet<LabeledGraph> set = new HashSet<>(embeddingMap.keySet());
+        // for (Cluster c : intersectionEmbeddings.keySet()) {
+        //     set.addAll(c.snapshots());
+        // }
+        // return set.size();
     }
 
     public DFSCode code() {
@@ -77,15 +80,10 @@ public class Pattern {
 
     public boolean checkMin() {
         if (!isMinChecked) {
-            Pattern.minCheckCount++;
             minCheckResult = code().isMin();
             isMinChecked = true;
         }
         return minCheckResult;
-    }
-
-    public List<LabeledGraph> unClusteredGraphs() {
-        return new ArrayList<>(embeddingMap.keySet());
     }
 
     public List<LabeledGraph> graphsAfterDelimiter() {
@@ -153,13 +151,13 @@ public class Pattern {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
             DeltaCounter counter = deltaSupportCount.getOrDefault(c, new DeltaCounter());
             this.support += (c.size() - counter.delta);
+            deltaSupportCount.remove(c);
             return new ArrayList<>();
         });
         embeddings.add(em);
     }
 
     public void clearEmbeddings() {
-        //TODO clear embeddings
         for (List<Embedding> embeddings : intersectionEmbeddings.values()) {
             embeddings.clear();
         }
@@ -229,6 +227,7 @@ public class Pattern {
             if (intersectionEmbeddings.remove(c) != null) {
                 removedClusters.add(c);
             }
+            this.deltaSupportCount.remove(c);
         }
 
         Iterator<Entry<DFSEdge, Pattern>> it = this.children.entrySet().iterator();

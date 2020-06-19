@@ -28,6 +28,7 @@ public class Main {
         }
 
         output.mkdir();
+        long startTime = System.currentTimeMillis();
         FSMHGWIN fsmhgwin = new FSMHGWIN(arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
         int winCount = 0;
@@ -38,7 +39,7 @@ public class Main {
                 fsmhgwin.setOutput(outfile);
                 fsmhgwin.enumerate(trans);
             } else {
-                FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, false, 0);
+                FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
                 // fsmhg.optimize(arguments.optimize);
                 fsmhg.enumerate(trans);
             }
@@ -46,6 +47,9 @@ public class Main {
             trans.addAll(loader.loadTrans(arguments.sliding));
             winCount++;
         }
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("WIN duration = " + duration);
+
     }
 
     private static class Arguments {

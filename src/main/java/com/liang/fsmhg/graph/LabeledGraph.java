@@ -66,6 +66,11 @@ public abstract class LabeledGraph implements Comparable<LabeledGraph> {
         this.adjLists = adjLists;
     }
 
+    public void clear() {
+        this.vertices.clear();
+        this.adjLists.clear();
+    }
+
     public long graphId() {
         return this.graphId;
     }
