@@ -121,10 +121,22 @@ public class FSMHGWIN {
         Map<Integer, PointPattern> addedPoints;
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
+            Cluster unfullCluster = this.clusterDelimiter;
+            List<LabeledGraph> fill = new ArrayList<>();
+            for (LabeledGraph g : addedTrans) {
+                if (!unfullCluster.add(g)) {
+                    break;
+                }
+                fill.add(g);
+            }
+            addedTrans.removeAll(fill);
             addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
             this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
             this.clusterCounter += addedClusters.size();
             this.clusters.addAll(addedClusters);
+            if (!fill.isEmpty()) {
+                //TODO fill unfull cluster
+            }
             addedPoints = pointsByPartition(addedClusters);
             addedEdges = edgesByPartition(addedPoints, addedClusters);
         } else {
@@ -137,8 +149,8 @@ public class FSMHGWIN {
                 continue;
             }
             subgraphMining(addedTrans, p);
-            p.setClusterDelimiter(this.clusterDelimiter);
-            p.setGraphDelimiter(this.transDelimiter);
+            // p.setClusterDelimiter(this.clusterDelimiter);
+            // p.setGraphDelimiter(this.transDelimiter);
         }
     }
 
@@ -215,7 +227,9 @@ public class FSMHGWIN {
                             }
                         }
                     }
-                    embeddings.clear();
+                    if (c != this.clusterDelimiter) {
+                        embeddings.clear();
+                    }
                 }
 
                 for (LabeledGraph g : c) {
@@ -285,7 +299,7 @@ public class FSMHGWIN {
         return addedEdges;
     }
 
-    public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
+    public void subgraphMining(List<LabeledGraph> trans, Pattern parent, Cluster unfullCluster) {
         if (!parent.checkMin()) {
             parent.clearEmbeddings();
             return;
@@ -295,18 +309,20 @@ public class FSMHGWIN {
             return;
         }
 
-        List<Pattern> children = enumerateChildren(parent);
+        List<Pattern> children = enumerateChildren(parent, unfullCluster);
+        parent.setClusterDelimiter(this.clusterDelimiter);
+        parent.setGraphDelimiter(this.transDelimiter);
         for (Pattern child : children) {
             if (!isFrequent(child)) {
                 continue;
             }
-            subgraphMining(trans, child);
-            child.setClusterDelimiter(this.clusterDelimiter);
-            child.setGraphDelimiter(this.transDelimiter);
+            subgraphMining(trans, child, unfullCluster);
+            // child.setClusterDelimiter(this.clusterDelimiter);
+            // child.setGraphDelimiter(this.transDelimiter);
         }
     }
 
-    private List<Pattern> enumerateChildren(Pattern p) {
+    private List<Pattern> enumerateChildren(Pattern p, Cluster unfullCluster) {
         TreeMap<DFSEdge, Pattern> addedChildren = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -316,8 +332,14 @@ public class FSMHGWIN {
         TreeSet<DFSEdge> extendCands = new TreeSet<>();
         extendCands(p, extendCands);
 
-        for (Cluster c : p.clustersAfterDelimiter()) {
-            joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
+        List<Cluster> clusters = p.clustersAfterDelimiter();
+        int index = clusters.indexOf(unfullCluster);
+        if (index >= 0) {
+            //TODO search in unfull cluster
+        } else {
+            for (Cluster c : p.clustersAfterDelimiter()) {
+                joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
+            }
         }
         for (LabeledGraph g : p.graphsAfterDelimiter()) {
             joinExtendOther(g, p, joinBackCands, joinForCands, extendCands, addedChildren);
@@ -504,8 +526,9 @@ public class FSMHGWIN {
                 }
             }
         }
-
-        embeddings.clear();
+        if (c != this.clusterDelimiter) {
+            embeddings.clear();
+        }
     }
 
     private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {

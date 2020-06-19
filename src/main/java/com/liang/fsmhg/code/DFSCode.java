@@ -78,7 +78,6 @@ public class DFSCode implements Comparable<DFSCode> {
         return g;
     }
 
-    // TODO: 2020/3/28 Need correct right most path
     public ArrayList<Integer> rightMostPath() {
         ArrayList<Integer> rmPath = new ArrayList<>();
         long oldFrom = -1;
@@ -140,7 +139,6 @@ public class DFSCode implements Comparable<DFSCode> {
 
 
     public boolean isMin() {
-        // TODO: 2020/3/27 need to check min DFS code
         DFSEdge edge = edges.get(0);
         if (edges.size() == 1) {
             return edge.from() == 0 && edge.to() == 1 && edge.fromLabel() <= edge.toLabel();
@@ -270,7 +268,6 @@ public class DFSCode implements Comparable<DFSCode> {
     }
 
     private TreeMap<DFSEdge, List<Embedding>> nextEdge(LabeledGraph patternGraph, LabeledGraph subPatternGraph, List<Embedding> embeddings, List<Integer> rmPath) {
-        // TODO: 2020/3/29 next edge
         TreeMap<DFSEdge, List<Embedding>> map = backwardEdge(patternGraph, subPatternGraph, embeddings, rmPath);
         if (map != null && !map.isEmpty()) {
             return map;
