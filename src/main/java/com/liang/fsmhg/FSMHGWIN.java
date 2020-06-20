@@ -456,9 +456,10 @@ public class FSMHGWIN {
         if (index >= 0) {
             //TODO search in unfull cluster
         } else {
-            for (Cluster c : p.clustersAfterDelimiter()) {
-                joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
-            }
+        }
+        
+        for (Cluster c : p.clustersAfterDelimiter()) {
+            joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
         }
         for (LabeledGraph g : p.graphsAfterDelimiter()) {
             joinExtendOther(g, p, joinBackCands, joinForCands, extendCands, addedChildren);
