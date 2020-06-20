@@ -66,6 +66,18 @@ public class Pattern {
         // return set.size();
     }
 
+    public void increaseSupport(int deltaSup) {
+        this.support += deltaSup;
+    }
+
+    public boolean containsCluster(Cluster c) {
+        return intersectionEmbeddings.containsKey(c);
+    }
+
+    public boolean containGraph(LabeledGraph g) {
+        return embeddingMap.containsKey(g);
+    }
+
     public DFSCode code() {
         if (parent instanceof PointPattern) {
             DFSCode code = new DFSCode();

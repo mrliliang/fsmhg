@@ -34,6 +34,8 @@ public class FSMHGWIN {
     private int maxVid = 0;
     private LabeledGraph transDelimiter;
     private Cluster clusterDelimiter;
+    private Cluster unfullCluster;
+    private List<LabeledGraph> filler;
     private int patternCount = 0;
     private int pointCount = 0;
 
@@ -46,6 +48,7 @@ public class FSMHGWIN {
         this.points = new TreeMap<>();
         this.clusters = new ArrayList<>();
         this.trans = new ArrayList<>();
+        this.filler = new ArrayList<>();
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
@@ -122,19 +125,19 @@ public class FSMHGWIN {
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
             Cluster unfullCluster = this.clusterDelimiter;
-            List<LabeledGraph> fill = new ArrayList<>();
+            List<LabeledGraph> filler = new ArrayList<>();
             for (LabeledGraph g : addedTrans) {
                 if (!unfullCluster.add(g)) {
                     break;
                 }
-                fill.add(g);
+                filler.add(g);
             }
-            addedTrans.removeAll(fill);
+            addedTrans.removeAll(filler);
             addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
             this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
             this.clusterCounter += addedClusters.size();
             this.clusters.addAll(addedClusters);
-            if (!fill.isEmpty()) {
+            if (!filler.isEmpty()) {
                 //TODO fill unfull cluster
             }
             addedPoints = pointsByPartition(addedClusters);
@@ -192,6 +195,52 @@ public class FSMHGWIN {
                 }
             }
         }
+        return addedPoints;
+    }
+
+    public TreeMap<Integer, PointPattern> pointsInUnfullCluster(Cluster c, List<LabeledGraph> filler) {
+        TreeMap<Integer, PointPattern> addedPoints = new TreeMap<>();
+        
+        LabeledGraph inter = c.intersection();
+        // for (LabeledVertex v : inter.vertices()) {
+        //     PointPattern pattern = this.points.get(inter.vLabel(v));
+        //     if (pattern == null) {
+        //         pattern = new PointPattern(inter.vLabel(v));
+        //         this.points.put(pattern.label(), pattern);
+        //     }
+        //     Embedding em = new Embedding(v, null);
+        //     pattern.addIntersectionEmbedding(c, em);
+        //     addedPoints.put(pattern.label(), pattern);
+        //     if (v.id() > maxVid) {
+        //         maxVid = v.id();
+        //     }
+        // }
+        for (PointPattern pp : this.points.values()) {
+            if (pp.containsCluster(c)) {
+                pp.increaseSupport(filler.size());
+            }
+        }
+
+        for (LabeledGraph g : filler) {
+            LabeledGraph dg = c.deltaGraph1(g);
+            for (LabeledVertex v : dg.vertices()) {
+                if (inter.vertex(v.id()) != null) {
+                    continue;
+                }
+                PointPattern pattern = this.points.get(g.vLabel(v));
+                if (pattern == null) {
+                    pattern = new PointPattern(g.vLabel(v));
+                    this.points.put(pattern.label(), pattern);
+                }
+                Embedding em = new Embedding(v, null);
+                pattern.addEmbedding(g, c, em);
+                addedPoints.put(pattern.label(), pattern);
+                if (v.id() > maxVid) {
+                    maxVid = v.id();
+                }
+            }
+        }
+        
         return addedPoints;
     }
 
@@ -255,6 +304,76 @@ public class FSMHGWIN {
         return addedEdges;
     }
 
+    public Map<DFSEdge, Pattern> edgesInUnfullCluster(Map<Integer, PointPattern> points, Cluster c) {
+        Map<DFSEdge, Pattern> addedEdges = new TreeMap<>();
+
+        LabeledGraph inter = c.intersection();
+        for (PointPattern pp : points.values()) {
+            List<LabeledGraph> graphs = filler;
+            if (!pp.hasChild()) {
+                graphs = c.snapshots();
+            }
+            List<Embedding> embeddings = pp.intersectionEmbeddings(c);
+            if (embeddings != null) {
+                List<Embedding> noninterEms = new ArrayList<>();
+                for (Embedding em : embeddings) {
+                    // for (LabeledEdge e : inter.adjEdges(em.vertex().id())) {
+                    //     if (inter.vLabel(e.from()) > inter.vLabel(e.to())) {
+                    //         continue;
+                    //     }
+                    //     Pattern child = pp.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
+                    //     child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                    //     addedEdges.put(child.edge(), child);
+                    // }
+
+                    // Map<LabeledGraph, AdjEdges> borderAdj = c.borderAdj(em.vertex().id());
+                    // for (Entry<LabeledGraph, AdjEdges> adjEntry : borderAdj.entrySet()) {
+                    //     LabeledGraph g = adjEntry.getKey();
+                    //     AdjEdges adj = adjEntry.getValue();
+                    //     for (LabeledEdge e : adj) {
+                    //         if (g.vLabel(e.from()) > g.vLabel(e.to())) {
+                    //             continue;
+                    //         }
+                    //         Pattern child = pp.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
+                    //         child.addEmbedding(g, c, new Embedding(e.to(), em));
+                    //         addedEdges.put(child.edge(), child);
+                    //     }
+                    // }
+                    if (!containEmbedding(inter, em, pp)) {
+                        noninterEms.add(em);
+                        for (LabeledGraph g : graphs) {
+                            pp.addEmbedding(g, c, em);
+                        }
+                    }
+                }
+                
+                if (c != this.clusterDelimiter) {
+                    embeddings.clear();
+                }
+            }
+
+            for (LabeledGraph g : graphs) {
+                embeddings = pp.embeddings(g);
+                if (embeddings == null) {
+                    continue;
+                }
+                for (Embedding em : embeddings) {
+                    for (LabeledEdge e : g.adjEdges(em.vertex().id())) {
+                        if (g.vLabel(e.from()) > g.vLabel(e.to())) {
+                            continue;
+                        }
+                        Pattern child = pp.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
+                        child.addEmbedding(g, c, new Embedding(e.to(), em));
+                        addedEdges.put(child.edge(), child);
+                    }
+                }
+                embeddings.clear();
+            }
+        }
+
+        return addedEdges;
+    }
+
     public TreeMap<Integer, PointPattern> pointsNoPartition(List<LabeledGraph> trans) {
         TreeMap<Integer, PointPattern> addedPoints = new TreeMap<>();
         for (LabeledGraph g : trans) {
@@ -299,7 +418,7 @@ public class FSMHGWIN {
         return addedEdges;
     }
 
-    public void subgraphMining(List<LabeledGraph> trans, Pattern parent, Cluster unfullCluster) {
+    public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
             parent.clearEmbeddings();
             return;
@@ -309,20 +428,20 @@ public class FSMHGWIN {
             return;
         }
 
-        List<Pattern> children = enumerateChildren(parent, unfullCluster);
+        List<Pattern> children = enumerateChildren(parent);
         parent.setClusterDelimiter(this.clusterDelimiter);
         parent.setGraphDelimiter(this.transDelimiter);
         for (Pattern child : children) {
             if (!isFrequent(child)) {
                 continue;
             }
-            subgraphMining(trans, child, unfullCluster);
+            subgraphMining(trans, child);
             // child.setClusterDelimiter(this.clusterDelimiter);
             // child.setGraphDelimiter(this.transDelimiter);
         }
     }
 
-    private List<Pattern> enumerateChildren(Pattern p, Cluster unfullCluster) {
+    private List<Pattern> enumerateChildren(Pattern p) {
         TreeMap<DFSEdge, Pattern> addedChildren = new TreeMap<>();
 
         TreeMap<Integer, TreeSet<DFSEdge>> joinBackCands = new TreeMap<>();
@@ -771,4 +890,19 @@ public class FSMHGWIN {
         this.out = out;
     }
 
+    private boolean containEmbedding(LabeledGraph g, Embedding em, Pattern p) {
+        if (p instanceof PointPattern) {
+            return g.vertex(em.vertex().id()) != null;
+        }
+        List<LabeledVertex> vertices = em.vertices();
+        DFSCode code = p.code();
+        for (DFSEdge e : code.edges()) {
+            LabeledVertex from = vertices.get(e.from());
+            LabeledVertex to = vertices.get(e.to());
+            if (g.edge(from.id(), to.id()) == null) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
