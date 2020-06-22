@@ -115,7 +115,9 @@ public class Pattern {
             return clusters();
         }
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
-        return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
+        //TODO Not sure whether should include clusterDelimiter
+        // return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
+        return new ArrayList<>(clusters.tailSet(clusterDelimiter, true));
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
@@ -292,6 +294,10 @@ public class Pattern {
 
     public void setGraphDelimiter(LabeledGraph g) {
         this.graphDelimiter = g;
+    }
+
+    public LabeledGraph graphDelimiter() {
+        return this.graphDelimiter;
     }
 
     public long numberOfEmbeddings() {
