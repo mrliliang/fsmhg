@@ -34,7 +34,6 @@ public class FSMHGWIN {
     private int maxVid = 0;
     private LabeledGraph transDelimiter;
     private Cluster clusterDelimiter;
-    private Cluster unfullCluster;
     private List<LabeledGraph> filler;
     private int patternCount = 0;
     private int pointCount = 0;
@@ -48,7 +47,6 @@ public class FSMHGWIN {
         this.points = new TreeMap<>();
         this.clusters = new ArrayList<>();
         this.trans = new ArrayList<>();
-        this.filler = new ArrayList<>();
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
@@ -124,6 +122,7 @@ public class FSMHGWIN {
         Map<Integer, PointPattern> addedPoints;
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
+            //TODO process unfull cluster
             Cluster unfullCluster = this.clusterDelimiter;
             List<LabeledGraph> filler = new ArrayList<>();
             for (LabeledGraph g : addedTrans) {
@@ -133,13 +132,11 @@ public class FSMHGWIN {
                 filler.add(g);
             }
             addedTrans.removeAll(filler);
+
             addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
             this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
             this.clusterCounter += addedClusters.size();
             this.clusters.addAll(addedClusters);
-            if (!filler.isEmpty()) {
-                //TODO fill unfull cluster
-            }
             addedPoints = pointsByPartition(addedClusters);
             addedEdges = edgesByPartition(addedPoints, addedClusters);
         } else {
@@ -149,6 +146,7 @@ public class FSMHGWIN {
 
         for (Pattern p : addedEdges.values()) {
             if (!isFrequent(p)) {
+                //TODO for children of infrequent pattern, search their embeddings in unfull cluster
                 continue;
             }
             subgraphMining(addedTrans, p);
@@ -740,7 +738,12 @@ public class FSMHGWIN {
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         
         for (Embedding em : embeddings) {
-            if (extendInInter && !containEmbedding(inter, em, p)) {
+            if (!extendInInter && !containEmbedding(inter, em, p) && !p.hasChild()) {
+                for (LabeledGraph g : c) {
+                    if (g.graphId() <= graphDelimiter.graphId()) {
+                        p.addEmbedding(g, c, em);
+                    }
+                }
                 continue;
             }
             List<LabeledVertex> emVertices = em.vertices();
