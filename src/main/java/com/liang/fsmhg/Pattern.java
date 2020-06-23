@@ -292,6 +292,10 @@ public class Pattern {
         this.clusterDelimiter = c;
     }
 
+    public Cluster clusterDelimiter() {
+        return this.clusterDelimiter;
+    }
+
     public void setGraphDelimiter(LabeledGraph g) {
         this.graphDelimiter = g;
     }

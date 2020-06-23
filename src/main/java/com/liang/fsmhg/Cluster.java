@@ -93,7 +93,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return changed;
     }
 
-    public boolean add(LabeledGraph s) {
+    public boolean append(LabeledGraph s) {
         Map<Integer, LabeledVertex> vCommon = new HashMap<>();
         Map<Integer, AdjEdges> eCommon = new HashMap<>();
         Map<Integer, LabeledVertex> vDeltaInc = new HashMap<>();
@@ -329,13 +329,13 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         Cluster cluster = new Cluster(similarity);
         cluster.setIndex(startIndex++);
         for (LabeledGraph s : snapshots) {
-            if (cluster.add(s)) {
+            if (cluster.append(s)) {
                 continue;
             }
             clusters.add(cluster);
             cluster = new Cluster(similarity);
             cluster.setIndex(startIndex++);
-            cluster.add(s);
+            cluster.append(s);
         }
         clusters.add(cluster);
         return clusters;
