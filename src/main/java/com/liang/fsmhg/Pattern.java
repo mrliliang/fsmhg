@@ -3,6 +3,7 @@ package com.liang.fsmhg;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -57,13 +58,13 @@ public class Pattern {
     }
 
     public int support() {
-        return this.support;
+        // return this.support;
 
-        // HashSet<LabeledGraph> set = new HashSet<>(embeddingMap.keySet());
-        // for (Cluster c : intersectionEmbeddings.keySet()) {
-        //     set.addAll(c.snapshots());
-        // }
-        // return set.size();
+        HashSet<LabeledGraph> set = new HashSet<>(embeddingMap.keySet());
+        for (Cluster c : intersectionEmbeddings.keySet()) {
+            set.addAll(c.snapshots());
+        }
+        return set.size();
     }
 
     public void increaseSupport(int deltaSup) {

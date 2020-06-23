@@ -38,6 +38,7 @@ public class FSMHGWIN {
     private int patternCount = 0;
     private int pointCount = 0;
 
+    private int winCount = -1;
 
     public FSMHGWIN(double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
@@ -50,6 +51,8 @@ public class FSMHGWIN {
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
+        this.winCount++;
+
         long startTime = System.currentTimeMillis();
         this.patternCount = 0;
         this.pointCount = 0;
@@ -336,6 +339,7 @@ public class FSMHGWIN {
             
             List<Cluster> clusters = pp.clustersAfterDelimiter();
             for (Cluster c : clusters) {
+                
                 LabeledGraph graphDelimiter = pp.graphDelimiter();
                 // LabeledGraph first = c.first();
                 // boolean extendInInter = graphDelimiter == null || graphDelimiter.graphId() < first.graphId();
@@ -689,6 +693,9 @@ public class FSMHGWIN {
     }
 
     private void joinExtendIntersection1(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
+        // if (c == p.clusterDelimiter()) {
+        //     p.increaseSupport((int)(c.last().graphId() - p.graphDelimiter().graphId()));
+        // }
         List<Embedding> embeddings = p.intersectionEmbeddings(c);
         if (embeddings == null || embeddings.isEmpty()) {
             return;
@@ -702,7 +709,13 @@ public class FSMHGWIN {
         List<Integer> rmPathIds = code.rightMostPath();
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         
+        int emCounter = -1;
         for (Embedding em : embeddings) {
+            emCounter++;
+            if (this.winCount == 1 && "(0,1,1,73,58)(1,2,58,13,18)(2,3,18,0,63)(3,4,63,33,36)(2,5,18,9,61)(5,6,61,49,31)(2,7,18,80,65)(1,8,58,46,74)(8,9,74,68,57)".equals(code.toString())) {
+                // System.out.println();
+            }
+
             if (c == p.clusterDelimiter() && !containEmbedding(inter, em, p)) {
                 if (!p.hasChild()) {
                     for (LabeledGraph g : c) {
@@ -861,6 +874,8 @@ public class FSMHGWIN {
                     System.out.println("inter == null");
                 }
                 if (inter.adjEdges(from.id()) == null) {
+                    System.out.println("wincount = " + this.winCount + ", emcount = " + emCounter);
+                    System.out.print("code = " + code);
                     System.out.println("adjEdges == null");
                     boolean containV = inter.vertex(from.id()) != null;
                     System.out.println("Contains from " + containV);
