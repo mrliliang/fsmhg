@@ -117,8 +117,8 @@ public class Pattern {
         }
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
         //TODO Not sure whether should include clusterDelimiter
-        // return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
-        return new ArrayList<>(clusters.tailSet(clusterDelimiter, true));
+        return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
+        // return new ArrayList<>(clusters.tailSet(clusterDelimiter, true));
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
