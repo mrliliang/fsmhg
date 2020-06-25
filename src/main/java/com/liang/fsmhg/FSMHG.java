@@ -40,6 +40,9 @@ public class FSMHG {
     private long numOfEmbedding = 0;
     private long numOfEmbeddingNoPartition = 0;
 
+    private int minCount = 0;
+    private int nonminCount = 0;
+
     public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
@@ -81,6 +84,7 @@ public class FSMHG {
             for (Pattern p : pp.children()) {
                 // this.numOfEmbedding += p.numberOfEmbeddings();
                 // this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
+                this.minCount++;
                 if (!isFrequent(p)) {
                     pp.removeChild(p);
                     continue;
@@ -92,6 +96,8 @@ public class FSMHG {
         pw.close();
         System.out.println(this.pointCount + " point patterns");
         System.out.println((this.patternCount - this.pointCount) + " connected patterns.");
+        System.out.println(this.minCount +" min code");
+        System.out.println(this.nonminCount +" nonmin code");
 
         System.out.println("support = " + this.minSup);
         if (this.partition) {
@@ -256,6 +262,11 @@ public class FSMHG {
         for (Pattern child : parent.children()) {
             // this.numOfEmbedding += child.numberOfEmbeddings();
             // this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
+            if (child.checkMin()) {
+                this.minCount++;
+            } else {
+                this.nonminCount++;
+            }
             if (!isFrequent(child)) {
                 parent.removeChild(child);
                 continue;
