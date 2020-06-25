@@ -58,13 +58,13 @@ public class Pattern {
     }
 
     public int support() {
-        return this.support;
+        // return this.support;
 
-        // HashSet<LabeledGraph> set = new HashSet<>(embeddingMap.keySet());
-        // for (Cluster c : intersectionEmbeddings.keySet()) {
-        //     set.addAll(c.snapshots());
-        // }
-        // return set.size();
+        HashSet<LabeledGraph> set = new HashSet<>(embeddingMap.keySet());
+        for (Cluster c : intersectionEmbeddings.keySet()) {
+            set.addAll(c.snapshots());
+        }
+        return set.size();
     }
 
     public void increaseSupport(int deltaSup) {

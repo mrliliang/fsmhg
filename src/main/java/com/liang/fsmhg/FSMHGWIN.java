@@ -126,33 +126,32 @@ public class FSMHGWIN {
         Map<Integer, PointPattern> addedPoints;
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
-            this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
-            addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
-            this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
-            this.clusterCounter += addedClusters.size();
-            this.clusters.addAll(addedClusters);
-            addedPoints = pointsByPartition(addedClusters);
-            addedEdges = edgesByPartition(addedPoints, addedClusters);
-
-            //TODO process unfull cluster
-            // Cluster lastClusterDelimiter = this.clusterDelimiter;
-            // List<LabeledGraph> appended = new ArrayList<>();
-            // if (lastClusterDelimiter != null) {
-            //     for (LabeledGraph g : addedTrans) {
-            //         if (!lastClusterDelimiter.append(g)) {
-            //             break;
-            //         }
-            //         appended.add(g);
-            //     }
-            //     // addedTrans.removeAll(appended);
-            // }
-            // addedClusters = Cluster.partition(addedTrans.subList(appended.size(), addedTrans.size()), similarity, clusterCounter);
+            // this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
+            // addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
             // this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
             // this.clusterCounter += addedClusters.size();
             // this.clusters.addAll(addedClusters);
-            // addedPoints = pointsByPartition1(lastClusterDelimiter, appended, this.transDelimiter, addedClusters);
-            // this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
-            // addedEdges = edgesByPartition1(addedPoints);
+            // addedPoints = pointsByPartition(addedClusters);
+            // addedEdges = edgesByPartition(addedPoints, addedClusters);
+
+            //TODO process unfull cluster
+            Cluster lastClusterDelimiter = this.clusterDelimiter;
+            List<LabeledGraph> appended = new ArrayList<>();
+            if (lastClusterDelimiter != null) {
+                for (LabeledGraph g : addedTrans) {
+                    if (!lastClusterDelimiter.append(g)) {
+                        break;
+                    }
+                    appended.add(g);
+                }
+            }
+            addedClusters = Cluster.partition(addedTrans.subList(appended.size(), addedTrans.size()), similarity, clusterCounter);
+            this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
+            this.clusterCounter += addedClusters.size();
+            this.clusters.addAll(addedClusters);
+            addedPoints = pointsByPartition1(lastClusterDelimiter, appended, this.transDelimiter, addedClusters);
+            this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
+            addedEdges = edgesByPartition1(addedPoints);
         } else {
             this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
             addedPoints = pointsNoPartition(addedTrans);
@@ -218,7 +217,6 @@ public class FSMHGWIN {
             if (!pp.containsCluster(lastClusterDelimiter)) {
                 continue;
             }
-            // LabeledGraph graphDelimiter = pp.graphDelimiter();
             if (lastGraphDelimiter.graphId() < lastClusterDelimiter.last().graphId()) {
                 List<Embedding> interEmbeddings = pp.intersectionEmbeddings(lastClusterDelimiter);
                 List<Embedding> nonInterEmbeddings = new ArrayList<>();
@@ -231,15 +229,14 @@ public class FSMHGWIN {
                 if (!interEmbeddings.isEmpty()) {
                     addedPoints.put(pp.label(), pp);
                 }
-                for (Embedding em : nonInterEmbeddings) {
-                    if (pp.hasChild()) {
-                        continue;
-                    }
-                    for (LabeledGraph g : lastClusterDelimiter) {
-                        if (g.graphId() > lastGraphDelimiter.graphId()) {
-                            break;
+                if (!pp.hasChild()) {
+                    for (Embedding em : nonInterEmbeddings) {
+                        for (LabeledGraph g : lastClusterDelimiter) {
+                            if (g.graphId() > lastGraphDelimiter.graphId()) {
+                                break;
+                            }
+                            pp.addEmbedding(g, lastClusterDelimiter, em);
                         }
-                        pp.addEmbedding(g, lastClusterDelimiter, em);
                     }
                 }
             }
@@ -370,26 +367,26 @@ public class FSMHGWIN {
 
         for (PointPattern pp : points.values()) {
             Cluster clusterDelimiter = pp.clusterDelimiter();
+            LabeledGraph graphDelimiter = pp.graphDelimiter();
             if (clusterDelimiter != null) {
                 for (Pattern child : pp.children()) {
-                    if (child.containsCluster(clusterDelimiter)) {
-                        // LabeledGraph graphDelimiter = child.graphDelimiter();
-                        if (pp.graphDelimiter().graphId() < clusterDelimiter.last().graphId()) {
-                            List<Embedding> interEmbeddings = child.intersectionEmbeddings(clusterDelimiter);
-                            List<Embedding> nonInterEmbeddings = new ArrayList<>();
-                            for (Embedding em : interEmbeddings) {
-                                if (!containEmbedding(clusterDelimiter.intersection(), em, child)) {
-                                    nonInterEmbeddings.add(em);
-                                }
+                    if (!child.containsCluster(clusterDelimiter)) {
+                        continue;
+                    }
+                    if (graphDelimiter.graphId() < clusterDelimiter.last().graphId()) {
+                        List<Embedding> interEmbeddings = child.intersectionEmbeddings(clusterDelimiter);
+                        List<Embedding> nonInterEmbeddings = new ArrayList<>();
+                        for (Embedding em : interEmbeddings) {
+                            if (!containEmbedding(clusterDelimiter.intersection(), em, child)) {
+                                nonInterEmbeddings.add(em);
                             }
-                            interEmbeddings.removeAll(nonInterEmbeddings);
-                            if (!interEmbeddings.isEmpty()) {
-                                addedEdges.put(child.edge(), child);
-                            }
+                        }
+                        interEmbeddings.removeAll(nonInterEmbeddings);
+                        if (!interEmbeddings.isEmpty()) {
+                            addedEdges.put(child.edge(), child);
+                        }
+                        if (!child.hasChild()) {
                             for (Embedding em : nonInterEmbeddings) {
-                                if (child.hasChild()) {
-                                    continue;
-                                }
                                 for (LabeledGraph g : clusterDelimiter) {
                                     if (g.graphId() > pp.graphDelimiter().graphId()) {
                                         break;
@@ -400,26 +397,11 @@ public class FSMHGWIN {
                         }
                     }
                 }
-                // List<Embedding> nonInterEmbeddings = new ArrayList<>();
                 List<Embedding> embeddings = pp.intersectionEmbeddings(clusterDelimiter);
                 for (Embedding em : embeddings) {
-                    // if (!containEmbedding(clusterDelimiter.intersection(), em, pp)) {
-                    //     nonInterEmbeddings.add(em);
-                    //     if (!pp.hasChild()) {
-                            // for (LabeledGraph g : clusterDelimiter) {
-                            //     if (g.graphId() > pp.graphDelimiter().graphId()) {
-                            //         break;
-                            //     }
-                            //     pp.addEmbedding(g, clusterDelimiter, em);
-                            // }
-                    //     }
-                    //     continue;
-                    // }
-
                     Map<LabeledGraph, AdjEdges> borderAdj = clusterDelimiter.borderAdj(em.vertex().id());
                     for (Entry<LabeledGraph, AdjEdges> adjEntry : borderAdj.entrySet()) {
                         LabeledGraph g = adjEntry.getKey();
-                        LabeledGraph graphDelimiter = pp.graphDelimiter();
                         if (graphDelimiter != null && g.graphId() <= graphDelimiter.graphId()) {
                             continue;
                         }
@@ -579,13 +561,13 @@ public class FSMHGWIN {
         extendCands(p, extendCands);
         
         Cluster clusterDelimiter = p.clusterDelimiter();
-        // if (clusterDelimiter != null) {
-        //     joinExtendIntersectionInClusterDelimiter(clusterDelimiter, p, joinBackCands, joinForCands, extendCands, addedChildren);
-        // }
+        if (clusterDelimiter != null) {
+            joinExtendIntersectionInClusterDelimiter(clusterDelimiter, p, joinBackCands, joinForCands, extendCands, addedChildren);
+        }
 
         // for (Cluster c : p.clustersAfterDelimiter()) {
         for (Cluster c : p.clusters()) {
-            if (clusterDelimiter != null && c.index() < clusterDelimiter.index()) {
+            if (clusterDelimiter != null && c.index() <= clusterDelimiter.index()) {
                 continue;
             }
             joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
@@ -594,7 +576,7 @@ public class FSMHGWIN {
         LabeledGraph graphDelimiter = p.graphDelimiter();
         // for (LabeledGraph g : p.graphsAfterDelimiter()) {
         for (LabeledGraph g : p.graphs()) {
-            if (graphDelimiter != null && g.graphId() < graphDelimiter.graphId()) {
+            if (graphDelimiter != null && g.graphId() <= graphDelimiter.graphId()) {
                 continue;
             }
             joinExtendOther(g, p, joinBackCands, joinForCands, extendCands, addedChildren);
@@ -787,9 +769,10 @@ public class FSMHGWIN {
                 }
             }
         }
-        // if (c != this.clusterDelimiter) {
-        // }
-        embeddings.clear();
+        if (c != this.clusterDelimiter) {
+            embeddings.clear();
+        }
+        // embeddings.clear();
     }
 
     private void joinExtendIntersectionInClusterDelimiter(Cluster clusterDelimiter, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
@@ -797,28 +780,28 @@ public class FSMHGWIN {
         if (embeddings == null || embeddings.isEmpty()) {
             return;
         }
-        
-        for (Pattern child : p.children()) {
-            if (child.containsCluster(clusterDelimiter)) {
-                // LabeledGraph graphDelimiter = child.graphDelimiter();
-                if (p.graphDelimiter().graphId() < clusterDelimiter.last().graphId()) {
-                    List<Embedding> interEmbeddings = child.intersectionEmbeddings(clusterDelimiter);
-                    List<Embedding> nonInterEmbeddings = new ArrayList<>();
-                    for (Embedding em : interEmbeddings) {
-                        if (!containEmbedding(clusterDelimiter.intersection(), em, child)) {
-                            nonInterEmbeddings.add(em);
-                        }
+
+        LabeledGraph graphDelimiter = p.graphDelimiter();
+        if (graphDelimiter.graphId() < clusterDelimiter.last().graphId()) {
+            for (Pattern child : p.children()) {
+                if (!child.containsCluster(clusterDelimiter)) {
+                    continue;
+                }
+                List<Embedding> interEmbeddings = child.intersectionEmbeddings(clusterDelimiter);
+                List<Embedding> nonInterEmbeddings = new ArrayList<>();
+                for (Embedding em : interEmbeddings) {
+                    if (!containEmbedding(clusterDelimiter.intersection(), em, child)) {
+                        nonInterEmbeddings.add(em);
                     }
-                    interEmbeddings.removeAll(nonInterEmbeddings);
-                    if (!interEmbeddings.isEmpty()) {
-                        addedChildren.put(child.edge(), child);
-                    }
+                }
+                interEmbeddings.removeAll(nonInterEmbeddings);
+                if (!interEmbeddings.isEmpty()) {
+                    addedChildren.put(child.edge(), child);
+                }
+                if (!child.hasChild()) {
                     for (Embedding em : nonInterEmbeddings) {
-                        if (child.hasChild()) {
-                            continue;
-                        }
                         for (LabeledGraph g : clusterDelimiter) {
-                            if (g.graphId() > p.graphDelimiter().graphId()) {
+                            if (g.graphId() > graphDelimiter.graphId()) {
                                 break;
                             }
                             child.addEmbedding(g, clusterDelimiter, em);
@@ -828,27 +811,12 @@ public class FSMHGWIN {
             }
         }
         
-        LabeledGraph graphDelimiter = p.graphDelimiter();
-        // List<Embedding> nonInterEmbeddings = new ArrayList<>();
         LabeledGraph inter = clusterDelimiter.intersection();
         DFSCode code = p.code();
         List<Integer> rmPathIds = code.rightMostPath();
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         
         for (Embedding em : embeddings) {
-            // if (!containEmbedding(inter, em, p)) {
-            //     nonInterEmbeddings.add(em);
-            //     if (!p.hasChild()) {
-            //         for (LabeledGraph g : clusterDelimiter) {
-            //             if (g.graphId() > graphDelimiter.graphId()) {
-            //                 break;
-            //             }
-            //             p.addEmbedding(g, clusterDelimiter, em);
-            //         }
-            //     }
-            //     continue;
-            // }
-
             List<LabeledVertex> emVertices = em.vertices();
             //join backward edges
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : backCand.entrySet()) {
