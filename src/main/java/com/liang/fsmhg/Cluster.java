@@ -322,6 +322,9 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
 
     public static List<Cluster> partition(List<? extends LabeledGraph> snapshots, double similarity, int startIndex) {
         List<Cluster> clusters = new ArrayList<>();
+        if (snapshots.isEmpty()) {
+            return clusters;
+        }
         Cluster cluster = new Cluster(similarity);
         cluster.setIndex(startIndex++);
         for (LabeledGraph s : snapshots) {

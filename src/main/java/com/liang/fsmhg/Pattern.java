@@ -260,13 +260,16 @@ public class Pattern {
         }
     }
 
-    public void removeCluster(Cluster c) {
+    public void removeCluster(Cluster c, LabeledGraph graphDelimiter) {
         intersectionEmbeddings.remove(c);
-        // for (LabeledGraph g : c) {
-        //     if (!embeddingMap.containsKey(g)) {
-        //         this.support--;
-        //     }
-        // }
+        for (LabeledGraph g : c) {
+            if (g.graphId() > graphDelimiter.graphId()) {
+                break;
+            }
+            if (!embeddingMap.containsKey(g)) {
+                this.support--;
+            }
+        }
     }
 
     public List<Pattern> rightSiblings() {
