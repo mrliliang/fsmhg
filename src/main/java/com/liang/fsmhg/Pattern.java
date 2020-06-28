@@ -215,6 +215,9 @@ public class Pattern {
     }
 
     public void remove(Collection<LabeledGraph> graphs, Collection<Cluster> clusters) {
+        // if ("(0,1,23,2,94)".equals(code().toString()) && clusters.size() == 1) {
+        //     System.out.println("(0,1,23,2,94)");
+        // }
         List<LabeledGraph> removedGraphs = new ArrayList<>();
         for (LabeledGraph g : graphs) {
             if (embeddingMap.remove(g) != null) {
@@ -230,15 +233,15 @@ public class Pattern {
             }
         }
 
-        if (removedGraphs.isEmpty()) {
-            return;
-        }
-
         List<Cluster> removedClusters = new ArrayList<>();
         for (Cluster c : clusters) {
             if (intersectionEmbeddings.remove(c) != null) {
                 removedClusters.add(c);
             }
+        }
+
+        if (removedGraphs.isEmpty()) {
+            return;
         }
 
         Iterator<Entry<DFSEdge, Pattern>> it = this.children.entrySet().iterator();
