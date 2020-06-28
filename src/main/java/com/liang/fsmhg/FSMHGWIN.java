@@ -169,8 +169,6 @@ public class FSMHGWIN {
                 continue;
             }
             subgraphMining(addedTrans, p);
-            // p.setClusterDelimiter(this.clusterDelimiter);
-            // p.setGraphDelimiter(this.transDelimiter);
         }
     }
 
@@ -441,8 +439,6 @@ public class FSMHGWIN {
                 }
                 if (clusterDelimiter != this.clusterDelimiter) {
                     embeddings.clear();
-                } else {
-                    // embeddings.removeAll(nonInterEmbeddings);
                 }
             }
             
@@ -551,11 +547,11 @@ public class FSMHGWIN {
 
     public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
-            parent.clearEmbeddings();
+            parent.clearEmbeddings(this.clusterDelimiter);
             return;
         }
         if (parent.code().edgeSize() >= maxEdgeSize) {
-            parent.clearEmbeddings();
+            parent.clearEmbeddings(this.clusterDelimiter);
             return;
         }
 
@@ -566,9 +562,8 @@ public class FSMHGWIN {
             if (!isFrequent(child)) {
                 continue;
             }
+            
             subgraphMining(trans, child);
-            // child.setClusterDelimiter(this.clusterDelimiter);
-            // child.setGraphDelimiter(this.transDelimiter);
         }
     }
 
@@ -661,11 +656,6 @@ public class FSMHGWIN {
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertices.get(entry.getKey());
                 TreeSet<DFSEdge> cands = entry.getValue();
-                if (inter.adjEdges(from.id()) == null) {
-                    System.out.println("x");
-                    System.out.println(code);
-                    System.out.println("cluster = " + c.index());
-                }
                 for (LabeledEdge e : inter.adjEdges(from.id())) {
                     if (emBits.get(e.to().id())) {
                         continue;
@@ -793,7 +783,6 @@ public class FSMHGWIN {
         if (c != this.clusterDelimiter) {
             embeddings.clear();
         }
-        // embeddings.clear();
     }
 
     private void joinExtendIntersectionInClusterDelimiter(Cluster clusterDelimiter, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
@@ -972,8 +961,6 @@ public class FSMHGWIN {
         }
         if (clusterDelimiter != this.clusterDelimiter) {
             embeddings.clear();
-        } else {
-            // embeddings.removeAll(nonInterEmbeddings);
         }
     }
 
@@ -1231,5 +1218,20 @@ public class FSMHGWIN {
             }
         }
         return true;
+    }
+
+    private void outputGraphIds(long[] graphIds, File out) {
+        try {
+            FileWriter fw = new FileWriter(out);
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (long id : graphIds) {
+                bw.write(String.valueOf(id));
+                bw.newLine();
+            }
+            bw.close();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

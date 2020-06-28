@@ -3,13 +3,11 @@ package com.liang.fsmhg;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.function.Function;
 
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
@@ -32,10 +30,6 @@ public class Pattern {
     private LabeledGraph graphDelimiter;
 
     private int support = 0;
-    // private HashMap<Cluster, DeltaCounter> deltaSupportCount;
-    // private class DeltaCounter {
-    //     int delta = 0;
-    // }
 
 
     public Pattern(DFSEdge edge, Pattern parent) {
@@ -46,7 +40,6 @@ public class Pattern {
         intersectionEmbeddings = new HashMap<>();
 
         children = new TreeMap<>();
-        // deltaSupportCount = new HashMap<>();
     }
 
     public DFSEdge edge() {
@@ -116,9 +109,7 @@ public class Pattern {
             return clusters();
         }
         TreeSet<Cluster> clusters = new TreeSet<>(intersectionEmbeddings.keySet());
-        //TODO Not sure whether should include clusterDelimiter
         return new ArrayList<>(clusters.tailSet(clusterDelimiter, false));
-        // return new ArrayList<>(clusters.tailSet(clusterDelimiter, true));
     }
 
     public List<Embedding> embeddings(LabeledGraph graph) {
@@ -149,13 +140,6 @@ public class Pattern {
         List<Embedding> embeddings = embeddingMap.computeIfAbsent(g, labeledGraph -> {
             if (!intersectionEmbeddings.containsKey(c)) {
                 this.support++;
-                // DeltaCounter counter = deltaSupportCount.computeIfAbsent(c, new Function<Cluster, DeltaCounter>() {
-                //     @Override
-                //     public DeltaCounter apply(Cluster t) {
-                //         return new DeltaCounter();
-                //     }
-                // });
-                // counter.delta++;
             }
             return new ArrayList<>();
         });
@@ -164,9 +148,6 @@ public class Pattern {
 
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
-            // DeltaCounter counter = deltaSupportCount.getOrDefault(c, new DeltaCounter());
-            // this.support += (c.size() - counter.delta);
-            // deltaSupportCount.remove(c);
             for (LabeledGraph g : c) {
                 if (!embeddingMap.containsKey(g)) {
                     this.support++;
@@ -180,6 +161,17 @@ public class Pattern {
     public void clearEmbeddings() {
         for (List<Embedding> embeddings : intersectionEmbeddings.values()) {
             embeddings.clear();
+        }
+        for (List<Embedding> embeddings : embeddingMap.values()) {
+            embeddings.clear();
+        }
+    }
+
+    public void clearEmbeddings(Cluster exceptionCluster) {
+        for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
+            if (entry.getKey() != exceptionCluster) {
+                entry.getValue().clear();
+            }
         }
         for (List<Embedding> embeddings : embeddingMap.values()) {
             embeddings.clear();
@@ -247,7 +239,6 @@ public class Pattern {
             if (intersectionEmbeddings.remove(c) != null) {
                 removedClusters.add(c);
             }
-            // this.deltaSupportCount.remove(c);
         }
 
         Iterator<Entry<DFSEdge, Pattern>> it = this.children.entrySet().iterator();
@@ -296,6 +287,11 @@ public class Pattern {
         TreeSet<Long> set = new TreeSet<>();
         for (LabeledGraph g : embeddingMap.keySet()) {
             set.add(g.graphId());
+        }
+        for (Cluster c : intersectionEmbeddings.keySet()) {
+            for (LabeledGraph g : c) {
+                set.add(g.graphId());
+            }
         }
 
         long[] ids = new long[set.size()];

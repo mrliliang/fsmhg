@@ -1,6 +1,9 @@
 package com.liang.fsmhg;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -1086,5 +1089,20 @@ public class FSMHG {
 
     private void searchEmbeddings(Pattern p) {
         
+    }
+
+    private void outputGraphIds(long[] graphIds, File out) {
+        try {
+            FileWriter fw = new FileWriter(out);
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (long id : graphIds) {
+                bw.write(String.valueOf(id));
+                bw.newLine();
+            }
+            bw.close();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
