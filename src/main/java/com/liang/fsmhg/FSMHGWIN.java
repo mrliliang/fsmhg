@@ -73,9 +73,6 @@ public class FSMHGWIN {
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
         long shinkStart = System.currentTimeMillis();
-        if (this.winCount == 8) {
-            System.out.println("win = 8");
-        }
         shrink(removed);
         long shrinkEnd = System.currentTimeMillis();
         long growStart = System.currentTimeMillis();
@@ -114,6 +111,9 @@ public class FSMHGWIN {
                 }
             }
             c.remove(batch);
+            if (c.size() == 0) {
+                emptyClusters.add(c);
+            }
             this.clusters.removeAll(emptyClusters);
         }
 
@@ -385,7 +385,6 @@ public class FSMHGWIN {
             LabeledGraph graphDelimiter = pp.graphDelimiter();
             if (clusterDelimiter != null) {
                 for (Pattern child : pp.children()) {
-                    if (this.winCount == 14 && "(0,1,23,2,94)".equals(child.code().toString()))
                     if (!child.containsCluster(clusterDelimiter)) {
                         continue;
                     }
@@ -662,24 +661,6 @@ public class FSMHGWIN {
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertices.get(entry.getKey());
                 TreeSet<DFSEdge> cands = entry.getValue();
-                if (inter.adjEdges(from.id()) == null) {
-                    System.out.println("x");
-                    System.out.println(p.code());
-                    System.out.println("cluster " + c.index());
-                    System.out.println("last snapshot " + c.last().graphId());
-                    LabeledGraph gDeli = p.graphDelimiter();
-                    if (gDeli != null) {
-                        System.out.println("graph delimiter " + gDeli.graphId());
-                    } else {
-                        System.out.println("graph delimiter null");
-                    }
-                    Cluster clusterDeli = p.clusterDelimiter();
-                    if (clusterDeli != null) {
-                        System.out.println("cluster delimiter " + clusterDeli.index());
-                    } else {
-                        System.out.println("cluster delimiter null");
-                    }
-                }
                 for (LabeledEdge e : inter.adjEdges(from.id())) {
                     if (emBits.get(e.to().id())) {
                         continue;
