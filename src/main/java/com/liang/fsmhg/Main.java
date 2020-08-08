@@ -41,11 +41,15 @@ public class Main {
             } else {
                 FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
                 // fsmhg.optimize(arguments.optimize);
+                fsmhg.setWinCount(winCount);
                 fsmhg.enumerate(trans);
             }
             trans = trans.subList(arguments.sliding, trans.size());
             trans.addAll(loader.loadTrans(arguments.sliding));
             winCount++;
+            // if (winCount > 1) {
+            //     break;
+            // }
         }
         long duration = System.currentTimeMillis() - startTime;
         System.out.println("WIN duration = " + duration);

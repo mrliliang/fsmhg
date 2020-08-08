@@ -46,6 +46,8 @@ public class FSMHG {
     private int minCount = 0;
     private int nonminCount = 0;
 
+    private int winCount = 0;
+
     public FSMHG(File out, double minSupport, int maxEdgeSize, boolean partition, double similarity) {
         this.minSup = minSupport;
         this.maxEdgeSize = maxEdgeSize;
@@ -58,6 +60,10 @@ public class FSMHG {
     // public void optimize(boolean opt) {
     //     this.optimize = opt;
     // }
+
+    public void setWinCount(int winCount) {
+        this.winCount = winCount;
+    }
 
     public void enumerate(List<LabeledGraph> trans) {
         long startTime = System.currentTimeMillis();
@@ -99,8 +105,8 @@ public class FSMHG {
         pw.close();
         System.out.println(this.pointCount + " point patterns");
         System.out.println((this.patternCount - this.pointCount) + " connected patterns.");
-        System.out.println(this.minCount +" min code");
-        System.out.println(this.nonminCount +" nonmin code");
+        // System.out.println(this.minCount +" min code");
+        // System.out.println(this.nonminCount +" nonmin code");
 
         System.out.println("support = " + this.minSup);
         if (this.partition) {
@@ -261,14 +267,13 @@ public class FSMHG {
         if (!parent.hasChild()) {
             return;
         }
-        // parent.code().nodeCount();
         for (Pattern child : parent.children()) {
             // this.numOfEmbedding += child.numberOfEmbeddings();
             // this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
             if (child.checkMin()) {
-                this.minCount++;
+                // this.minCount++;
             } else {
-                this.nonminCount++;
+                // this.nonminCount++;
             }
             if (!isFrequent(child)) {
                 parent.removeChild(child);
@@ -562,6 +567,9 @@ public class FSMHG {
             return;
         }
         DFSCode code = p.code();
+        // if (code.toString().equals("(0,1,0,0,29)(0,2,0,2,14)")) {
+        //     System.out.println("x");
+        // }
         List<Integer> rmPathIds = code.rightMostPath();
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         for (Embedding em : embeddings) {

@@ -329,6 +329,22 @@ public class Pattern {
         return num;
     }
 
+    public long numberOfInterEmbeddings() {
+        long num = 0;
+        for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {
+            num += entry.getValue() .size();
+        }
+        return num;
+    }
+
+    public long numberOfNoninterEmbeddings() {
+        long num = 0;
+        for (List<Embedding> embeddings : embeddingMap.values()) {
+            num += embeddings.size();
+        }
+        return num;
+    }
+
     public long numberOfEmbeddingsNoPartition() {
         long num = 0;
         for (Entry<Cluster, List<Embedding>> entry : intersectionEmbeddings.entrySet()) {

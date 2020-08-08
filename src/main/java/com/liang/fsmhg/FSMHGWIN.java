@@ -36,6 +36,7 @@ public class FSMHGWIN {
     private Cluster clusterDelimiter;
     private int patternCount = 0;
     private int pointCount = 0;
+    private PatternWriter pw;
 
     private int winCount = -1;
 
@@ -72,6 +73,10 @@ public class FSMHGWIN {
         System.out.println("Total trans : " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
+        if (this.winCount == 1) {
+            loadPatterns();
+        }
+
         long shinkStart = System.currentTimeMillis();
         shrink(removed);
         long shrinkEnd = System.currentTimeMillis();
@@ -79,7 +84,9 @@ public class FSMHGWIN {
         grow(added);
         long growEnd = System.currentTimeMillis();
 
-        saveResult();
+        if (this.winCount > 0) {
+            saveResult();
+        }
         long endTime = System.currentTimeMillis();
         System.out.println(pointCount + " point patterns");
         System.out.println((this.patternCount - pointCount) + " connected patterns.");
@@ -133,38 +140,55 @@ public class FSMHGWIN {
         Map<Integer, PointPattern> addedPoints;
         Map<DFSEdge, Pattern> addedEdges;
         if (partition) {
-            // this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
-            // addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
-            // this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
-            // this.clusterCounter += addedClusters.size();
-            // this.clusters.addAll(addedClusters);
-            // addedPoints = pointsByPartition(addedClusters);
-            // addedEdges = edgesByPartition(addedPoints, addedClusters);
-
-            //TODO process unfull cluster
-            Cluster lastClusterDelimiter = this.clusterDelimiter;
-            List<LabeledGraph> appended = new ArrayList<>();
-            if (lastClusterDelimiter != null) {
-                for (LabeledGraph g : addedTrans) {
-                    if (!lastClusterDelimiter.append(g)) {
-                        break;
-                    }
-                    appended.add(g);
-                }
-            }
-            addedClusters = Cluster.partition(addedTrans.subList(appended.size(), addedTrans.size()), similarity, clusterCounter);
-            if (!addedClusters.isEmpty()) {
-                this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
-                this.clusterCounter += addedClusters.size();
-                this.clusters.addAll(addedClusters);
-            }
-            addedPoints = pointsByPartition1(lastClusterDelimiter, appended, this.transDelimiter, addedClusters);
             this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
-            addedEdges = edgesByPartition1(addedPoints);
+            addedClusters = Cluster.partition(addedTrans, similarity, clusterCounter);
+            this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
+            this.clusterCounter += addedClusters.size();
+            this.clusters.addAll(addedClusters);
+            addedPoints = pointsByPartition(addedClusters);
+            addedEdges = edgesByPartition(addedPoints, addedClusters);
+
+            //TODO process degradation
+            // Cluster lastClusterDelimiter = this.clusterDelimiter;
+            // List<LabeledGraph> appended = new ArrayList<>();
+            // if (lastClusterDelimiter != null) {
+            //     for (LabeledGraph g : addedTrans) {
+            //         if (!lastClusterDelimiter.append(g)) {
+            //             break;
+            //         }
+            //         appended.add(g);
+            //     }
+            // }
+            // addedClusters = Cluster.partition(addedTrans.subList(appended.size(), addedTrans.size()), similarity, clusterCounter);
+            // if (!addedClusters.isEmpty()) {
+            //     this.clusterDelimiter = addedClusters.get(addedClusters.size() - 1);
+            //     this.clusterCounter += addedClusters.size();
+            //     this.clusters.addAll(addedClusters);
+            // }
+            // addedPoints = pointsByPartition1(lastClusterDelimiter, appended, this.transDelimiter, addedClusters);
+            // this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
+            // addedEdges = edgesByPartition1(addedPoints);
         } else {
             this.transDelimiter = addedTrans.get(addedTrans.size() - 1);
             addedPoints = pointsNoPartition(addedTrans);
             addedEdges = edgesNoPartition(addedPoints, addedTrans);
+        }
+
+        if (this.winCount == 0) {
+            for (PointPattern pp : addedPoints.values()) {
+                if (!isFrequent(pp)) {
+
+                    continue;
+                }
+                for (Pattern p : pp.children()) {
+                    if (!isFrequent(p)) {
+
+                        continue;
+                    }
+                    subgraphMining(trans, p);
+                }
+            }
+            return;
         }
 
         for (Pattern p : addedEdges.values()) {
@@ -550,13 +574,13 @@ public class FSMHGWIN {
 
     public void subgraphMining(List<LabeledGraph> trans, Pattern parent) {
         if (!parent.checkMin()) {
-            parent.clearEmbeddings(this.clusterDelimiter);
-            // parent.clearEmbeddings();
+            // parent.clearEmbeddings(this.clusterDelimiter);
+            parent.clearEmbeddings();
             return;
         }
         if (parent.code().edgeSize() >= maxEdgeSize) {
-            parent.clearEmbeddings(this.clusterDelimiter);
-            // parent.clearEmbeddings();
+            // parent.clearEmbeddings(this.clusterDelimiter);
+            parent.clearEmbeddings();
             return;
         }
 
@@ -583,9 +607,9 @@ public class FSMHGWIN {
         extendCands(p, extendCands);
         
         Cluster clusterDelimiter = p.clusterDelimiter();
-        if (clusterDelimiter != null) {
-            joinExtendIntersectionInClusterDelimiter(clusterDelimiter, p, joinBackCands, joinForCands, extendCands, addedChildren);
-        }
+        // if (clusterDelimiter != null) {
+        //     joinExtendIntersectionInClusterDelimiter(clusterDelimiter, p, joinBackCands, joinForCands, extendCands, addedChildren);
+        // }
 
         // for (Cluster c : p.clustersAfterDelimiter()) {
         for (Cluster c : p.clusters()) {
@@ -1238,5 +1262,9 @@ public class FSMHGWIN {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void loadPatterns() {
+
     }
 }
