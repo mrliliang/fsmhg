@@ -21,6 +21,8 @@ import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
 
 public class FSMHGWIN {
+    private static final String PATTERN_TREE_FILE = "/tmp/tree";
+
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
     private File out;
@@ -37,6 +39,7 @@ public class FSMHGWIN {
     private int patternCount = 0;
     private int pointCount = 0;
     private PatternWriter pw;
+    private PatternTreeWriter ptw;
 
     private int winCount = -1;
 
@@ -48,6 +51,7 @@ public class FSMHGWIN {
         this.points = new TreeMap<>();
         this.clusters = new ArrayList<>();
         this.trans = new ArrayList<>();
+        this.ptw = new PatternTreeWriter(new File(PATTERN_TREE_FILE));
     }
 
     public void enumerate(List<LabeledGraph> newTrans) {
@@ -56,6 +60,10 @@ public class FSMHGWIN {
         long startTime = System.currentTimeMillis();
         this.patternCount = 0;
         this.pointCount = 0;
+
+        if (this.winCount == 1) {
+            loadPatterns();
+        }
 
         List<LabeledGraph> removed;
         List<LabeledGraph> added;
@@ -73,10 +81,6 @@ public class FSMHGWIN {
         System.out.println("Total trans : " + this.trans.size());
         this.absSup = Math.ceil(this.trans.size() * this.minSup);
 
-        if (this.winCount == 1) {
-            loadPatterns();
-        }
-
         long shinkStart = System.currentTimeMillis();
         shrink(removed);
         long shrinkEnd = System.currentTimeMillis();
@@ -87,6 +91,8 @@ public class FSMHGWIN {
         if (this.winCount > 0) {
             saveResult();
         }
+        this.pw.close();
+
         long endTime = System.currentTimeMillis();
         System.out.println(pointCount + " point patterns");
         System.out.println((this.patternCount - pointCount) + " connected patterns.");
@@ -177,14 +183,16 @@ public class FSMHGWIN {
         if (this.winCount == 0) {
             for (PointPattern pp : addedPoints.values()) {
                 if (!isFrequent(pp)) {
-
                     continue;
                 }
+                this.pointCount++;
+                this.pw.save(pp, this.patternCount++);
                 for (Pattern p : pp.children()) {
+                    this.ptw.saveNode(p);
                     if (!isFrequent(p)) {
-
                         continue;
                     }
+
                     subgraphMining(trans, p);
                 }
             }
@@ -578,6 +586,9 @@ public class FSMHGWIN {
             parent.clearEmbeddings();
             return;
         }
+        if (this.winCount == 0) {
+            this.pw.save(parent, this.patternCount++);
+        }
         if (parent.code().edgeSize() >= maxEdgeSize) {
             // parent.clearEmbeddings(this.clusterDelimiter);
             parent.clearEmbeddings();
@@ -588,6 +599,10 @@ public class FSMHGWIN {
         parent.setClusterDelimiter(this.clusterDelimiter);
         parent.setGraphDelimiter(this.transDelimiter);
         for (Pattern child : children) {
+            this.ptw.saveNode(child);
+            if (this.winCount == 0) {
+                parent.removeChild(child);
+            }
             if (!isFrequent(child)) {
                 continue;
             }
@@ -1169,68 +1184,73 @@ public class FSMHGWIN {
     }
 
     private void saveResult() {
-        FileWriter fw = null;
-        BufferedWriter bw = null;
+        // FileWriter fw = null;
+        // BufferedWriter bw = null;
         try {
-            fw = new FileWriter(out);
-            bw = new BufferedWriter(fw);
+            // fw = new FileWriter(out);
+            // bw = new BufferedWriter(fw);
             for (PointPattern pp : points.values()) {
                 if (!isFrequent(pp)) {
                     continue;
                 }
                 pointCount++;
-                bw.write("t # " + (this.patternCount++) + " * " + pp.support());
-                bw.newLine();
-                bw.write("v 0 " + pp.label());
-                bw.newLine();
-                bw.newLine();
+                // bw.write("t # " + (this.patternCount++) + " * " + pp.support());
+                // bw.newLine();
+                // bw.write("v 0 " + pp.label());
+                // bw.newLine();
+                // bw.newLine();
+                this.pw.save(pp, this.patternCount++);
 
                 for (Pattern child : pp.children()) {
                     if (!isFrequent(child) || !child.checkMin()) {
                         continue;
                     }
-                    save(child, bw);
+                    save(child);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            try {
-                bw.close();
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // try {
+            //     bw.close();
+            //     fw.close();
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            // }
 
         }
     }
 
-    private void save(Pattern p, BufferedWriter bw) throws IOException {
-        bw.write("t # " + (this.patternCount++) + " * " + p.support());
-        bw.newLine();
-        DFSCode code = p.code();
-        LabeledGraph g = code.toGraph();
-        for (int i = 0; i < g.vSize(); i++) {
-            LabeledVertex v = g.vertex(i);
-            bw.write("v " + i + " " + g.vLabel(v));
-            bw.newLine();
-        }
-        for (DFSEdge e : code.edges()) {
-            bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
-            bw.newLine();
-        }
-        bw.newLine();
+    // private void save(Pattern p, BufferedWriter bw) throws IOException {
+    private void save(Pattern p) throws IOException {
+        // bw.write("t # " + (this.patternCount++) + " * " + p.support());
+        // bw.newLine();
+        // DFSCode code = p.code();
+        // LabeledGraph g = code.toGraph();
+        // for (int i = 0; i < g.vSize(); i++) {
+        //     LabeledVertex v = g.vertex(i);
+        //     bw.write("v " + i + " " + g.vLabel(v));
+        //     bw.newLine();
+        // }
+        // for (DFSEdge e : code.edges()) {
+        //     bw.write("e " + e.from() + " " + e.to() + " " + e.edgeLabel());
+        //     bw.newLine();
+        // }
+        // bw.newLine();
+        this.pw.save(p, this.patternCount++);
 
         for (Pattern child : p.children()) {
             if (!isFrequent(child) || !child.checkMin()) {
                 continue;
             }
-            save(child, bw);
+            // save(child, bw);
+            save(child);
         }
     }
 
     public void setOutput(File out) {
         this.out = out;
+        this.pw = new PatternWriter(this.out);
     }
 
     private boolean containEmbedding(LabeledGraph g, Embedding em, Pattern p) {

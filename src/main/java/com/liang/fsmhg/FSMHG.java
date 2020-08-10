@@ -93,13 +93,14 @@ public class FSMHG {
             for (Pattern p : pp.children()) {
                 // this.numOfEmbedding += p.numberOfEmbeddings();
                 // this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
-                this.minCount++;
+                // this.minCount++;
+                pp.removeChild(p);
                 if (!isFrequent(p)) {
-                    pp.removeChild(p);
+                    // pp.removeChild(p);
                     continue;
                 }
                 subgraphMining(trans, p);
-                pp.removeChild(p);
+                // pp.removeChild(p);
             }
         }
         pw.close();
@@ -270,17 +271,18 @@ public class FSMHG {
         for (Pattern child : parent.children()) {
             // this.numOfEmbedding += child.numberOfEmbeddings();
             // this.numOfEmbeddingNoPartition += child.numberOfEmbeddingsNoPartition();
-            if (child.checkMin()) {
-                // this.minCount++;
-            } else {
-                // this.nonminCount++;
-            }
+            // if (child.checkMin()) {
+            //     this.minCount++;
+            // } else {
+            //     this.nonminCount++;
+            // }
+            parent.removeChild(child);
             if (!isFrequent(child)) {
-                parent.removeChild(child);
+                // parent.removeChild(child);
                 continue;
             }
             subgraphMining(trans, child);
-            parent.removeChild(child);
+            // parent.removeChild(child);
         }
     }
 
