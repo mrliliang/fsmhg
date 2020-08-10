@@ -189,6 +189,7 @@ public class FSMHGWIN {
                 this.pw.save(pp, this.patternCount++);
                 for (Pattern p : pp.children()) {
                     this.ptw.saveNode(p);
+                    pp.removeChild(p);
                     if (!isFrequent(p)) {
                         continue;
                     }
@@ -196,6 +197,8 @@ public class FSMHGWIN {
                     subgraphMining(trans, p);
                 }
             }
+            this.ptw.close();
+            this.ptw = null;
             return;
         }
 
@@ -599,8 +602,8 @@ public class FSMHGWIN {
         parent.setClusterDelimiter(this.clusterDelimiter);
         parent.setGraphDelimiter(this.transDelimiter);
         for (Pattern child : children) {
-            this.ptw.saveNode(child);
             if (this.winCount == 0) {
+                this.ptw.saveNode(child);
                 parent.removeChild(child);
             }
             if (!isFrequent(child)) {
