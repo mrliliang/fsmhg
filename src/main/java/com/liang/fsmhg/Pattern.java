@@ -92,6 +92,14 @@ public class Pattern {
         return minCheckResult;
     }
 
+    public boolean isMinChecked() {
+        return this.isMinChecked;
+    }
+
+    public boolean minCheckResult() {
+        return this.minCheckResult;
+    }
+
     public List<LabeledGraph> graphsAfterDelimiter() {
         if (graphDelimiter == null) {
             return graphs();
