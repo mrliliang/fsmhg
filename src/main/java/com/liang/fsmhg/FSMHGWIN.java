@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import com.liang.fsmhg.code.DFSCode;
 import com.liang.fsmhg.code.DFSEdge;
@@ -234,7 +235,7 @@ public class FSMHGWIN {
             }
 
             for (LabeledGraph g : c) {
-                LabeledGraph dg = c.deltaGraph1(g);
+                LabeledGraph dg = c.deltaGraph(g);
                 for (LabeledVertex v : dg.vertices()) {
                     if (inter.vertex(v.id()) != null) {
                         continue;
@@ -299,7 +300,7 @@ public class FSMHGWIN {
         }
 
         for (LabeledGraph g : appended) {
-            LabeledGraph dg = lastClusterDelimiter.deltaGraph1(g);
+            LabeledGraph dg = lastClusterDelimiter.deltaGraph(g);
             for (LabeledVertex v : dg.vertices()) {
                 if (lastClusterDelimiter.intersection().vertex(v.id()) != null) {
                     continue;
@@ -335,7 +336,7 @@ public class FSMHGWIN {
             }
 
             for (LabeledGraph g : c) {
-                LabeledGraph dg = c.deltaGraph1(g);
+                LabeledGraph dg = c.deltaGraph(g);
                 for (LabeledVertex v : dg.vertices()) {
                     if (inter.vertex(v.id()) != null) {
                         continue;
@@ -1225,7 +1226,7 @@ public class FSMHGWIN {
                 if (!isFrequent(pp)) {
                     continue;
                 }
-                pointCount++;
+                this.pointCount++;
                 // bw.write("t # " + (this.patternCount++) + " * " + pp.support());
                 // bw.newLine();
                 // bw.write("v 0 " + pp.label());
@@ -1393,5 +1394,203 @@ public class FSMHGWIN {
             p = p.child(dfsCode.get(i));
         }
         return p;
+    }
+
+    class EmbeddingListWrapper {
+        List<Embedding> interEmbeddings;
+        Map<LabeledGraph, List<Embedding>> noninterEmbeddingMap = new HashMap<>();
+    }
+    private EmbeddingListWrapper searchEmbeddings(Pattern p, DFSCode code, Cluster c) {
+        DFSEdge dfsEdge = code.get(0);
+        EmbeddingListWrapper wrapper = new EmbeddingListWrapper();
+        wrapper.interEmbeddings = firstEdge(dfsEdge, c.intersection());
+        for (int i = 1; i < code.edgeSize(); i++) {
+            dfsEdge = code.get(i);
+            wrapper = nextEdge(p, dfsEdge, wrapper, c);
+        }
+        return wrapper;
+    }
+
+    private EmbeddingListWrapper nextEdge(Pattern p, DFSEdge dfsEdge, EmbeddingListWrapper wrapper, Cluster c) {
+        List<Embedding> interEmbeddings = new ArrayList<>();
+        Map<LabeledGraph, List<Embedding>> noninterEmbeddingMap = new HashMap<>();
+        LabeledGraph inter = c.intersection();
+        for (Embedding em : wrapper.interEmbeddings) {
+            List<LabeledVertex> vertices = em.vertices();
+            BitSet emBits = new BitSet(this.maxVid);
+            for (LabeledVertex v : vertices) {
+                emBits.set(v.id());
+            }
+            if (!dfsEdge.isForward()) {
+                LabeledVertex from = vertices.get(dfsEdge.from());
+                LabeledVertex to = vertices.get(dfsEdge.to());
+                LabeledEdge e = inter.edge(from.id(), to.id());
+                if (e != null && dfsEdge.edgeLabel() == inter.eLabel(e)) {
+                    interEmbeddings.add(em);
+                }
+                Map<LabeledGraph, AdjEdges> borderAdj = c.borderAdj(from.id());
+                for (Entry<LabeledGraph, AdjEdges> entry : borderAdj.entrySet()) {
+                    LabeledGraph g = entry.getKey();
+                    if (!p.containGraph(g)) {
+                        continue;
+                    }
+                    e = entry.getValue().edgeTo(to.id());
+                    if (e != null && dfsEdge.edgeLabel() == inter.eLabel(e)) {
+                        List<Embedding> noninterEms = noninterEmbeddingMap.computeIfAbsent(g, new Function<LabeledGraph, List<Embedding>>() {
+                            @Override
+                            public List<Embedding> apply(LabeledGraph t) {
+                                return new ArrayList<>();
+                            }
+                        });
+                        noninterEms.add(em);
+                    }
+                }
+            } else {
+                LabeledVertex from = vertices.get(dfsEdge.from());
+                for (LabeledEdge e : inter.adjEdges(from.id())) {
+                    LabeledVertex to = e.to();
+                    if (emBits.get(to.id())) {
+                        continue;
+                    }
+                    if (dfsEdge.edgeLabel() == inter.eLabel(e) && dfsEdge.toLabel() == inter.vLabel(to)) {
+                        interEmbeddings.add(new Embedding(to, em));
+                    }
+                }
+                Map<LabeledGraph, AdjEdges> borderAdj = c.borderAdj(from.id());
+                for (Entry<LabeledGraph, AdjEdges> entry : borderAdj.entrySet()) {
+                    LabeledGraph g = entry.getKey();
+                    if (!p.containGraph(g)) {
+                        continue;
+                    }
+                    for (LabeledEdge e : entry.getValue()) {
+                        LabeledVertex to = e.to();
+                        if (emBits.get(to.id())) {
+                            continue;
+                        }
+                        if (dfsEdge.edgeLabel() != g.eLabel(e) || dfsEdge.toLabel() != g.vLabel(to)) {
+                            continue;
+                        }
+                        List<Embedding> noninterEms = noninterEmbeddingMap.computeIfAbsent(g, new Function<LabeledGraph, List<Embedding>>() {
+                            @Override
+                            public List<Embedding> apply(LabeledGraph t) {
+                                return new ArrayList<>();
+                            }
+                        });
+                        noninterEms.add(new Embedding(to, em));
+                    }
+                }
+            }
+        }
+
+        for (Entry<LabeledGraph, List<Embedding>> entry : wrapper.noninterEmbeddingMap.entrySet()) {
+            LabeledGraph g = entry.getKey();
+            for (Embedding em : entry.getValue()) {
+                List<LabeledVertex> vertices = em.vertices();
+                BitSet emBits = new BitSet(this.maxVid);
+                for (LabeledVertex v : vertices) {
+                    emBits.set(v.id());
+                }
+                if (!dfsEdge.isForward()) {
+                    LabeledVertex from = vertices.get(dfsEdge.from());
+                    LabeledVertex to = vertices.get(dfsEdge.to());
+                    LabeledEdge e = g.edge(from.id(), to.id());
+                    if (e != null && dfsEdge.edgeLabel() == g.eLabel(e)) {
+                        List<Embedding> noninterEms = noninterEmbeddingMap.computeIfAbsent(g, new Function<LabeledGraph, List<Embedding>>() {
+                            @Override
+                            public List<Embedding> apply(LabeledGraph t) {
+                                return new ArrayList<>();
+                            }
+                        });
+                        noninterEms.add(em);
+                    }
+                } else {
+                    LabeledVertex from = vertices.get(dfsEdge.from());
+                    for (LabeledEdge e : g.adjEdges(from.id())) {
+                        LabeledVertex to = e.to();
+                        if (emBits.get(to.id())) {
+                            continue;
+                        }
+                        if (dfsEdge.edgeLabel() != g.eLabel(e) || dfsEdge.toLabel() != g.vLabel(to)) {
+                            continue;
+                        }
+                        List<Embedding> noninterEms = noninterEmbeddingMap.computeIfAbsent(g, new Function<LabeledGraph, List<Embedding>>() {
+                            @Override
+                            public List<Embedding> apply(LabeledGraph t) {
+                                return new ArrayList<>();
+                            }
+                        });
+                        noninterEms.add(new Embedding(to, em));
+                    }
+                }
+            }
+        }
+
+        wrapper.interEmbeddings.clear();
+        wrapper.interEmbeddings = interEmbeddings;
+        wrapper.noninterEmbeddingMap.clear();
+        wrapper.noninterEmbeddingMap = noninterEmbeddingMap;
+        return wrapper;
+    }
+
+    private List<Embedding> searchEmbeddings(Pattern p, DFSCode code, LabeledGraph g, Cluster c) {
+        DFSEdge dfsEdge = code.get(0);
+        List<Embedding> embeddings;
+        if (p.containsCluster(c)) {
+            embeddings = firstEdge(dfsEdge, c.deltaGraph(g));
+        } else {
+            embeddings = firstEdge(dfsEdge, g);
+        }
+        for (int i = 1; i < code.edgeSize(); i++) {
+            embeddings = nextEdge(code.get(i), embeddings, g);
+        }
+
+        return embeddings;
+    }
+
+    List<Embedding> firstEdge(DFSEdge dfsEdge, LabeledGraph g) {
+        List<Embedding> embeddings = new ArrayList<>();
+        for (LabeledVertex v : g.vertices()) {
+            if (dfsEdge.fromLabel() != g.vLabel(v)) {
+                continue;
+            }
+            Embedding em = new Embedding(v, null);
+            for (LabeledEdge e : g.adjEdges(v.id())) {
+                LabeledVertex to = e.to();
+                if (dfsEdge.edgeLabel() != g.eLabel(e) || dfsEdge.toLabel() != g.vLabel(to)) {
+                    continue;
+                }
+                embeddings.add(new Embedding(to, em));
+            }
+        }
+        return embeddings;
+    }
+
+    private List<Embedding> nextEdge(DFSEdge dfsEdge, List<Embedding> parentEmbeddings, LabeledGraph g) {
+        List<Embedding> embeddings = new ArrayList<>();
+        for (Embedding em : parentEmbeddings) {
+            List<LabeledVertex> vertices = em.vertices();
+            BitSet emBits = new BitSet(this.maxVid);
+            for (LabeledVertex v : vertices) {
+                emBits.set(v.id());
+            }
+            if (!dfsEdge.isForward()) {
+                LabeledEdge e = g.edge(vertices.get(dfsEdge.from()).id(), vertices.get(dfsEdge.to()).id());
+                if (e != null && dfsEdge.edgeLabel() == g.eLabel(e)) {
+                    embeddings.add(em);
+                }
+            } else {
+                LabeledVertex from = vertices.get(dfsEdge.from());
+                for (LabeledEdge e : g.adjEdges(from.id())) {
+                    LabeledVertex to = e.to();
+                    if (emBits.get(to.id())) {
+                        continue;
+                    }
+                    if (dfsEdge.edgeLabel() == g.eLabel(e) && dfsEdge.toLabel() == g.vLabel(to)) {
+                        embeddings.add(new Embedding(to, em));
+                    }
+                }
+            }
+        }
+        return embeddings;
     }
 }

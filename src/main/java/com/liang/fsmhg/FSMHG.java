@@ -139,7 +139,7 @@ public class FSMHG {
             }
 
             for (LabeledGraph g : c) {
-                LabeledGraph dg = c.deltaGraph1(g);
+                LabeledGraph dg = c.deltaGraph(g);
                 for (LabeledVertex v : dg.vertices()) {
                     if (inter.vertex(v.id()) != null) {
                         continue;

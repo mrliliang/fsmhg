@@ -306,7 +306,7 @@ public class Cluster implements Iterable<LabeledGraph>, Comparable<Cluster> {
         return dg;
     }
 
-    public LabeledGraph deltaGraph1(LabeledGraph g) {
+    public LabeledGraph deltaGraph(LabeledGraph g) {
         int index = (int)(g.graphId() - this.snapshots.get(0).graphId());
         return this.deltaGraphList.get(index);
     }
