@@ -60,12 +60,24 @@ public class Pattern {
         // return set.size();
     }
 
+    public void setSupport(int support) {
+        this.support = support;
+    }
+
     public void increaseSupport(int deltaSup) {
         this.support += deltaSup;
     }
 
+    public void addCluster(Cluster c) {
+        this.intersectionEmbeddings.put(c, null);
+    }
+
     public boolean containsCluster(Cluster c) {
         return intersectionEmbeddings.containsKey(c);
+    }
+
+    public void addGraph(LabeledGraph g) {
+        this.embeddingMap.put(g, null);
     }
 
     public boolean containGraph(LabeledGraph g) {
@@ -96,8 +108,16 @@ public class Pattern {
         return this.isMinChecked;
     }
 
+    public void setChecked(boolean checked) {
+        this.isMinChecked = checked;
+    }
+
     public boolean minCheckResult() {
         return this.minCheckResult;
+    }
+
+    public void setMinCheckResult(boolean result) {
+        this.minCheckResult = result;
     }
 
     public List<LabeledGraph> graphsAfterDelimiter() {

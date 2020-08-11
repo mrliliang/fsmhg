@@ -39,23 +39,30 @@ public class Test {
 //         System.out.println(dfsCode);
 //         System.out.println(dfsCode.minCode());
 
-        TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-connected"));
-        List<LabeledGraph> graphs =  loader.loadTrans();
-        System.out.println("Number of trans: " + graphs.size());
-        long begin = System.currentTimeMillis();
-        List<Cluster> clusters = Cluster.partition(graphs, 0.9, 0);
-        long end = System.currentTimeMillis();
-        System.out.println("partition time " + (end - begin));
-        System.out.println(clusters.size() + " clusters");
-        System.out.println("Total number of edges of intersection is " + clusters.get(0).intersection().eSize());
-        int oneCount = 0;
-        for (Cluster c : clusters) {
-            if (c.size() == 1) {
-                oneCount++;
-            }
-            System.out.println("(" + c.index() + ", " +  c.size() +")");
-        }
-        System.out.println("one snapshot cluster " + oneCount);
+        // TransLoader loader = new TransLoader(new File("/home/liliang/data/as-733-snapshots-connected"));
+        // List<LabeledGraph> graphs =  loader.loadTrans();
+        // System.out.println("Number of trans: " + graphs.size());
+        // long begin = System.currentTimeMillis();
+        // List<Cluster> clusters = Cluster.partition(graphs, 0.9, 0);
+        // long end = System.currentTimeMillis();
+        // System.out.println("partition time " + (end - begin));
+        // System.out.println(clusters.size() + " clusters");
+        // System.out.println("Total number of edges of intersection is " + clusters.get(0).intersection().eSize());
+        // int oneCount = 0;
+        // for (Cluster c : clusters) {
+        //     if (c.size() == 1) {
+        //         oneCount++;
+        //     }
+        //     System.out.println("(" + c.index() + ", " +  c.size() +")");
+        // }
+        // System.out.println("one snapshot cluster " + oneCount);
+
+        String str = "(0,1,a,b,c),1 2 3 ,4 5 6 ,1,2,1,1";
+        int index = str.indexOf("),");
+        System.out.println("code = " + str.substring(0, index + 1));
+        String[] items = str.substring(index + 2).split(",");
+        String[] seqs = items[0].split(" ");
+        
     }
 
 

@@ -1326,13 +1326,72 @@ public class FSMHGWIN {
 
             String line = null;
             while ((line = br.readLine()) != null) {
-                
+                int index = line.indexOf("),");
+                String code = line.substring(0, index + 1);
+                Pattern p = getPattern(code);
+
+                String[] items = line.substring(index + 2).split(",");
+                int support = Integer.parseInt(items[0]);
+                p.setSupport(support);
+
+                //sequences
+                if (!" ".equals(items[1])) {
+                    String[] indices = items[1].split(" ");
+                    for (String str : indices) {
+                        p.addCluster(this.clusters.get(Integer.parseInt(str)));
+                    }
+                }
+
+                //graphs
+                if (!" ".equals(items[2])) {
+                    String[] graphIds = items[2].split(" ");
+                    for (String id : graphIds) {
+                        p.addGraph(this.trans.get(Integer.parseInt(id)));
+                    }
+                }
+
+                //sequence delimiter
+                int clusterDelimiter = Integer.parseInt(items[3]);
+                if (clusterDelimiter != -1) {
+                    p.setClusterDelimiter(this.clusters.get(clusterDelimiter));
+                }
+
+                //graph delimiter
+                int graphDelimiter = Integer.parseInt(items[4]);
+                if (graphDelimiter != -1) {
+                    p.setGraphDelimiter(this.trans.get(graphDelimiter));
+                }
+
+                //isMinChecked
+                boolean isMinChecked = "1".equals(items[5]);
+                p.setChecked(isMinChecked);
+
+                //minCheckResult
+                boolean minCheckResult = "1".equals(items[6]);
+                p.setMinCheckResult(minCheckResult);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+                fr.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
+    }
+
+    private Pattern getPattern(String code) {
+        DFSCode dfsCode = DFSCode.parse(code);
+        int label = dfsCode.get(0).fromLabel();
+        Pattern p = this.points.get(label);
+        for (int i = 0; i < dfsCode.edgeSize(); i++) {
+            p = p.child(dfsCode.get(i));
+        }
+        return p;
     }
 }

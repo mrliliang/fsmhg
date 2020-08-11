@@ -448,4 +448,25 @@ public class DFSCode implements Comparable<DFSCode> {
         return builder.toString();
     }
 
+    public static DFSCode parse(String code) {
+        DFSCode dfsCode = new DFSCode();
+        String[] edges = code.split("\\)");
+        for (String edge : edges) {
+            DFSEdge dfsEdge = edge(edge);
+            dfsCode.add(dfsEdge);
+        }
+        return dfsCode;
+    }
+
+    private static DFSEdge edge(String edge) {
+        String[] item = edge.substring(1).split(",");
+        int from = Integer.parseInt(item[0]);
+        int to = Integer.parseInt(item[1]);
+        int fromLabel = Integer.parseInt(item[2]);
+        int toLabel = Integer.parseInt(item[4]);
+        int eLabel = Integer.parseInt(item[3]);
+
+        return new DFSEdge(from, to, fromLabel, toLabel, eLabel);
+    }
+
 }
