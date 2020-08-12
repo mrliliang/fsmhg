@@ -69,7 +69,7 @@ public class Pattern {
     }
 
     public void addCluster(Cluster c) {
-        this.intersectionEmbeddings.put(c, null);
+        this.intersectionEmbeddings.put(c, new ArrayList<>());
     }
 
     public boolean containsCluster(Cluster c) {
@@ -77,7 +77,7 @@ public class Pattern {
     }
 
     public void addGraph(LabeledGraph g) {
-        this.embeddingMap.put(g, null);
+        this.embeddingMap.put(g, new ArrayList<>());
     }
 
     public boolean containGraph(LabeledGraph g) {
