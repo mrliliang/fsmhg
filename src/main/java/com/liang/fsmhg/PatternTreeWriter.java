@@ -90,6 +90,7 @@ public class PatternTreeWriter {
             int minCheckResult = p.minCheckResult() ? 1 : 0;
             // bw.write("minCheckResult:" + minCheckResult);
             bw.write(minCheckResult + "");
+            bw.newLine();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

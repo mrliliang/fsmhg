@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ import com.liang.fsmhg.graph.LabeledGraph;
 import com.liang.fsmhg.graph.LabeledVertex;
 
 public class FSMHGWIN {
-    private static final String PATTERN_TREE_FILE = "/tmp/tree";
+    private static final String PATTERN_TREE_FILE = "tree";
 
     private TreeMap<Integer, PointPattern> points;
     private List<LabeledGraph> trans;
@@ -194,8 +195,8 @@ public class FSMHGWIN {
                 this.pointCount++;
                 this.pw.save(pp, this.patternCount++);
                 for (Pattern p : pp.children()) {
-                    this.ptw.saveNode(p);
                     pp.removeChild(p);
+                    this.ptw.saveNode(p);
                     if (!isFrequent(p)) {
                         continue;
                     }
@@ -612,8 +613,8 @@ public class FSMHGWIN {
         parent.setGraphDelimiter(this.transDelimiter);
         for (Pattern child : children) {
             if (this.winCount == 0) {
-                this.ptw.saveNode(child);
                 parent.removeChild(child);
+                this.ptw.saveNode(child);
             }
             if (!isFrequent(child)) {
                 continue;
@@ -644,7 +645,17 @@ public class FSMHGWIN {
             if (clusterDelimiter != null && c.index() <= clusterDelimiter.index()) {
                 continue;
             }
-            joinExtendIntersection(c, p, joinBackCands, joinForCands, extendCands, addedChildren);
+            List<Embedding> embeddings = p.intersectionEmbeddings(c);
+            if (!embeddings.isEmpty()) {
+                joinExtendIntersection(embeddings, c, p, joinBackCands, joinForCands, extendCands, addedChildren);
+                continue;
+            }
+
+            EmbeddingListWrapper wrapper = this.searchEmbeddings(p, p.code(), c);
+            joinExtendIntersection(wrapper.interEmbeddings, c, p, joinBackCands, joinForCands, extendCands, addedChildren);
+            for (Entry<LabeledGraph, List<Embedding>> entry : wrapper.noninterEmbeddingMap.entrySet()) {
+                joinExtendOther(entry.getValue(), entry.getKey(), p, joinBackCands, joinForCands, extendCands, addedChildren);
+            }
         }
 
         LabeledGraph graphDelimiter = p.graphDelimiter();
@@ -653,16 +664,22 @@ public class FSMHGWIN {
             if (graphDelimiter != null && g.graphId() <= graphDelimiter.graphId()) {
                 continue;
             }
-            joinExtendOther(g, p, joinBackCands, joinForCands, extendCands, addedChildren);
+            List<Embedding> embeddings = p.embeddings(g);
+            if (!embeddings.isEmpty()) {
+                joinExtendOther(embeddings, g, p, joinBackCands, joinForCands, extendCands, addedChildren);
+                continue;
+            }
+
+            embeddings = this.searchEmbeddings(p, p.code(), g, g.getCluster());
+            joinExtendOther(embeddings, g, p, joinBackCands, joinForCands, extendCands, addedChildren);
         }
 
         return new ArrayList<>(addedChildren.values());
     }
 
-    private void joinExtendIntersection(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand,
-            TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands,
-            TreeMap<DFSEdge, Pattern> addedChildren) {
-        List<Embedding> embeddings = p.intersectionEmbeddings(c);
+    // private void joinExtendIntersection(Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands,TreeMap<DFSEdge, Pattern> addedChildren) {
+    private void joinExtendIntersection(List<Embedding> embeddings, Cluster c, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands,TreeMap<DFSEdge, Pattern> addedChildren) {
+        // List<Embedding> embeddings = p.intersectionEmbeddings(c);
         if (embeddings == null || embeddings.isEmpty()) {
             return;
         }
@@ -716,6 +733,9 @@ public class FSMHGWIN {
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertices.get(entry.getKey());
                 TreeSet<DFSEdge> cands = entry.getValue();
+                if (this.winCount == 4 && inter.adjEdges(from.id()) == null) {
+                    System.out.println("x");
+                }
                 for (LabeledEdge e : inter.adjEdges(from.id())) {
                     if (emBits.get(e.to().id())) {
                         continue;
@@ -1035,10 +1055,9 @@ public class FSMHGWIN {
         }
     }
 
-    private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand,
-            TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands,
-            TreeMap<DFSEdge, Pattern> addedChildren) {
-        List<Embedding> embeddings = p.embeddings(g);
+    // private void joinExtendOther(LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
+    private void joinExtendOther(List<Embedding> embeddings, LabeledGraph g, Pattern p, TreeMap<Integer, TreeSet<DFSEdge>> backCand, TreeMap<Integer, TreeSet<DFSEdge>> forCand, TreeSet<DFSEdge> extendCands, TreeMap<DFSEdge, Pattern> addedChildren) {
+        // List<Embedding> embeddings = p.embeddings(g);
         if (embeddings == null || embeddings.isEmpty()) {
             return;
         }
@@ -1383,7 +1402,6 @@ public class FSMHGWIN {
                 e.printStackTrace();
             }
         }
-
     }
 
     private Pattern getPattern(String code) {
