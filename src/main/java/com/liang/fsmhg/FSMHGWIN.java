@@ -66,10 +66,6 @@ public class FSMHGWIN {
         this.patternCount = 0;
         this.pointCount = 0;
 
-        if (this.winCount == 1) {
-            loadPatterns();
-        }
-
         List<LabeledGraph> removed;
         List<LabeledGraph> added;
         int index = this.trans.indexOf(newTrans.get(0));
@@ -93,9 +89,14 @@ public class FSMHGWIN {
         grow(added);
         long growEnd = System.currentTimeMillis();
 
-        if (this.winCount > 0) {
-            saveResult();
-        }
+        // if (this.winCount == 0) {
+        //     loadPatterns();
+        // }
+
+        // if (this.winCount > 0) {
+        //     saveResult();
+        // }
+        saveResult();
         this.pw.close();
 
         long endTime = System.currentTimeMillis();
@@ -187,27 +188,28 @@ public class FSMHGWIN {
             addedEdges = edgesNoPartition(addedPoints, addedTrans);
         }
 
-        if (this.winCount == 0) {
-            for (PointPattern pp : addedPoints.values()) {
-                if (!isFrequent(pp)) {
-                    continue;
-                }
-                this.pointCount++;
-                this.pw.save(pp, this.patternCount++);
-                for (Pattern p : pp.children()) {
-                    pp.removeChild(p);
-                    this.ptw.saveNode(p);
-                    if (!isFrequent(p)) {
-                        continue;
-                    }
+        // if (this.winCount == 0) {
+        //     for (PointPattern pp : addedPoints.values()) {
+        //         if (!isFrequent(pp)) {
+        //             continue;
+        //         }
+        //         this.pointCount++;
+        //         this.pw.save(pp, this.patternCount++);
+        //         for (Pattern p : pp.children()) {
+        //             pp.removeChild(p);
+        //             // this.ptw.saveNode(p);
+        //             if (!isFrequent(p)) {
+        //                 this.ptw.saveNode(p);
+        //                 continue;
+        //             }
 
-                    subgraphMining(trans, p);
-                }
-            }
-            this.ptw.close();
-            this.ptw = null;
-            return;
-        }
+        //             subgraphMining(trans, p);
+        //         }
+        //     }
+        //     this.ptw.close();
+        //     this.ptw = null;
+        //     return;
+        // }
 
         for (Pattern p : addedEdges.values()) {
             if (!isFrequent(p)) {
@@ -597,13 +599,20 @@ public class FSMHGWIN {
         if (!parent.checkMin()) {
             // parent.clearEmbeddings(this.clusterDelimiter);
             parent.clearEmbeddings();
+            // if (this.winCount == 0) {
+            //     this.ptw.saveNode(parent);
+            // }
             return;
         }
-        if (this.winCount == 0) {
-            this.pw.save(parent, this.patternCount++);
-        }
+
+        // if (this.winCount == 0) {
+        //     this.pw.save(parent, this.patternCount++);
+        // }
         if (parent.code().edgeSize() >= maxEdgeSize) {
             // parent.clearEmbeddings(this.clusterDelimiter);
+            // if (this.winCount == 0) {
+            //     this.ptw.saveNode(parent);
+            // }
             parent.clearEmbeddings();
             return;
         }
@@ -611,12 +620,18 @@ public class FSMHGWIN {
         List<Pattern> children = enumerateChildren(parent);
         parent.setClusterDelimiter(this.clusterDelimiter);
         parent.setGraphDelimiter(this.transDelimiter);
+        parent.clearEmbeddings();
+        // if (this.winCount == 0) {
+        //     this.ptw.saveNode(parent);
+        // }
         for (Pattern child : children) {
-            if (this.winCount == 0) {
-                parent.removeChild(child);
-                this.ptw.saveNode(child);
-            }
+            // if (this.winCount == 0) {
+            //     parent.removeChild(child);
+            // }
             if (!isFrequent(child)) {
+                // if (this.winCount == 0) {
+                //     this.ptw.saveNode(child);
+                // }
                 continue;
             }
 
@@ -733,9 +748,6 @@ public class FSMHGWIN {
             for (Map.Entry<Integer, TreeSet<DFSEdge>> entry : forCand.entrySet()) {
                 LabeledVertex from = emVertices.get(entry.getKey());
                 TreeSet<DFSEdge> cands = entry.getValue();
-                if (this.winCount == 4 && inter.adjEdges(from.id()) == null) {
-                    System.out.println("x");
-                }
                 for (LabeledEdge e : inter.adjEdges(from.id())) {
                     if (emBits.get(e.to().id())) {
                         continue;
@@ -866,9 +878,10 @@ public class FSMHGWIN {
                 }
             }
         }
-        if (c != this.clusterDelimiter) {
-            embeddings.clear();
-        }
+        // if (c != this.clusterDelimiter) {
+        //     embeddings.clear();
+        // }
+        embeddings.clear();
     }
 
     private void joinExtendIntersectionInClusterDelimiter(Cluster clusterDelimiter, Pattern p,
@@ -1339,7 +1352,7 @@ public class FSMHGWIN {
     private void loadPatterns() {
         FileReader fr = null;
         BufferedReader br = null;
-
+        List<Pattern> infrequentPatterns = new ArrayList<>();
         try {
             fr = new FileReader(new File(PATTERN_TREE_FILE));
             br = new BufferedReader(fr);
@@ -1348,7 +1361,8 @@ public class FSMHGWIN {
             while ((line = br.readLine()) != null) {
                 int index = line.indexOf("),");
                 String code = line.substring(0, index + 1);
-                Pattern p = getPattern(code);
+                DFSCode dfsCode = DFSCode.parse(code);
+                Pattern p = getPattern(dfsCode);
 
                 String[] items = line.substring(index + 2).split(",");
                 int support = Integer.parseInt(items[0]);
@@ -1366,7 +1380,7 @@ public class FSMHGWIN {
                 if (!" ".equals(items[2])) {
                     String[] graphIds = items[2].split(" ");
                     for (String id : graphIds) {
-                        p.addGraph(this.trans.get(Integer.parseInt(id)));
+                        p.addGraph(this.trans.get(Integer.parseInt(id) - 1));
                     }
                 }
 
@@ -1379,7 +1393,7 @@ public class FSMHGWIN {
                 //graph delimiter
                 int graphDelimiter = Integer.parseInt(items[4]);
                 if (graphDelimiter != -1) {
-                    p.setGraphDelimiter(this.trans.get(graphDelimiter));
+                    p.setGraphDelimiter(this.trans.get(graphDelimiter - 1));
                 }
 
                 //isMinChecked
@@ -1389,6 +1403,11 @@ public class FSMHGWIN {
                 //minCheckResult
                 boolean minCheckResult = "1".equals(items[6]);
                 p.setMinCheckResult(minCheckResult);
+
+                if (!isFrequent(p) && dfsCode.edgeSize() < maxEdgeSize && p.checkMin()) {
+                    infrequentPatterns.add(p);
+                    continue;
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -1402,10 +1421,24 @@ public class FSMHGWIN {
                 e.printStackTrace();
             }
         }
+
+        for (Pattern p : infrequentPatterns) {
+            for (Cluster c : p.clusters()) {
+                EmbeddingListWrapper wrapper = this.searchEmbeddings(p, p.code(), c);
+                p.addIntersectionEmbeddings(c, wrapper.interEmbeddings);
+                for (Entry<LabeledGraph, List<Embedding>> entry : wrapper.noninterEmbeddingMap.entrySet()) {
+                    p.addEmbeddings(entry.getKey(), entry.getValue());
+                }
+            }
+    
+            for (LabeledGraph g : p.graphs()) {
+                List<Embedding> embeddings = this.searchEmbeddings(p, p.code(), g, g.getCluster());
+                p.addEmbeddings(g, embeddings);
+            }
+        }
     }
 
-    private Pattern getPattern(String code) {
-        DFSCode dfsCode = DFSCode.parse(code);
+    private Pattern getPattern(DFSCode dfsCode) {
         int label = dfsCode.get(0).fromLabel();
         Pattern p = this.points.get(label);
         for (int i = 0; i < dfsCode.edgeSize(); i++) {

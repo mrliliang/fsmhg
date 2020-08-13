@@ -569,9 +569,6 @@ public class FSMHG {
             return;
         }
         DFSCode code = p.code();
-        // if (code.toString().equals("(0,1,0,0,29)(0,2,0,2,14)")) {
-        //     System.out.println("x");
-        // }
         List<Integer> rmPathIds = code.rightMostPath();
         int rmDfsId = rmPathIds.get(rmPathIds.size() - 1);
         for (Embedding em : embeddings) {

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.function.BiFunction;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -174,6 +175,15 @@ public class Pattern {
         embeddings.add(em);
     }
 
+    public void addEmbeddings(LabeledGraph g, List<Embedding> embeddings) {
+        List<Embedding> originalEmbeddings = this.embeddingMap.get(g);
+        if (originalEmbeddings == null || originalEmbeddings.isEmpty()) {
+            this.embeddingMap.put(g, embeddings);
+            return;
+        }
+        originalEmbeddings.addAll(embeddings);
+    }
+
     public void addIntersectionEmbedding(Cluster c, Embedding em) {
         List<Embedding> embeddings = intersectionEmbeddings.computeIfAbsent(c, key -> {
             for (LabeledGraph g : c) {
@@ -184,6 +194,15 @@ public class Pattern {
             return new ArrayList<>();
         });
         embeddings.add(em);
+    }
+
+    public void addIntersectionEmbeddings(Cluster c, List<Embedding> embeddings) {
+        List<Embedding> originalEmbeddings = this.intersectionEmbeddings.get(c);
+        if (originalEmbeddings == null || originalEmbeddings.isEmpty()) {
+            this.intersectionEmbeddings.put(c, embeddings);
+            return;
+        }
+        originalEmbeddings.addAll(embeddings);
     }
 
     public void clearEmbeddings() {

@@ -23,16 +23,12 @@ public class PatternTreeWriter {
     }
     
     public void saveNode(Pattern p) {
-        //code
-        // bw.write("code:" + p.code().toString());
         try {
+            //code
             bw.write(p.code().toString() + ",");
-            // bw.newLine();
     
             //support
-            // bw.write("support:" + p.support());
             bw.write(p.support() + ",");
-            // bw.newLine();
     
             //sequences
             StringBuilder sb = new StringBuilder();
@@ -43,9 +39,7 @@ public class PatternTreeWriter {
             if (clusters.size() > 0) {
                 sb.append(clusters.get(clusters.size() - 1).index());
             }
-            // bw.write("sequences:" + sb.toString());
             bw.write(sb.toString() + " ,");
-            // bw.newLine();
     
             //graphs
             sb = new StringBuilder();
@@ -56,9 +50,7 @@ public class PatternTreeWriter {
             if (graphs.size() > 0) {
                 sb.append(graphs.get(graphs.size() - 1).graphId());
             }
-            // bw.write("graphs:" + sb.toString());
             bw.write(sb.toString() + " ,");
-            // bw.newLine();
     
             //cluster delimiter
             int clusterDelimiter = -1;
@@ -66,9 +58,7 @@ public class PatternTreeWriter {
             if (cDelimiter != null) {
                 clusterDelimiter = cDelimiter.index();
             }
-            // bw.write("sequence delimiter:" + cDelimiter);
             bw.write(clusterDelimiter + ",");
-            // bw.newLine();
     
             //graph delimiter
             long graphDelimiter = -1;
@@ -76,25 +66,18 @@ public class PatternTreeWriter {
             if (g != null) {
                 graphDelimiter = g.graphId();
             }
-            // bw.write("graph delimiter:" + graphDelimiter);
             bw.write(graphDelimiter + ",");
-            // bw.newLine();
     
             //isMinChecked
             int isMinChecked = p.isMinChecked() ? 1 : 0;
-            // bw.write("isMinChecked:" + isMinChecked);
             bw.write(isMinChecked + ",");
-            // bw.newLine();
     
             //minCheckResult
             int minCheckResult = p.minCheckResult() ? 1 : 0;
-            // bw.write("minCheckResult:" + minCheckResult);
             bw.write(minCheckResult + "");
             bw.newLine();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-            // bw.newLine();
         }
     }
 
