@@ -630,7 +630,8 @@ public class FSMHGWIN {
             // }
             if (!isFrequent(child)) {
                 // if (this.winCount == 0) {
-                //     this.ptw.saveNode(child);
+                //     // this.ptw.saveNode(child);
+                //     child.clearEmbeddings();
                 // }
                 continue;
             }
