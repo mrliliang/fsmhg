@@ -29,10 +29,15 @@ public class Main {
 
         output.mkdir();
         long startTime = System.currentTimeMillis();
+        long winStart = startTime;
+        long initialWinTime = 0;
+        long maxWinTime = 0;
+        long minWinTime = 0;
         FSMHGWIN fsmhgwin = new FSMHGWIN(arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
         List<LabeledGraph> trans = loader.loadTrans(arguments.window);
-        int winCount = 0;
+        int winCount = -1;
         while (trans.size() == arguments.window) {
+            winCount++;
             System.out.println("Window " + winCount);
             File outfile = new File(output, String.format("WIN%03d", winCount));
             if (arguments.enumerator == Arguments.ENUM_FSMHG_WIN) {
@@ -40,20 +45,48 @@ public class Main {
                 fsmhgwin.enumerate(trans);
             } else {
                 FSMHG fsmhg = new FSMHG(outfile, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
-                // fsmhg.optimize(arguments.optimize);
                 fsmhg.setWinCount(winCount);
                 fsmhg.enumerate(trans);
             }
+
+            long winEnd = System.currentTimeMillis();
+            long winTime = winEnd - winStart;
+            if (winCount == 0) {
+                initialWinTime = winTime;
+            } else if (winCount == 1) {
+                maxWinTime = winTime;
+                minWinTime = winTime;
+            } else {
+                if (winTime > maxWinTime) {
+                    maxWinTime = winTime;
+                }
+                if (winTime < minWinTime) {
+                    minWinTime = winTime;
+                }
+            }
+
+            winStart = System.currentTimeMillis();
             trans = trans.subList(arguments.sliding, trans.size());
             trans.addAll(loader.loadTrans(arguments.sliding));
-            winCount++;
-            // if (winCount > 1) {
-            //     break;
-            // }
         }
-        long duration = System.currentTimeMillis() - startTime;
-        System.out.println("WIN duration = " + duration);
+        long totalTime = System.currentTimeMillis() - startTime;
 
+        for (int i = 0; i < 50; i++) {
+            System.out.print("*");
+        }
+        System.out.println();
+        System.out.println("Initial window time = " + initialWinTime);
+        long slidingTime = totalTime - initialWinTime;
+        System.out.println("Total sliding time = " + slidingTime);
+        System.out.println("Max window time = " + maxWinTime);
+        System.out.println("Min window time = " + minWinTime);
+        System.out.println("Window count = " + winCount);
+        double averageWinTime = (double)slidingTime / winCount;
+        System.out.println("Average window time = " + averageWinTime);
+        for (int i = 0; i < 50; i++) {
+            System.out.print("*");
+        }
+        System.out.println();
     }
 
     private static class Arguments {
