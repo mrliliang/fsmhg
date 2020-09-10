@@ -69,7 +69,7 @@ public class Pattern {
         this.support += deltaSup;
     }
 
-    public void addCluster(Cluster c) {
+    public void insertCluster(Cluster c) {
         this.intersectionEmbeddings.put(c, new ArrayList<>());
     }
 
@@ -77,7 +77,7 @@ public class Pattern {
         return intersectionEmbeddings.containsKey(c);
     }
 
-    public void addGraph(LabeledGraph g) {
+    public void insertGraph(LabeledGraph g) {
         this.embeddingMap.put(g, new ArrayList<>());
     }
 
@@ -410,4 +410,33 @@ public class Pattern {
         }
         return num;
     }
+
+
+    public void addCluster(Cluster c) {
+        if (c != null && !this.intersectionEmbeddings.containsKey(c)) {
+            this.intersectionEmbeddings.put(c, new ArrayList<>());
+            for (LabeledGraph g : c) {
+                if (!this.embeddingMap.containsKey(g)) {
+                    this.support++;
+                }
+            }
+        }
+    }
+
+    public void addGraph(LabeledGraph g) {
+        if (g != null && !this.embeddingMap.containsKey(g)) {
+            this.support++;
+            this.embeddingMap.put(g, new ArrayList<>());
+        }
+    }
+
+    public void addGraph(LabeledGraph g, Cluster c) {
+        if (g != null && !this.embeddingMap.containsKey(g)) {
+            if (!this.intersectionEmbeddings.containsKey(c)) {
+                this.support++;
+            }
+            this.embeddingMap.put(g, new ArrayList<>());
+        }
+    }
+
 }

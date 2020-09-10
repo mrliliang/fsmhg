@@ -1373,7 +1373,7 @@ public class FSMHGWIN {
                 if (!" ".equals(items[1])) {
                     String[] indices = items[1].split(" ");
                     for (String str : indices) {
-                        p.addCluster(this.clusters.get(Integer.parseInt(str)));
+                        p.insertCluster(this.clusters.get(Integer.parseInt(str)));
                     }
                 }
 
@@ -1381,7 +1381,7 @@ public class FSMHGWIN {
                 if (!" ".equals(items[2])) {
                     String[] graphIds = items[2].split(" ");
                     for (String id : graphIds) {
-                        p.addGraph(this.trans.get(Integer.parseInt(id) - 1));
+                        p.insertGraph(this.trans.get(Integer.parseInt(id) - 1));
                     }
                 }
 
