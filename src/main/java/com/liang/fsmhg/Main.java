@@ -22,7 +22,7 @@ public class Main {
         TransLoader loader = new TransLoader(data);
         if (arguments.window <= 0) {
             FSMHG fsmhg = new FSMHG(output, arguments.support, arguments.maxEdgeNum, arguments.partition, arguments.similarity);
-            // fsmhg.optimize(arguments.optimize);
+            fsmhg.useEmbeddingList(arguments.useEmbeddingList);
             fsmhg.enumerate(loader.loadTrans());
             return;
         }
@@ -101,7 +101,7 @@ public class Main {
         public int window;
         public int sliding;
         public int enumerator = ENUM_FSMHG_WIN;
-        public boolean optimize = true;
+        public boolean useEmbeddingList = true;
 
 
         private Arguments() {
@@ -119,7 +119,7 @@ public class Main {
             ops.addOption("w", "window size", true, "Open sliding window mode and specify the window size (>= 1)");
             ops.addOption("ss", "sliding speed", true, "Window sliding speed (>0 1)");
             ops.addOption("e", "enumerator", true, "1(FSMHG-WIN)/2(FSMHG)");
-            ops.addOption("opt", "optimization", true, "Use min code optimization (YES / NO)");
+            ops.addOption("nel", "nel", true, "not using embedding list");
             ops.addOption("h", "Help");
 
             HelpFormatter formatter = new HelpFormatter();
@@ -200,17 +200,9 @@ public class Main {
                 arguments.enumerator = e;
             }
 
-            // if (cmd.hasOption("opt")) {
-            //     String opt = cmd.getOptionValue("opt");
-            //     if ("YES".equalsIgnoreCase(opt)) {
-            //         arguments.optimize = true;
-            //     } else if ("NO".equalsIgnoreCase(opt)) {
-            //         arguments.optimize = false;
-            //     } else {
-            //         System.out.println("opt must be YES / NO");
-            //         System.exit(1);
-            //     }
-            // }
+            if (cmd.hasOption("nel")) {
+                arguments.useEmbeddingList = false;
+            }
 
             return arguments;
         }

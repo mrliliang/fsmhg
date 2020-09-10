@@ -31,6 +31,7 @@ public class FSMHG {
     private int maxEdgeSize;
     private boolean partition;
     private double similarity;
+    private boolean useEmbeddingList = true;
     private int patternCount = 0;
     private int pointCount = 0;
 
@@ -59,6 +60,10 @@ public class FSMHG {
     // public void optimize(boolean opt) {
     //     this.optimize = opt;
     // }
+
+    public void useEmbeddingList(boolean use) {
+        this.useEmbeddingList = use;
+    }
 
     public void setWinCount(int winCount) {
         this.winCount = winCount;
@@ -346,7 +351,11 @@ public class FSMHG {
                     DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
-                        child.addIntersectionEmbedding(c, em);
+                        if (this.useEmbeddingList) {
+                            child.addIntersectionEmbedding(c, em);
+                        } else {
+                            child.addCluster(c);
+                        }
                     }
                 }
 
@@ -361,7 +370,11 @@ public class FSMHG {
                     DFSEdge dfsEdge = new DFSEdge(rmDfsId, entry.getKey(), g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
-                        child.addEmbedding(g, c, em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, c, em);
+                        } else {
+                            child.addGraph(g, c);
+                        }
                     }
                 }
             }
@@ -383,7 +396,11 @@ public class FSMHG {
                     DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), inter.vLabel(from), inter.vLabel(e.to()), inter.eLabel(e));
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
-                        child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                        if (this.useEmbeddingList) {
+                            child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                        } else {
+                            child.addCluster(c);
+                        }
                     }
                 }
 
@@ -398,7 +415,11 @@ public class FSMHG {
                         DFSEdge dfsEdge = new DFSEdge(entry.getKey(), emVertices.size(), g.vLabel(from), g.vLabel(e.to()), g.eLabel(e));
                         if (cands.contains(dfsEdge)) {
                             Pattern child = p.child(dfsEdge);
-                            child.addEmbedding(g, c, new Embedding(e.to(), em));
+                            if (this.useEmbeddingList) {
+                                child.addEmbedding(g, c, new Embedding(e.to(), em));
+                            } else {
+                                child.addGraph(g, c);
+                            }
                         }
                     }
                 }
@@ -425,7 +446,11 @@ public class FSMHG {
                     }
                     if (extendCands.contains(dfsEdge)) {
                         Pattern child = p.child(rmDfsId, toId, inter.vLabel(from), inter.vLabel(to), inter.eLabel(back));
-                        child.addIntersectionEmbedding(c, em);
+                        if (this.useEmbeddingList) {
+                            child.addIntersectionEmbedding(c, em);
+                        } else {
+                            child.addCluster(c);
+                        }
                     }
                 }
 
@@ -449,7 +474,11 @@ public class FSMHG {
                     }
                     if (extendCands.contains(dfsEdge)) {
                         Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
-                        child.addEmbedding(g, c, em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, c, em);
+                        } else {
+                            child.addGraph(g, c);
+                        }
                     }
                 }
             }
@@ -468,7 +497,11 @@ public class FSMHG {
                 }
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, emVertices.size(), inter.vLabel(from), inter.vLabel(to), inter.eLabel(e));
-                    child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                    if (this.useEmbeddingList) {
+                        child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                    } else {
+                        child.addCluster(c);
+                    }
                 }
             }
 
@@ -489,7 +522,11 @@ public class FSMHG {
                     }
                     if (extendCands.contains(dfsEdge)) {
                         Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                        child.addEmbedding(g, c, new Embedding(e.to(), em));
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, c, new Embedding(e.to(), em));
+                        } else {
+                            child.addGraph(g, c);
+                        }
                     }
                 }
             }
@@ -523,9 +560,17 @@ public class FSMHG {
                 if (cands.contains(dfsEdge)) {
                     Pattern child = p.child(dfsEdge);
                     if (this.partition) {
-                        child.addEmbedding(g, g.getCluster(), em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, g.getCluster(), em);
+                        } else {
+                            child.addGraph(g, g.getCluster());
+                        }
                     } else {
-                        child.addEmbedding(g, em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, em);
+                        } else {
+                            child.addGraph(g);
+                        }
                     }
                 }
             }
@@ -547,9 +592,17 @@ public class FSMHG {
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
                         if (this.partition) {
-                            child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
+                            if (this.useEmbeddingList) {
+                                child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
+                            } else {
+                                child.addGraph(g, g.getCluster());
+                            }
                         } else {
-                            child.addEmbedding(g, new Embedding(e.to(), em));
+                            if (this.useEmbeddingList) {
+                                child.addEmbedding(g, new Embedding(e.to(), em));
+                            } else {
+                                child.addGraph(g);
+                            }
                         }
                     }
                 }
@@ -580,9 +633,17 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (this.partition) {
-                        child.addEmbedding(g, g.getCluster(), em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, g.getCluster(), em);
+                        } else {
+                            child.addGraph(g, g.getCluster());
+                        }
                     } else {
-                        child.addEmbedding(g, em);
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, em);
+                        } else {
+                            child.addGraph(g);
+                        }
                     }
                 }
             }
@@ -603,9 +664,17 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     if (this.partition) {
-                        child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
+                        } else {
+                            child.addGraph(g, g.getCluster());
+                        }
                     } else {
-                        child.addEmbedding(g, new Embedding(to, em));
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, new Embedding(to, em));
+                        } else {
+                            child.addGraph(g);
+                        }
                     }
                 }
             }
