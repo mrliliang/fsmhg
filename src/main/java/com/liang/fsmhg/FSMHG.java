@@ -98,13 +98,13 @@ public class FSMHG {
                 // this.numOfEmbedding += p.numberOfEmbeddings();
                 // this.numOfEmbeddingNoPartition += p.numberOfEmbeddingsNoPartition();
                 // this.minCount++;
-                pp.removeChild(p);
+                // pp.removeChild(p);
                 if (!isFrequent(p)) {
-                    // pp.removeChild(p);
+                    pp.removeChild(p);
                     continue;
                 }
                 subgraphMining(trans, p);
-                // pp.removeChild(p);
+                pp.removeChild(p);
             }
         }
         pw.close();
@@ -176,8 +176,11 @@ public class FSMHG {
                                 continue;
                             }
                             Pattern child = pp.child(0, 1, inter.vLabel(e.from()), inter.vLabel(e.to()), inter.eLabel(e));
-                            // child.setMin(true);
-                            child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                            if (this.useEmbeddingList) {
+                                child.addIntersectionEmbedding(c, new Embedding(e.to(), em));
+                            } else {
+                                child.addCluster(c);
+                            }
                         }
 
                         Map<LabeledGraph, AdjEdges> borderAdj = c.borderAdj(em.vertex().id());
@@ -189,8 +192,11 @@ public class FSMHG {
                                     continue;
                                 }
                                 Pattern child = pp.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
-                                // child.setMin(true);
-                                child.addEmbedding(g, c, new Embedding(e.to(), em));
+                                if (this.useEmbeddingList) {
+                                    child.addEmbedding(g, c, new Embedding(e.to(), em));
+                                } else {
+                                    child.addGraph(g, c);
+                                }
                             }
                         }
                     }
@@ -208,8 +214,11 @@ public class FSMHG {
                                 continue;
                             }
                             Pattern child = pp.child(0, 1, g.vLabel(e.from()), g.vLabel(e.to()), g.eLabel(e));
-                            // child.setMin(true);
-                            child.addEmbedding(g, c, new Embedding(e.to(), em));
+                            if (this.useEmbeddingList) {
+                                child.addEmbedding(g, c, new Embedding(e.to(), em));
+                            } else {
+                                child.addGraph(g, c);
+                            }
                         }
                     }
                     embeddings.clear();
@@ -248,8 +257,11 @@ public class FSMHG {
                             continue;
                         }
                         Pattern child = pp.child(0, 1, g.vLabel(from), g.vLabel(to), g.eLabel(e));
-                        // child.setMin(true);
-                        child.addEmbedding(g, new Embedding(to, em));
+                        if (this.useEmbeddingList) {
+                            child.addEmbedding(g, new Embedding(to, em));
+                        } else {
+                            child.addGraph(g);
+                        }
                     }
                 }
                 embeddings.clear();
@@ -279,13 +291,13 @@ public class FSMHG {
             // } else {
             //     this.nonminCount++;
             // }
-            parent.removeChild(child);
+            // parent.removeChild(child);
             if (!isFrequent(child)) {
-                // parent.removeChild(child);
+                parent.removeChild(child);
                 continue;
             }
             subgraphMining(trans, child);
-            // parent.removeChild(child);
+            parent.removeChild(child);
         }
     }
 
@@ -560,12 +572,14 @@ public class FSMHG {
                 if (cands.contains(dfsEdge)) {
                     Pattern child = p.child(dfsEdge);
                     if (this.partition) {
+                        // child.addEmbedding(g, g.getCluster(), em);
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, g.getCluster(), em);
                         } else {
                             child.addGraph(g, g.getCluster());
                         }
                     } else {
+                        // child.addEmbedding(g, em);
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, em);
                         } else {
@@ -592,12 +606,14 @@ public class FSMHG {
                     if (cands.contains(dfsEdge)) {
                         Pattern child = p.child(dfsEdge);
                         if (this.partition) {
+                            // child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
                             if (this.useEmbeddingList) {
                                 child.addEmbedding(g, g.getCluster(), new Embedding(e.to(), em));
                             } else {
                                 child.addGraph(g, g.getCluster());
                             }
                         } else {
+                            // child.addEmbedding(g, new Embedding(e.to(), em));
                             if (this.useEmbeddingList) {
                                 child.addEmbedding(g, new Embedding(e.to(), em));
                             } else {
@@ -633,12 +649,14 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, toId, g.vLabel(from), g.vLabel(to), g.eLabel(back));
                     if (this.partition) {
+                        // child.addEmbedding(g, g.getCluster(), em);
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, g.getCluster(), em);
                         } else {
                             child.addGraph(g, g.getCluster());
                         }
                     } else {
+                        // child.addEmbedding(g, em);
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, em);
                         } else {
@@ -664,12 +682,14 @@ public class FSMHG {
                 if (extendCands.contains(dfsEdge)) {
                     Pattern child = p.child(rmDfsId, emVertices.size(), g.vLabel(from), g.vLabel(to), g.eLabel(e));
                     if (this.partition) {
+                        // child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, g.getCluster(), new Embedding(to, em));
                         } else {
                             child.addGraph(g, g.getCluster());
                         }
                     } else {
+                        // child.addEmbedding(g, new Embedding(to, em));
                         if (this.useEmbeddingList) {
                             child.addEmbedding(g, new Embedding(to, em));
                         } else {

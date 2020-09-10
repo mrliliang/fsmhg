@@ -119,7 +119,7 @@ public class Main {
             ops.addOption("w", "window size", true, "Open sliding window mode and specify the window size (>= 1)");
             ops.addOption("ss", "sliding speed", true, "Window sliding speed (>0 1)");
             ops.addOption("e", "enumerator", true, "1(FSMHG-WIN)/2(FSMHG)");
-            ops.addOption("nel", "nel", true, "not using embedding list");
+            ops.addOption("nel", "nel", false, "not using embedding list");
             ops.addOption("h", "Help");
 
             HelpFormatter formatter = new HelpFormatter();
