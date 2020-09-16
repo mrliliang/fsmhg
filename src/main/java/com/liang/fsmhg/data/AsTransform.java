@@ -43,7 +43,7 @@ public class AsTransform {
 
     public static void main(String[] args) {
         File indir = new File("/home/liliang/data/as-733");
-        File outdir = new File("/home/liliang/data/as-733-snapshots-connected-md20-ver");
+        File outdir = new File("/home/liliang/data/as-733-snapshots-ogirinal1");
         Utils.deleteFileDir(outdir);
         outdir.mkdirs();
         List<File> data = Arrays.asList(indir.listFiles());
@@ -58,6 +58,8 @@ public class AsTransform {
 
     private void transform(List<File> data, File outdir) {
         int count = 0;
+        int maxDegreeGlobal = 0;
+        int averageSize = 0;
         for (File file : data) {
             count++;
             System.out.format("transform snapshot %d\r", count);
@@ -72,7 +74,7 @@ public class AsTransform {
             int largeDegreeCount = 0;
             for (AdjEdges adj : adjLists.values()) {
                 eSize += adj.size();
-                if (adj.size() > 5) {
+                if (adj.size() >= 100) {
                     largeDegreeCount++;
                 }
                 if (adj.size() > maxDegree) {
@@ -81,7 +83,11 @@ public class AsTransform {
                     minDegree = adj.size();
                 }
             }
+            if (maxDegree > maxDegreeGlobal) {
+                maxDegreeGlobal = maxDegree;
+            }
             eSize = eSize / 2;
+            averageSize += eSize;
 
             File out = new File(outdir, file.getName() + "V" + vSize + "E" + eSize + "m" + minDegree + "M" + maxDegree + "L" + largeDegreeCount);
             output(out, vMap, adjLists, count);
@@ -104,6 +110,9 @@ public class AsTransform {
         // System.out.println(unconnectedCount + " unconnected graphs");
         System.out.format("Min graph %d vertices %d edges.\n", minV, minE);
         System.out.format("Max graph %d vertices %d edges.\n", maxV, maxE);
+        System.out.println("Max degree " + maxDegreeGlobal);
+        averageSize = averageSize / 733;
+        System.out.println("Average size " + averageSize);
     }
 
     private void transform1(List<File> data, File outdir) {
